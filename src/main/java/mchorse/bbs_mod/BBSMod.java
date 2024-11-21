@@ -27,14 +27,7 @@ import mchorse.bbs_mod.camera.clips.misc.AudioClip;
 import mchorse.bbs_mod.camera.clips.misc.CurveClip;
 import mchorse.bbs_mod.camera.clips.misc.SubtitleClip;
 import mchorse.bbs_mod.camera.clips.misc.VoicelineClip;
-import mchorse.bbs_mod.camera.clips.modifiers.AngleClip;
-import mchorse.bbs_mod.camera.clips.modifiers.DragClip;
-import mchorse.bbs_mod.camera.clips.modifiers.LookClip;
-import mchorse.bbs_mod.camera.clips.modifiers.MathClip;
-import mchorse.bbs_mod.camera.clips.modifiers.OrbitClip;
-import mchorse.bbs_mod.camera.clips.modifiers.RemapperClip;
-import mchorse.bbs_mod.camera.clips.modifiers.ShakeClip;
-import mchorse.bbs_mod.camera.clips.modifiers.TranslateClip;
+import mchorse.bbs_mod.camera.clips.modifiers.*;
 import mchorse.bbs_mod.camera.clips.overwrite.CircularClip;
 import mchorse.bbs_mod.camera.clips.overwrite.DollyClip;
 import mchorse.bbs_mod.camera.clips.overwrite.IdleClip;
@@ -332,6 +325,7 @@ public class BBSMod implements ModInitializer
             .register(Link.bbs("shake"), ShakeClip.class, new ClipFactoryData(Icons.EXCHANGE, 0x159e64))
             .register(Link.bbs("math"), MathClip.class, new ClipFactoryData(Icons.GRAPH, 0x6820ad))
             .register(Link.bbs("look"), LookClip.class, new ClipFactoryData(Icons.VISIBLE, 0x197fff))
+            .register(Link.bbs("tracker"), TrackerClip.class, new ClipFactoryData(Icons.VISIBLE, 0xffffff))
             .register(Link.bbs("orbit"), OrbitClip.class, new ClipFactoryData(Icons.GLOBE, 0xd82253))
             .register(Link.bbs("remapper"), RemapperClip.class, new ClipFactoryData(Icons.TIME, 0x222222))
             .register(Link.bbs("audio"), AudioClip.class, new ClipFactoryData(Icons.SOUND, 0xffc825))

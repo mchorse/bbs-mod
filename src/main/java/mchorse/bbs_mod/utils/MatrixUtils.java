@@ -87,12 +87,17 @@ public class MatrixUtils {
             return v.setComponent(this.index, 0);
         }
 
+        /**
+         * @param forwardAxis the forward axis to test for flips and rotation
+         * @return angle in radians around this axis
+         */
         public double getAngleAround(Axis forwardAxis, Matrix3d rotation) {
             return this.getAngleAround(forwardAxis, 1, rotation);
         }
 
         /**
-         * @return angle in radians
+         * @param forwardAxis the forward axis to test for flips and rotation
+         * @return angle in radians around this axis
          */
         public double getAngleAround(Axis forwardAxis, int sign, Matrix3d rotation) {
             if (forwardAxis == this) return 0;
