@@ -536,7 +536,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     {
         super.appear();
 
-        BBSRendering.setCustomSize(true);
+        BBSRendering.setResolution(BBSSettings.videoSettings.width.get(), BBSSettings.videoSettings.height.get());
+        BBSRendering.setIsInsideFilmEditor(true);
         MorphRenderer.hidePlayer = true;
 
         CameraController cameraController = this.getCameraController();
@@ -553,7 +554,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     {
         super.close();
 
-        BBSRendering.setCustomSize(false);
+        int width = MinecraftClient.getInstance().getWindow().getFramebufferWidth();
+        int height = MinecraftClient.getInstance().getWindow().getFramebufferHeight();
+        BBSRendering.setResolution(width, height);
+        BBSRendering.setIsInsideFilmEditor(false);
         MorphRenderer.hidePlayer = false;
 
         CameraController cameraController = this.getCameraController();
@@ -575,7 +579,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     {
         super.disappear();
 
-        BBSRendering.setCustomSize(false);
+        int width = MinecraftClient.getInstance().getWindow().getFramebufferWidth();
+        int height = MinecraftClient.getInstance().getWindow().getFramebufferHeight();
+        BBSRendering.setResolution(width, height);
+        BBSRendering.setIsInsideFilmEditor(false);
         MorphRenderer.hidePlayer = false;
 
         this.setFlight(false);

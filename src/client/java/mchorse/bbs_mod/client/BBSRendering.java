@@ -41,6 +41,7 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.util.HashSet;
@@ -57,12 +58,15 @@ public class BBSRendering
     public static boolean canRender;
 
     public static boolean renderingWorld;
+    private static boolean isInsideFilmEditor;
     public static int lastAction;
 
-    private static boolean customSize;
     private static boolean iris;
     private static boolean sodium;
     private static boolean optifine;
+
+    private static boolean needUpdate = false;
+    private static boolean isReady = false;
 
     private static int width;
     private static int height;
@@ -88,6 +92,11 @@ public class BBSRendering
         return i;
     }
 
+    public static boolean isReady()
+    {
+        return isReady;
+    }
+
     public static int getMotionBlurFactor()
     {
         return getMotionBlurFactor(BBSSettings.videoSettings.motionBlur.get());
@@ -100,12 +109,12 @@ public class BBSRendering
 
     public static int getVideoWidth()
     {
-        return width == 0 ? BBSSettings.videoSettings.width.get() : width;
+        return width;
     }
 
     public static int getVideoHeight()
     {
-        return height == 0 ? BBSSettings.videoSettings.height.get() : height;
+        return height;
     }
 
     public static int getVideoFrameRate()
@@ -130,29 +139,68 @@ public class BBSRendering
         return movies;
     }
 
-    public static boolean isCustomSize()
+    public static void setIsInsideFilmEditor(boolean value)
     {
-        return customSize;
+        isInsideFilmEditor = value;
     }
 
-    public static void setCustomSize(boolean customSize)
+    public static boolean isInsideFilmEditor()
     {
-        setCustomSize(customSize, 0, 0);
+        return isInsideFilmEditor;
     }
 
-    public static void setCustomSize(boolean customSize, int w, int h)
+    public static void setResolution(int new_width, int new_height)
     {
-        BBSRendering.customSize = customSize;
+        setResolution(new_width, new_height, true);
+    }
 
-        width = !customSize ? 0 : w;
-        height = !customSize ? 0 : h;
-
-        if (!customSize)
+    public static void setResolution(int new_width, int new_height, boolean need_update)
+    {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        Framebuffer framebuffer = mc.getFramebuffer();
+        if (framebuffer.textureHeight != new_height || framebuffer.textureWidth != new_width)
         {
-            Framebuffer efb = MinecraftClient.getInstance().worldRenderer.getEntityOutlinesFramebuffer();
-            Window window = MinecraftClient.getInstance().getWindow();
+            Window window = mc.getWindow();
+            if(window != null) {
+                int windowHeight = window.getHeight();
+                int windowWidth = window.getWidth();
 
-            efb.resize(window.getFramebufferWidth(), window.getFramebufferHeight(), false);
+                int windowFBHeight = window.getFramebufferHeight();
+                int windowFBWidth = window.getFramebufferWidth();
+
+                System.out.println("window W "  + windowWidth + " H " + windowHeight);
+                System.out.println("windowFB W "  + windowFBWidth + " H " + windowFBHeight);
+                System.out.println("BBS W "  + new_width + " H " + new_height);
+            }
+
+            needUpdate = need_update;
+            isReady = false;
+            width = new_width;
+            height = new_height;
+        }
+    }
+
+    public static void prepareRender()
+    {
+        if (needUpdate)
+        {
+            System.out.println("preparing Render");
+            int bbsWidth = getVideoWidth();
+            int bbsHeight = getVideoHeight();
+
+            Window window = MinecraftClient.getInstance().getWindow();
+            Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
+
+            framebuffer.resize(bbsWidth, bbsHeight, false);
+
+            Framebuffer efb = MinecraftClient.getInstance().worldRenderer.getEntityOutlinesFramebuffer();
+
+            if (efb != null && (efb.viewportWidth != bbsWidth || efb.viewportHeight != bbsHeight))
+            {
+                efb.resize(bbsWidth, bbsHeight, false);
+            }
+            needUpdate = false;
+            isReady = true;
         }
     }
 
@@ -164,7 +212,6 @@ public class BBSRendering
             texture.setFormat(TextureFormat.RGB_U8);
             texture.setFilter(GL11.GL_NEAREST);
         }
-
         return texture;
     }
 
@@ -199,23 +246,13 @@ public class BBSRendering
     {
         renderingWorld = true;
 
-        if (!customSize)
+        if (!isInsideFilmEditor || !isReady)
         {
             return;
         }
 
-        Window window = MinecraftClient.getInstance().getWindow();
         Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
-
-        framebuffer.resize(window.getFramebufferWidth(), window.getFramebufferHeight(), false);
         framebuffer.beginWrite(true);
-
-        Framebuffer efb = MinecraftClient.getInstance().worldRenderer.getEntityOutlinesFramebuffer();
-
-        if (efb != null && (efb.viewportWidth != window.getFramebufferWidth() || efb.viewportHeight != window.getFramebufferHeight()))
-        {
-            efb.resize(window.getFramebufferWidth(), window.getFramebufferHeight(), false);
-        }
     }
 
     public static void onWorldRenderEnd()
@@ -230,7 +267,7 @@ public class BBSRendering
             UISubtitleRenderer.renderSubtitles(batcher.getContext().getMatrices(), batcher, SubtitleClip.getSubtitles(controller.getContext()));
         }
 
-        if (!customSize)
+        if (!isInsideFilmEditor || !isReady)
         {
             renderingWorld = false;
 
@@ -250,15 +287,16 @@ public class BBSRendering
         }
 
         texture.bind();
-        texture.setSize(framebuffer.textureWidth, framebuffer.textureHeight);
-        GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, framebuffer.textureWidth, framebuffer.textureHeight);
+        texture.setSize(getVideoWidth(), getVideoHeight());
+        System.out.println("copyTexture: VideoW " + getVideoWidth() + "  VideoH " + getVideoHeight() + " FbW " + framebuffer.textureWidth + " FbH " + framebuffer.textureHeight);
+        GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, getVideoWidth(), getVideoHeight());
         texture.unbind();
 
         Window window = mc.getWindow();
+        System.out.println("window: windowW " + window.getWidth() + "  windowH " + window.getHeight() + " windowFbW " + window.getFramebufferWidth() + " windowFbH " + window.getFramebufferHeight());
 
         renderingWorld = false;
 
-        framebuffer.resize(window.getFramebufferWidth(), window.getFramebufferHeight(), false);
         framebuffer.beginWrite(true);
 
         if (width != 0)

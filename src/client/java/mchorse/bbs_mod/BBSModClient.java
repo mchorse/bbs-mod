@@ -61,6 +61,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.impl.client.rendering.BlockEntityRendererRegistryImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -328,12 +329,34 @@ public class BBSModClient implements ClientModInitializer
         keyDemorph = this.createKey("demorph", GLFW.GLFW_KEY_PERIOD);
         keyTeleport = this.createKey("teleport", GLFW.GLFW_KEY_Y);
 
+        ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) ->
+        {
+            if (BBSRendering.isInsideFilmEditor())
+            {
+                BBSRendering.setResolution(BBSSettings.videoSettings.width.get(), BBSSettings.videoSettings.height.get());
+            }
+            else
+            {
+                Window window = MinecraftClient.getInstance().getWindow();
+                BBSRendering.setResolution(window.getFramebufferWidth(), window.getFramebufferHeight());
+            }
+        });
+
         WorldRenderEvents.AFTER_ENTITIES.register((context) ->
         {
             if (!BBSRendering.isIrisShadersEnabled())
             {
                 BBSRendering.renderCoolStuff(context);
             }
+        });
+
+        WorldRenderEvents.START.register((context) ->
+        {
+            if (BBSRendering.isInsideFilmEditor())
+            {
+                BBSRendering.setResolution(BBSSettings.videoSettings.width.get(), BBSSettings.videoSettings.height.get());
+            }
+            BBSRendering.prepareRender();
         });
 
         WorldRenderEvents.LAST.register((context) ->
@@ -347,10 +370,13 @@ public class BBSModClient implements ClientModInitializer
                 if (width % 2 == 1) width -= width % 2;
                 if (height % 2 == 1) height -= height % 2;
 
-                videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
-                BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
+                BBSRendering.setResolution(width, height);
+                if (BBSRendering.isReady()) {
+                    BBSRendering.setIsInsideFilmEditor(videoRecorder.isRecording());
+                    videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
 
-                requestToggleRecording = false;
+                    requestToggleRecording = false;
+                }
             }
 
             if (videoRecorder.isRecording() && BBSRendering.canRender)
@@ -425,6 +451,7 @@ public class BBSModClient implements ClientModInitializer
             Window window = MinecraftClient.getInstance().getWindow();
 
             originalFramebufferScale = window.getFramebufferWidth() / window.getWidth();
+            BBSRendering.setResolution(window.getFramebufferWidth(), window.getFramebufferHeight(), false);
         });
 
         URLTextureErrorCallback.EVENT.register((url, error) ->
