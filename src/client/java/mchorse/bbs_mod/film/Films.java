@@ -22,6 +22,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.utils.Batcher2D;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
+import mchorse.bbs_mod.utils.VideoRecorder;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -274,6 +275,18 @@ public class Films
     {
         Batcher2D batcher2D = new Batcher2D(drawContext);
         Recorder recorder = BBSModClient.getFilms().getRecorder();
+        VideoRecorder videoRecorder = BBSModClient.getVideoRecorder();
+
+
+        // Video Recording Overlay (F4)
+        if(videoRecorder != null && videoRecorder.isRecording() && BBSSettings.recordingOverlays.get())
+        {
+            int count = videoRecorder.getCounter();
+
+            String label = "Recording (" + count + " ticks)... Press F4 again to stop.";
+
+            batcher2D.textShadow(label, 10, 10);
+        }
 
         if (recorder != null && BBSSettings.recordingOverlays.get())
         {
