@@ -10,6 +10,11 @@ import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a UI keyframe sheet which handles the management of keyframes,
+ * including their selection, properties, and operations such as sorting or
+ * modifying keyframe attributes.
+ */
 public class UIKeyframeSheet
 {
     /* Meta data */

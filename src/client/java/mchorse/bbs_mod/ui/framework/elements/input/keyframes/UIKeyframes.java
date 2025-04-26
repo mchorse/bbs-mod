@@ -1,13 +1,18 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes;
 
+import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.IValueListener;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.ui.film.UIFilmPanel;
+import mchorse.bbs_mod.ui.film.replays.UIReplayList;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.IUIKeyframeGraph;
@@ -42,8 +47,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class UIKeyframes extends UIElement
-{
+public class UIKeyframes extends UIElement {
     /* Editing states */
 
     private boolean selecting;
@@ -83,70 +87,70 @@ public class UIKeyframes extends UIElement
 
     private UICopyPasteController copyPasteController;
 
-    public UIKeyframes(Consumer<Keyframe> callback)
-    {
+    public UIKeyframes(Consumer<Keyframe> callback) {
         this.callback = callback;
 
         this.copyPasteController = new UICopyPasteController(PresetManager.KEYFRAMES, "_CopyKeyframes")
-            .supplier(this::serializeKeyframes)
-            .consumer((data, mouseX, mouseY) ->
-            {
-                double offset = Math.round(this.fromGraphX(mouseX));
+                .supplier(this::serializeKeyframes)
+                .consumer((data, mouseX, mouseY) -> {
+                    double offset = Math.round(this.fromGraphX(mouseX));
 
-                this.pasteKeyframes(this.parseKeyframes(data), (float) offset, mouseY);
-            })
-            .canCopy(() -> this.currentGraph.getSelected() != null);
+                    this.pasteKeyframes(this.parseKeyframes(data), (float) offset, mouseY);
+                })
+                .canCopy(() -> this.currentGraph.getSelected() != null);
 
         /* Context menu items */
-        this.context((menu) ->
-        {
+        this.context((menu) -> {
             UIContext context = this.getContext();
             int mouseX = context.mouseX;
             int mouseY = context.mouseY;
             boolean hasSelected = this.currentGraph.getSelected() != null;
 
             menu.custom(new UIPresetContextMenu(this.copyPasteController, mouseX, mouseY)
-                .labels(UIKeys.KEYFRAMES_CONTEXT_COPY, UIKeys.KEYFRAMES_CONTEXT_PASTE));
+                    .labels(UIKeys.KEYFRAMES_CONTEXT_COPY, UIKeys.KEYFRAMES_CONTEXT_PASTE));
 
-            if (this.isEditing())
-            {
+            if (this.isEditing()) {
                 menu.action(Icons.CLOSE, UIKeys.KEYFRAMES_CONTEXT_EXIT_TRACK, () -> this.editSheet(null));
-            }
-            else
-            {
+            } else {
                 UIKeyframeSheet sheet = this.dopeSheet.getSheet(this.getContext().mouseY);
 
-                if (sheet != null && KeyframeFactories.isNumeric(sheet.channel.getFactory()))
-                {
-                    menu.action(Icons.EDIT, UIKeys.KEYFRAMES_CONTEXT_EDIT_TRACK.format(sheet.id), () -> this.editSheet(sheet));
+                if (sheet != null && KeyframeFactories.isNumeric(sheet.channel.getFactory())) {
+                    menu.action(Icons.EDIT, UIKeys.KEYFRAMES_CONTEXT_EDIT_TRACK.format(sheet.id),
+                            () -> this.editSheet(sheet));
                 }
             }
 
             menu.action(Icons.SEARCH, UIKeys.KEYFRAMES_CONTEXT_ADJUST_VALUES, () -> this.adjustValues());
-            menu.action(Icons.ARROW_LEFT, UIKeys.KEYFRAMES_KEYS_SELECT_LEFT, () -> this.selectAfter(mouseX, mouseY, -1));
-            menu.action(Icons.ARROW_RIGHT, UIKeys.KEYFRAMES_KEYS_SELECT_RIGHT, () -> this.selectAfter(mouseX, mouseY, 1));
+            menu.action(Icons.ARROW_LEFT, UIKeys.KEYFRAMES_KEYS_SELECT_LEFT,
+                    () -> this.selectAfter(mouseX, mouseY, -1));
+            menu.action(Icons.ARROW_RIGHT, UIKeys.KEYFRAMES_KEYS_SELECT_RIGHT,
+                    () -> this.selectAfter(mouseX, mouseY, 1));
 
             menu.action(Icons.MAXIMIZE, UIKeys.KEYFRAMES_CONTEXT_MAXIMIZE, this::resetView);
             menu.action(Icons.FULLSCREEN, UIKeys.KEYFRAMES_CONTEXT_SELECT_ALL, () -> this.currentGraph.selectAll());
 
-            if (hasSelected)
-            {
+            if (hasSelected) {
                 menu.action(Icons.CONVERT, UIKeys.KEYFRAMES_CONTEXT_SPREAD, this::spreadKeyframes);
-                menu.action(Icons.OUTLINE_SPHERE, UIKeys.KEYFRAMES_CONTEXT_ROUND, () ->
-                {
-                    for (UIKeyframeSheet sheet : this.getGraph().getSheets())
-                    {
+
+                UIReplayList replayList = BBSModClient.getDashboard()
+                        .getPanel(UIFilmPanel.class).replayEditor.replays.replays;
+
+                if (replayList.isSelected() && replayList.current.size() > 1) {
+                    menu.action(Icons.EXCLAMATION, UIKeys.KEYFRAMES_CONTEXT_TRANSFER_TO_SELECTED_REPLAYS,
+                            this::transferToSelectedReplays);
+                }
+
+                menu.action(Icons.OUTLINE_SPHERE, UIKeys.KEYFRAMES_CONTEXT_ROUND, () -> {
+                    for (UIKeyframeSheet sheet : this.getGraph().getSheets()) {
                         List<Keyframe> selected = sheet.selection.getSelected();
 
-                        if (selected.isEmpty())
-                        {
+                        if (selected.isEmpty()) {
                             continue;
                         }
 
                         sheet.channel.preNotifyParent();
 
-                        for (Keyframe kf : selected)
-                        {
+                        for (Keyframe kf : selected) {
                             kf.setTick(Math.round(kf.getTick()), false);
                         }
 
@@ -162,68 +166,119 @@ public class UIKeyframes extends UIElement
         Supplier<Boolean> canModify = () -> !this.scaling;
 
         this.keys().register(Keys.KEYFRAMES_MAXIMIZE, this::resetView).inside().category(category);
-        this.keys().register(Keys.KEYFRAMES_SELECT_ALL, () -> this.currentGraph.selectAll()).inside().category(category).active(canModify);
-        this.keys().register(Keys.COPY, () ->
-        {
-            if (this.copyPasteController.copy()) UIUtils.playClick();
+        this.keys().register(Keys.KEYFRAMES_SELECT_ALL, () -> this.currentGraph.selectAll()).inside().category(category)
+                .active(canModify);
+        this.keys().register(Keys.COPY, () -> {
+            if (this.copyPasteController.copy())
+                UIUtils.playClick();
         }).inside().category(category);
-        this.keys().register(Keys.PASTE, () ->
-        {
+        this.keys().register(Keys.PASTE, () -> {
             UIContext context = this.getContext();
 
-            if (this.copyPasteController.paste(context.mouseX, context.mouseY)) UIUtils.playClick();
+            if (this.copyPasteController.paste(context.mouseX, context.mouseY))
+                UIUtils.playClick();
         }).inside().category(category).active(canModify);
-        this.keys().register(Keys.PRESETS, () ->
-        {
+        this.keys().register(Keys.PRESETS, () -> {
             UIContext context = this.getContext();
 
-            if (this.copyPasteController.canPreviewPresets())
-            {
+            if (this.copyPasteController.canPreviewPresets()) {
                 this.copyPasteController.openPresets(context, context.mouseX, context.mouseY);
                 UIUtils.playClick();
             }
         }).category(category).active(canModify);
-        this.keys().register(Keys.DELETE, () -> this.currentGraph.removeSelected()).inside().category(category).active(canModify);
-        this.keys().register(Keys.KEYFRAMES_SELECT_LEFT, () ->
-        {
+        this.keys().register(Keys.DELETE, () -> this.currentGraph.removeSelected()).inside().category(category)
+                .active(canModify);
+        this.keys().register(Keys.KEYFRAMES_SELECT_LEFT, () -> {
             UIContext context = this.getContext();
 
             this.selectAfter(context.mouseX, context.mouseY, -1);
         }).category(category).active(canModify);
-        this.keys().register(Keys.KEYFRAMES_SELECT_RIGHT, () ->
-        {
+        this.keys().register(Keys.KEYFRAMES_SELECT_RIGHT, () -> {
             UIContext context = this.getContext();
 
             this.selectAfter(context.mouseX, context.mouseY, 1);
         }).category(category).active(canModify);
         this.keys().register(Keys.KEYFRAMES_SELECT_SAME, this::selectSame).category(category).active(canModify);
         this.keys().register(Keys.KEYFRAMES_SCALE_TIME, this::scaleTime).inside().category(category);
-        this.keys().register(Keys.KEYFRAMES_STACK_KEYFRAMES, () -> this.stackKeyframes(false)).inside().category(category);
+        this.keys().register(Keys.KEYFRAMES_STACK_KEYFRAMES, () -> this.stackKeyframes(false)).inside()
+                .category(category);
         this.keys().register(Keys.KEYFRAMES_SELECT_PREV, () -> this.selectNextKeyframe(-1)).category(category);
         this.keys().register(Keys.KEYFRAMES_SELECT_NEXT, () -> this.selectNextKeyframe(1)).category(category);
         this.keys().register(Keys.KEYFRAMES_SPREAD, this::spreadKeyframes).category(category);
+        this.keys().register(Keys.KEYFRAMES_TRANSFER_TO_SELECTED_REPLAYS, this::transferToSelectedReplays)
+                .category(category);
         this.keys().register(Keys.KEYFRAMES_ADJUST_VALUES, this::adjustValues).category(category);
     }
 
-    private void adjustValues()
-    {
-        this.getContext().replaceContextMenu((menu2) ->
-        {
+
+    /**
+     * Transfers the selected keyframes from the current graph to the selected replays
+     * in the UIReplayList. This method retrieves the selected keyframes and attempts
+     * to copy and insert them into corresponding keyframe channels in the selected
+     * replay destinations, provided the channels match by ID and factory type.
+     *
+     * The process involves:
+     * 1. Retrieving the selected replays from the active replay editor.
+     * 2. Iterating through the selected keyframes in the current graph.
+     * 3. Determining if the destination replay has compatible keyframe channels.
+     * 4. Creating and copying the keyframe data to the destination channels where applicable.
+     *
+     * If a destination channel does not exist in the replay, it tries obtaining a
+     * related channel using a properties map. Valid keyframes are then transferred
+     * only to channels with a matching factory.
+     *
+     * This method is typically used to facilitate the synchronization of keyframe
+     * animations across multiple replay entities.
+     */
+    private void transferToSelectedReplays() {
+        UIReplaysEditor replaysEditor = BBSModClient.getDashboard().getPanel(UIFilmPanel.class).replayEditor;
+        UIReplayList replayList = BBSModClient.getDashboard().getPanel(UIFilmPanel.class).replayEditor.replays.replays;
+
+        // Fetch selected replays
+        List<Replay> replays = replayList.getCurrent();
+
+        for (UIKeyframeSheet sheet : this.currentGraph.getSheets()) {
+            for (Keyframe keyframe : sheet.selection.getSelected()) {
+                KeyframeChannel sourceChannel = (KeyframeChannel) keyframe.getParent();
+
+                for (Replay destinationReplay : replays) {
+                    if (destinationReplay == replayList.getCurrentFirst())
+                        continue;
+
+                    // Try getting the destination channel from keyframes
+                    KeyframeChannel destChannel = (KeyframeChannel) destinationReplay.keyframes.get(sourceChannel.getId());
+                    if (destChannel == null) {
+                        //It doesn't exists so it means we want to transfer form related keyframes
+                        destChannel = (KeyframeChannel) destinationReplay.properties.get(sourceChannel.getId());
+                    }
+
+                    // If a valid destination channel exists with matching factory
+                    if (destChannel != null && destChannel.getFactory() == sourceChannel.getFactory()) {
+                        Keyframe newKeyframe = new Keyframe(keyframe.getId(), keyframe.getFactory());
+                        newKeyframe.copy(keyframe);
+                        destChannel.insert(newKeyframe.getTick(), newKeyframe.getValue());
+                        System.out.println("Keyframe transferred to replay: " + destinationReplay.getName());
+                    }
+                }
+            }
+        }
+    }
+
+    private void adjustValues() {
+        this.getContext().replaceContextMenu((menu2) -> {
             menu2.autoKeys();
             menu2.action(Icons.ARROW_LEFT, UIKeys.KEYFRAMES_CONTEXT_ADJUST_VALUES_LEFT, () -> this.adjustValues(false));
-            menu2.action(Icons.ARROW_RIGHT, UIKeys.KEYFRAMES_CONTEXT_ADJUST_VALUES_RIGHT, () -> this.adjustValues(true));
+            menu2.action(Icons.ARROW_RIGHT, UIKeys.KEYFRAMES_CONTEXT_ADJUST_VALUES_RIGHT,
+                    () -> this.adjustValues(true));
         });
     }
 
-    private void adjustValues(boolean last)
-    {
-        for (UIKeyframeSheet sheet : this.getGraph().getSheets())
-        {
+    private void adjustValues(boolean last) {
+        for (UIKeyframeSheet sheet : this.getGraph().getSheets()) {
             List<Keyframe> selected = sheet.selection.getSelected();
             IKeyframeFactory factory = sheet.channel.getFactory();
 
-            if (selected.size() < 2 || !KeyframeFactories.isNumeric(factory))
-            {
+            if (selected.size() < 2 || !KeyframeFactories.isNumeric(factory)) {
                 continue;
             }
 
@@ -239,8 +294,7 @@ public class UIKeyframes extends UIElement
 
             selected.remove(index);
 
-            for (Keyframe keyframe : selected)
-            {
+            for (Keyframe keyframe : selected) {
                 keyframe.setValue(factory.yToValue(factory.getY(keyframe.getValue()) + difference));
             }
 
@@ -248,39 +302,32 @@ public class UIKeyframes extends UIElement
         }
     }
 
-    public UIKeyframes changed(Runnable runnable)
-    {
+    public UIKeyframes changed(Runnable runnable) {
         this.changeCallback = runnable;
 
         return this;
     }
 
-    public void triggerChange()
-    {
-        if (this.changeCallback != null)
-        {
+    public void triggerChange() {
+        if (this.changeCallback != null) {
             this.changeCallback.run();
         }
     }
 
-    public UIKeyframeDopeSheet getDopeSheet()
-    {
+    public UIKeyframeDopeSheet getDopeSheet() {
         return this.dopeSheet;
     }
 
-    protected void selectNextKeyframe(int direction)
-    {
+    protected void selectNextKeyframe(int direction) {
         IUIKeyframeGraph graph = this.getGraph();
         Keyframe keyframe = graph.getSelected();
 
-        if (keyframe == null)
-        {
+        if (keyframe == null) {
             UIContext context = this.getContext();
             UIKeyframeSheet sheet = this.getGraph().getSheet(context.mouseY);
             KeyframeSegment segment = sheet.channel.find((float) this.fromGraphX(context.mouseX));
 
-            if (segment != null)
-            {
+            if (segment != null) {
                 keyframe = direction < 0 ? segment.a : segment.b;
 
                 graph.clearSelection();
@@ -290,8 +337,7 @@ public class UIKeyframes extends UIElement
             }
         }
 
-        if (keyframe != null)
-        {
+        if (keyframe != null) {
             KeyframeChannel channel = (KeyframeChannel) keyframe.getParent();
             int existingIndex = channel.getKeyframes().indexOf(keyframe);
             int index = MathUtils.cycler(existingIndex + direction, channel.getAll());
@@ -302,43 +348,33 @@ public class UIKeyframes extends UIElement
         }
     }
 
-    private void selectAfter(int mouseX, int mouseY, int direction)
-    {
+    private void selectAfter(int mouseX, int mouseY, int direction) {
         float tick = (float) this.fromGraphX(mouseX);
 
-        if (!Window.isShiftPressed())
-        {
+        if (!Window.isShiftPressed()) {
             this.currentGraph.selectAfter(tick, direction);
-        }
-        else
-        {
+        } else {
             this.currentGraph.getSheet(mouseY).selection.after(tick, direction);
             this.currentGraph.pickSelected();
         }
     }
 
-    private void selectSame()
-    {
+    private void selectSame() {
         UIContext context = this.getContext();
         Pair<Keyframe, KeyframeType> keyframe = this.currentGraph.findKeyframe(context.mouseX, context.mouseY);
 
-        if (keyframe != null)
-        {
-            if (!Window.isShiftPressed())
-            {
+        if (keyframe != null) {
+            if (!Window.isShiftPressed()) {
                 this.currentGraph.clearSelection();
             }
 
-            for (UIKeyframeSheet sheet : this.currentGraph.getSheets())
-            {
+            for (UIKeyframeSheet sheet : this.currentGraph.getSheets()) {
                 List<Keyframe> list = sheet.channel.getList();
 
-                for (int i = 0; i < list.size(); i++)
-                {
+                for (int i = 0; i < list.size(); i++) {
                     Keyframe kf = list.get(i);
 
-                    if (kf.getFactory().compare(keyframe.a.getValue(), kf.getValue()))
-                    {
+                    if (kf.getFactory().compare(keyframe.a.getValue(), kf.getValue())) {
                         sheet.selection.add(i);
                     }
                 }
@@ -348,10 +384,8 @@ public class UIKeyframes extends UIElement
         }
     }
 
-    private void scaleTime()
-    {
-        if (this.scaling)
-        {
+    private void scaleTime() {
+        if (this.scaling) {
             this.scaling = false;
 
             return;
@@ -365,44 +399,35 @@ public class UIKeyframes extends UIElement
         this.originalX = context.mouseX;
         this.originalY = context.mouseY;
 
-        for (UIKeyframeSheet sheet : this.currentGraph.getSheets())
-        {
-            for (Keyframe keyframe : sheet.selection.getSelected())
-            {
+        for (UIKeyframeSheet sheet : this.currentGraph.getSheets()) {
+            for (Keyframe keyframe : sheet.selection.getSelected()) {
                 this.scaleTicks.put(keyframe, keyframe.getTick());
                 this.scalingAnchor = Math.min(this.scalingAnchor, keyframe.getTick());
             }
         }
     }
 
-    private void stackKeyframes(boolean cancel)
-    {
-        if (this.stacking)
-        {
+    private void stackKeyframes(boolean cancel) {
+        if (this.stacking) {
             this.stacking = false;
 
-            if (!cancel)
-            {
+            if (!cancel) {
                 UIContext context = this.getContext();
                 List<UIKeyframeSheet> sheets = new ArrayList<>();
                 float currentTick = (float) this.fromGraphX(context.mouseX);
 
-                for (UIKeyframeSheet sheet : this.getGraph().getSheets())
-                {
-                    if (sheet.selection.hasAny())
-                    {
+                for (UIKeyframeSheet sheet : this.getGraph().getSheets()) {
+                    if (sheet.selection.hasAny()) {
                         sheets.add(sheet);
                     }
                 }
 
-                for (UIKeyframeSheet current : sheets)
-                {
+                for (UIKeyframeSheet current : sheets) {
                     List<Keyframe> selected = current.selection.getSelected();
                     float mMin = Integer.MAX_VALUE;
                     float mMax = Integer.MIN_VALUE;
 
-                    for (Keyframe keyframe : selected)
-                    {
+                    for (Keyframe keyframe : selected) {
                         mMin = Math.min(keyframe.getTick(), mMin);
                         mMax = Math.max(keyframe.getTick(), mMax);
                     }
@@ -413,10 +438,8 @@ public class UIKeyframes extends UIElement
 
                     current.selection.clear();
 
-                    for (int i = 0; i < times; i++)
-                    {
-                        for (Keyframe keyframe : selected)
-                        {
+                    for (int i = 0; i < times; i++) {
+                        for (Keyframe keyframe : selected) {
                             float tick = mMax + this.getStackOffset() + (keyframe.getTick() - mMin) + x;
                             int index = current.channel.insert(tick, keyframe.getFactory().copy(keyframe.getValue()));
                             Keyframe kf = current.channel.get(index);
@@ -437,32 +460,26 @@ public class UIKeyframes extends UIElement
         this.stackOffset = 1;
     }
 
-    public boolean isStacking()
-    {
+    public boolean isStacking() {
         return this.stacking;
     }
 
-    public float getStackOffset()
-    {
+    public float getStackOffset() {
         return this.stackOffset;
     }
 
-    private void spreadKeyframes()
-    {
-        for (UIKeyframeSheet sheet : this.getGraph().getSheets())
-        {
+    private void spreadKeyframes() {
+        for (UIKeyframeSheet sheet : this.getGraph().getSheets()) {
             List<Keyframe> selected = sheet.selection.getSelected();
 
-            if (selected.isEmpty())
-            {
+            if (selected.isEmpty()) {
                 continue;
             }
 
             int min = Integer.MAX_VALUE;
             int max = Integer.MIN_VALUE;
 
-            for (Keyframe keyframe : selected)
-            {
+            for (Keyframe keyframe : selected) {
                 int index = sheet.channel.getKeyframes().indexOf(keyframe);
 
                 min = Math.min(min, index);
@@ -476,8 +493,7 @@ public class UIKeyframes extends UIElement
 
             sheet.channel.preNotifyParent();
 
-            for (int i = 1; i < count; i++)
-            {
+            for (int i = 1; i < count; i++) {
                 int index = i + min;
                 Keyframe kf = sheet.channel.get(index);
 
@@ -488,8 +504,7 @@ public class UIKeyframes extends UIElement
 
             sheet.selection.clear();
 
-            for (int i = min; i <= max; i++)
-            {
+            for (int i = min; i <= max; i++) {
                 sheet.selection.add(i);
             }
         }
@@ -499,19 +514,14 @@ public class UIKeyframes extends UIElement
 
     /* Sheet editing */
 
-    public boolean isEditing()
-    {
+    public boolean isEditing() {
         return this.currentGraph != this.dopeSheet;
     }
 
-    public void editSheet(UIKeyframeSheet sheet)
-    {
-        if (sheet == null)
-        {
+    public void editSheet(UIKeyframeSheet sheet) {
+        if (sheet == null) {
             this.currentGraph = this.dopeSheet;
-        }
-        else
-        {
+        } else {
             this.dopeSheet.clearSelection();
             this.dopeSheet.pickSelected();
 
@@ -523,18 +533,15 @@ public class UIKeyframes extends UIElement
 
     /* Caching keyframes */
 
-    public void cacheKeyframes()
-    {
+    public void cacheKeyframes() {
         this.cache = new SheetCache(this.currentGraph.getSheets());
     }
 
-    public void submitKeyframes()
-    {
+    public void submitKeyframes() {
         /* Cache selection indices */
         Map<UIKeyframeSheet, Pair<List<Integer>, List<Integer>>> selection = new HashMap<>();
 
-        for (UIKeyframeSheet sheet : this.currentGraph.getSheets())
-        {
+        for (UIKeyframeSheet sheet : this.currentGraph.getSheets()) {
             List<Integer> last = sheet.sort();
 
             selection.put(sheet, new Pair<>(last, new ArrayList<>(sheet.selection.getIndices())));
@@ -543,16 +550,14 @@ public class UIKeyframes extends UIElement
         /* Apply the data in order and submit to pre-/post-handlers */
         SheetCache cache = new SheetCache(this.currentGraph.getSheets());
 
-        for (Pair<BaseType, UIKeyframeSheet> pair : this.cache.data)
-        {
+        for (Pair<BaseType, UIKeyframeSheet> pair : this.cache.data) {
             pair.b.channel.fromData(pair.a);
             pair.b.selection.clear();
             pair.b.selection.addAll(selection.get(pair.b).a);
             pair.b.channel.preNotifyParent(IValueListener.FLAG_UNMERGEABLE);
         }
 
-        for (Pair<BaseType, UIKeyframeSheet> pair : cache.data)
-        {
+        for (Pair<BaseType, UIKeyframeSheet> pair : cache.data) {
             pair.b.channel.fromData(pair.a);
             pair.b.selection.clear();
             pair.b.selection.addAll(selection.get(pair.b).b);
@@ -564,23 +569,19 @@ public class UIKeyframes extends UIElement
 
     /* Copy-pasting */
 
-    private Map<String, PastedKeyframes> parseKeyframes(MapType data)
-    {
-        if (data == null)
-        {
+    private Map<String, PastedKeyframes> parseKeyframes(MapType data) {
+        if (data == null) {
             return Collections.emptyMap();
         }
 
         Map<String, PastedKeyframes> temp = new HashMap<>();
 
-        for (String key : data.keys())
-        {
+        for (String key : data.keys()) {
             MapType map = data.getMap(key);
             ListType list = map.getList("keyframes");
             IKeyframeFactory serializer = KeyframeFactories.FACTORIES.get(map.getString("type"));
 
-            for (int i = 0, c = list.size(); i < c; i++)
-            {
+            for (int i = 0, c = list.size(); i < c; i++) {
                 PastedKeyframes pastedKeyframes = temp.computeIfAbsent(key, k -> new PastedKeyframes(serializer));
                 Keyframe keyframe = new Keyframe("", serializer);
 
@@ -592,16 +593,13 @@ public class UIKeyframes extends UIElement
         return temp;
     }
 
-    private MapType serializeKeyframes()
-    {
+    private MapType serializeKeyframes() {
         MapType keyframes = new MapType();
 
-        for (UIKeyframeSheet property : this.currentGraph.getSheets())
-        {
+        for (UIKeyframeSheet property : this.currentGraph.getSheets()) {
             List<Keyframe> selected = property.selection.getSelected();
 
-            if (selected.isEmpty())
-            {
+            if (selected.isEmpty()) {
                 continue;
             }
 
@@ -611,13 +609,11 @@ public class UIKeyframes extends UIElement
             data.putString("type", CollectionUtils.getKey(KeyframeFactories.FACTORIES, property.channel.getFactory()));
             data.put("keyframes", list);
 
-            for (Keyframe keyframe : selected)
-            {
+            for (Keyframe keyframe : selected) {
                 list.add(keyframe.toData());
             }
 
-            if (!list.isEmpty())
-            {
+            if (!list.isEmpty()) {
                 keyframes.put(property.id, data);
             }
         }
@@ -628,31 +624,23 @@ public class UIKeyframes extends UIElement
     /**
      * Paste copied keyframes to clipboard
      */
-    protected void pasteKeyframes(Map<String, PastedKeyframes> keyframes, float offset, int mouseY)
-    {
+    protected void pasteKeyframes(Map<String, PastedKeyframes> keyframes, float offset, int mouseY) {
         List<UIKeyframeSheet> sheets = this.currentGraph.getSheets();
 
         this.currentGraph.clearSelection();
 
-        if (keyframes.size() == 1)
-        {
+        if (keyframes.size() == 1) {
             UIKeyframeSheet current = this.currentGraph.getSheet(mouseY);
 
-            if (current == null)
-            {
-                current =  sheets.get(0);
+            if (current == null) {
+                current = sheets.get(0);
             }
 
             this.pasteKeyframesTo(current, keyframes.get(keyframes.keySet().iterator().next()), offset);
-        }
-        else
-        {
-            for (Map.Entry<String, PastedKeyframes> entry : keyframes.entrySet())
-            {
-                for (UIKeyframeSheet property : sheets)
-                {
-                    if (!property.id.equals(entry.getKey()))
-                    {
+        } else {
+            for (Map.Entry<String, PastedKeyframes> entry : keyframes.entrySet()) {
+                for (UIKeyframeSheet property : sheets) {
+                    if (!property.id.equals(entry.getKey())) {
                         continue;
                     }
 
@@ -664,18 +652,15 @@ public class UIKeyframes extends UIElement
         this.currentGraph.pickSelected();
     }
 
-    private void pasteKeyframesTo(UIKeyframeSheet sheet, PastedKeyframes pastedKeyframes, float offset)
-    {
-        if (sheet.channel.getFactory() != pastedKeyframes.factory)
-        {
+    private void pasteKeyframesTo(UIKeyframeSheet sheet, PastedKeyframes pastedKeyframes, float offset) {
+        if (sheet.channel.getFactory() != pastedKeyframes.factory) {
             return;
         }
 
         float firstX = pastedKeyframes.keyframes.get(0).getTick();
         List<Keyframe> toSelect = new ArrayList<>();
 
-        for (Keyframe keyframe : pastedKeyframes.keyframes)
-        {
+        for (Keyframe keyframe : pastedKeyframes.keyframes) {
             keyframe.setTick(keyframe.getTick() - firstX + offset);
 
             int index = sheet.channel.insert(keyframe.getTick(), keyframe.getValue());
@@ -685,115 +670,95 @@ public class UIKeyframes extends UIElement
             toSelect.add(inserted);
         }
 
-        for (Keyframe select : toSelect)
-        {
+        for (Keyframe select : toSelect) {
             sheet.selection.add(sheet.channel.getKeyframes().indexOf(select));
         }
     }
 
     /* Getters & setters */
 
-    public UIKeyframes backgroundRenderer(Consumer<UIContext> backgroundRender)
-    {
+    public UIKeyframes backgroundRenderer(Consumer<UIContext> backgroundRender) {
         this.backgroundRender = backgroundRender;
 
         return this;
     }
 
-    public UIKeyframes duration(Supplier<Integer> duration)
-    {
+    public UIKeyframes duration(Supplier<Integer> duration) {
         this.duration = duration;
 
         return this;
     }
 
-    public UIKeyframes axisConverter(IAxisConverter converter)
-    {
+    public UIKeyframes axisConverter(IAxisConverter converter) {
         this.converter = converter;
 
         return this;
     }
 
-    public IAxisConverter getConverter()
-    {
+    public IAxisConverter getConverter() {
         return this.converter;
     }
 
-    public IUIKeyframeGraph getGraph()
-    {
+    public IUIKeyframeGraph getGraph() {
         return this.currentGraph;
     }
 
-    public Scale getXAxis()
-    {
+    public Scale getXAxis() {
         return this.xAxis;
     }
 
-    public int getDuration()
-    {
+    public int getDuration() {
         return this.duration == null ? 0 : this.duration.get();
     }
 
-    public boolean isSelecting()
-    {
+    public boolean isSelecting() {
         return this.selecting;
     }
 
-    public boolean isNavigating()
-    {
+    public boolean isNavigating() {
         return this.navigating;
     }
 
     /* Sheet management */
 
-    public void removeAllSheets()
-    {
+    public void removeAllSheets() {
         this.dopeSheet.removeAllSheets();
     }
 
-    public void addSheet(UIKeyframeSheet sheet)
-    {
+    public void addSheet(UIKeyframeSheet sheet) {
         this.dopeSheet.addSheet(sheet);
     }
 
-    public void pickKeyframe(Keyframe keyframe)
-    {
-        if (this.callback != null)
-        {
+    public void pickKeyframe(Keyframe keyframe) {
+        if (this.callback != null) {
             this.callback.accept(keyframe);
         }
     }
 
     /* Graphing */
 
-    public int toGraphX(double tick)
-    {
+    public int toGraphX(double tick) {
         return (int) this.xAxis.to(tick);
     }
 
-    public double fromGraphX(int mouseX)
-    {
+    public double fromGraphX(int mouseX) {
         return this.xAxis.from(mouseX);
     }
 
-    public void resetView()
-    {
+    public void resetView() {
         this.currentGraph.resetView();
     }
 
-    public void resetViewX()
-    {
+    public void resetViewX() {
         int c = 0;
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
 
         /* Find minimum and maximum */
-        for (UIKeyframeSheet property : this.currentGraph.getSheets())
-        {
+        for (UIKeyframeSheet property : this.currentGraph.getSheets()) {
             List keyframes = property.channel.getKeyframes();
 
-            for (Object object : keyframes)
-            {
+            for (Object object : keyframes) {
                 Keyframe frame = (Keyframe) object;
 
                 min = Integer.min((int) frame.getTick(), min);
@@ -803,24 +768,19 @@ public class UIKeyframes extends UIElement
             c = Math.max(c, keyframes.size());
         }
 
-        if (c <= 1)
-        {
+        if (c <= 1) {
             min = 0;
             max = this.getDuration();
         }
 
-        if (Math.abs(max - min) > 0.01F)
-        {
+        if (Math.abs(max - min) > 0.01F) {
             this.xAxis.viewOffset(min, max, this.area.w, 30);
-        }
-        else
-        {
+        } else {
             this.xAxis.set(0, 2);
         }
     }
 
-    public Area getGrabbingArea(UIContext context)
-    {
+    public Area getGrabbingArea(UIContext context) {
         Area area = new Area();
 
         area.setPoints(this.originalX, this.originalY, context.mouseX, context.mouseY, 3);
@@ -831,54 +791,41 @@ public class UIKeyframes extends UIElement
     /* User input */
 
     @Override
-    public void resize()
-    {
+    public void resize() {
         super.resize();
 
         this.currentGraph.resize();
     }
 
     @Override
-    protected boolean subMouseClicked(UIContext context)
-    {
-        if (this.currentGraph.mouseClicked(context))
-        {
+    protected boolean subMouseClicked(UIContext context) {
+        if (this.currentGraph.mouseClicked(context)) {
             return true;
         }
 
-        if (this.scaling)
-        {
+        if (this.scaling) {
             this.scaling = false;
 
             return true;
         }
 
-        if (this.stacking)
-        {
+        if (this.stacking) {
             this.stackKeyframes(context.mouseButton == 1);
 
             return true;
         }
 
-        if (this.area.isInside(context))
-        {
+        if (this.area.isInside(context)) {
             this.lastX = this.originalX = context.mouseX;
             this.lastY = this.originalY = context.mouseY;
 
-            if (Window.isCtrlPressed() && context.mouseButton == 0)
-            {
+            if (Window.isCtrlPressed() && context.mouseButton == 0) {
                 this.removeOrCreateKeyframe(context);
-            }
-            else if (Window.isAltPressed() && context.mouseButton == 0)
-            {
+            } else if (Window.isAltPressed() && context.mouseButton == 0) {
                 this.duplicateOrSelectColumn(context);
-            }
-            else if (context.mouseButton == 0)
-            {
+            } else if (context.mouseButton == 0) {
                 this.pickOrStartSelectingKeyframes(context);
-            }
-            else if (context.mouseButton == 2)
-            {
+            } else if (context.mouseButton == 2) {
                 this.navigating = true;
             }
 
@@ -888,24 +835,18 @@ public class UIKeyframes extends UIElement
         return super.subMouseClicked(context);
     }
 
-    private void removeOrCreateKeyframe(UIContext context)
-    {
+    private void removeOrCreateKeyframe(UIContext context) {
         Pair<Keyframe, KeyframeType> keyframe = this.currentGraph.findKeyframe(context.mouseX, context.mouseY);
 
-        if (keyframe != null)
-        {
+        if (keyframe != null) {
             this.currentGraph.removeKeyframe(keyframe.a);
-        }
-        else
-        {
+        } else {
             this.currentGraph.addKeyframe(context.mouseX, context.mouseY);
         }
     }
 
-    private void duplicateOrSelectColumn(UIContext context)
-    {
-        if (this.currentGraph.getSelected() != null && !Window.isShiftPressed())
-        {
+    private void duplicateOrSelectColumn(UIContext context) {
+        if (this.currentGraph.getSelected() != null && !Window.isShiftPressed()) {
             /* Duplicate */
             int tick = (int) Math.round(this.fromGraphX(context.mouseX));
 
@@ -918,24 +859,20 @@ public class UIKeyframes extends UIElement
         this.currentGraph.selectByX(context.mouseX);
     }
 
-    private void pickOrStartSelectingKeyframes(UIContext context)
-    {
+    private void pickOrStartSelectingKeyframes(UIContext context) {
         /* Picking keyframe or initiating selection */
         Pair<Keyframe, KeyframeType> pair = this.currentGraph.findKeyframe(context.mouseX, context.mouseY);
         Keyframe found = pair == null ? null : pair.a;
         boolean shift = Window.isShiftPressed();
 
-        if (shift && found == null)
-        {
+        if (shift && found == null) {
             this.selecting = true;
         }
 
-        if (found != null)
-        {
+        if (found != null) {
             UIKeyframeSheet sheet = this.currentGraph.getSheet(found);
 
-            if (!shift && !sheet.selection.has(found))
-            {
+            if (!shift && !sheet.selection.has(found)) {
                 this.currentGraph.clearSelection();
             }
 
@@ -944,27 +881,22 @@ public class UIKeyframes extends UIElement
             found = this.currentGraph.getSelected();
 
             this.pickKeyframe(found);
-        }
-        else if (!this.selecting)
-        {
+        } else if (!this.selecting) {
             this.currentGraph.clearSelection();
             this.pickKeyframe(null);
         }
 
-        if (!this.selecting)
-        {
+        if (!this.selecting) {
             this.dragging = 0;
             this.draggingData = pair;
 
-            if (pair != null && pair.b != KeyframeType.REGULAR)
-            {
+            if (pair != null && pair.b != KeyframeType.REGULAR) {
                 found = pair.a;
             }
 
             this.cacheKeyframes();
 
-            if (found != null)
-            {
+            if (found != null) {
                 this.originalT = found.getTick();
                 this.originalV = found.getFactory().copy(found.getValue());
             }
@@ -972,17 +904,14 @@ public class UIKeyframes extends UIElement
     }
 
     @Override
-    protected boolean subMouseReleased(UIContext context)
-    {
+    protected boolean subMouseReleased(UIContext context) {
         this.currentGraph.mouseReleased(context);
 
-        if (this.selecting)
-        {
+        if (this.selecting) {
             this.currentGraph.selectInArea(this.getGrabbingArea(context));
         }
 
-        if (this.dragging > 0)
-        {
+        if (this.dragging > 0) {
             this.submitKeyframes();
             this.currentGraph.pickSelected();
         }
@@ -995,17 +924,15 @@ public class UIKeyframes extends UIElement
     }
 
     @Override
-    protected boolean subMouseScrolled(UIContext context)
-    {
-        if (this.area.isInside(context) && this.stacking)
-        {
-            this.stackOffset = (float) Math.max(0.05F, this.stackOffset + Math.copySign(Window.isShiftPressed() ? 0.05F : 1, context.mouseWheel));
+    protected boolean subMouseScrolled(UIContext context) {
+        if (this.area.isInside(context) && this.stacking) {
+            this.stackOffset = (float) Math.max(0.05F,
+                    this.stackOffset + Math.copySign(Window.isShiftPressed() ? 0.05F : 1, context.mouseWheel));
 
             return true;
         }
 
-        if (this.area.isInside(context) && !this.navigating && !this.scaling)
-        {
+        if (this.area.isInside(context) && !this.navigating && !this.scaling) {
             this.currentGraph.mouseScrolled(context);
 
             return true;
@@ -1015,20 +942,16 @@ public class UIKeyframes extends UIElement
     }
 
     @Override
-    protected boolean subKeyPressed(UIContext context)
-    {
-        if ((this.scaling || this.stacking) && context.isPressed(GLFW.GLFW_KEY_ESCAPE))
-        {
+    protected boolean subKeyPressed(UIContext context) {
+        if ((this.scaling || this.stacking) && context.isPressed(GLFW.GLFW_KEY_ESCAPE)) {
             /* Reset scaling */
             this.scaling = false;
 
-            if (this.stacking)
-            {
+            if (this.stacking) {
                 this.stackKeyframes(true);
             }
 
-            for (Map.Entry<Keyframe, Float> entry : this.scaleTicks.entrySet())
-            {
+            for (Map.Entry<Keyframe, Float> entry : this.scaleTicks.entrySet()) {
                 entry.getKey().setTick(entry.getValue(), true);
             }
 
@@ -1041,8 +964,7 @@ public class UIKeyframes extends UIElement
     /* Rendering */
 
     @Override
-    public void render(UIContext context)
-    {
+    public void render(UIContext context) {
         super.render(context);
 
         this.handleMouse(context);
@@ -1052,9 +974,9 @@ public class UIKeyframes extends UIElement
         this.renderBackground(context);
         this.currentGraph.render(context);
 
-        if (this.selecting)
-        {
-            context.batcher.normalizedBox(this.originalX, this.originalY, context.mouseX, context.mouseY, Colors.setA(Colors.ACTIVE, 0.25F));
+        if (this.selecting) {
+            context.batcher.normalizedBox(this.originalX, this.originalY, context.mouseX, context.mouseY,
+                    Colors.setA(Colors.ACTIVE, 0.25F));
         }
 
         this.currentGraph.postRender(context);
@@ -1065,46 +987,36 @@ public class UIKeyframes extends UIElement
     /**
      * Handle any related mouse logic during rendering
      */
-    protected void handleMouse(UIContext context)
-    {
+    protected void handleMouse(UIContext context) {
         this.currentGraph.handleMouse(context, this.lastX, this.lastY);
 
         int mouseX = context.mouseX;
         int mouseY = context.mouseY;
         boolean mouseHasMoved = Math.abs(mouseX - this.originalX) > 2 || Math.abs(mouseY - this.originalY) > 2;
 
-        if (this.scaling)
-        {
+        if (this.scaling) {
             float tick = (float) this.fromGraphX(context.mouseX);
             float originalTick = (float) this.fromGraphX(this.originalX);
             float ratio = (tick - this.scalingAnchor) / (originalTick - this.scalingAnchor);
 
-            for (Map.Entry<Keyframe, Float> entry : this.scaleTicks.entrySet())
-            {
+            for (Map.Entry<Keyframe, Float> entry : this.scaleTicks.entrySet()) {
                 Keyframe keyframe = entry.getKey();
                 float oldTick = entry.getValue();
                 float newTick = this.scalingAnchor + (oldTick - this.scalingAnchor) * ratio;
 
-                if (Window.isCtrlPressed())
-                {
+                if (Window.isCtrlPressed()) {
                     newTick = Math.round(newTick);
                 }
 
                 keyframe.setTick(newTick, true);
             }
-        }
-        else if (this.dragging == 0 && mouseHasMoved)
-        {
+        } else if (this.dragging == 0 && mouseHasMoved) {
             this.dragging = 1;
-        }
-        else if (this.dragging == 1)
-        {
-            if (this.currentGraph.getSelected() != null)
-            {
-                this.currentGraph.dragKeyframes(context, this.draggingData, this.originalX, this.originalY, this.originalT, this.originalV);
-            }
-            else
-            {
+        } else if (this.dragging == 1) {
+            if (this.currentGraph.getSelected() != null) {
+                this.currentGraph.dragKeyframes(context, this.draggingData, this.originalX, this.originalY,
+                        this.originalT, this.originalV);
+            } else {
                 this.moveNoKeyframes(context);
             }
         }
@@ -1113,62 +1025,59 @@ public class UIKeyframes extends UIElement
         this.lastY = mouseY;
     }
 
-    protected void moveNoKeyframes(UIContext context)
-    {}
+    protected void moveNoKeyframes(UIContext context) {
+    }
 
     /**
-     * Render background, specifically backdrop and borders if the duration is present
+     * Render background, specifically backdrop and borders if the duration is
+     * present
      */
-    protected void renderBackground(UIContext context)
-    {
+    protected void renderBackground(UIContext context) {
         this.area.render(context.batcher, Colors.A50);
 
         int duration = this.getDuration();
 
-        if (duration > 0)
-        {
+        if (duration > 0) {
             int leftBorder = this.toGraphX(0);
             int rightBorder = this.toGraphX(duration);
 
-            if (leftBorder > this.area.x) context.batcher.box(this.area.x, this.area.y, Math.min(this.area.ex(), leftBorder), this.area.y + this.area.h, Colors.A50);
-            if (rightBorder < this.area.ex()) context.batcher.box(Math.max(this.area.x, rightBorder), this.area.y, this.area.ex() , this.area.y + this.area.h, Colors.A50);
+            if (leftBorder > this.area.x)
+                context.batcher.box(this.area.x, this.area.y, Math.min(this.area.ex(), leftBorder),
+                        this.area.y + this.area.h, Colors.A50);
+            if (rightBorder < this.area.ex())
+                context.batcher.box(Math.max(this.area.x, rightBorder), this.area.y, this.area.ex(),
+                        this.area.y + this.area.h, Colors.A50);
         }
 
-        if (this.backgroundRender != null)
-        {
+        if (this.backgroundRender != null) {
             this.backgroundRender.accept(context);
         }
     }
 
     /* Caching state */
 
-    public KeyframeState cacheState()
-    {
+    public KeyframeState cacheState() {
         KeyframeState state = new KeyframeState();
 
         state.extra.putDouble("x_min", this.xAxis.getMinValue());
         state.extra.putDouble("x_max", this.xAxis.getMaxValue());
         this.currentGraph.saveState(state.extra);
 
-        for (UIKeyframeSheet property : this.currentGraph.getSheets())
-        {
+        for (UIKeyframeSheet property : this.currentGraph.getSheets()) {
             state.selected.add(new ArrayList<>(property.selection.getIndices()));
         }
 
         return state;
     }
 
-    public void applyState(KeyframeState state)
-    {
+    public void applyState(KeyframeState state) {
         this.xAxis.view(state.extra.getDouble("x_min"), state.extra.getDouble("x_max"));
         this.currentGraph.restoreState(state.extra);
 
         List<UIKeyframeSheet> properties = this.currentGraph.getSheets();
 
-        for (int i = 0; i < properties.size(); i++)
-        {
-            if (CollectionUtils.inRange(state.selected, i))
-            {
+        for (int i = 0; i < properties.size(); i++) {
+            if (CollectionUtils.inRange(state.selected, i)) {
                 properties.get(i).selection.clear();
                 properties.get(i).selection.addAll(state.selected.get(i));
             }
@@ -1177,34 +1086,27 @@ public class UIKeyframes extends UIElement
         this.currentGraph.pickSelected();
     }
 
-    public void copyViewport(UIKeyframes lastEditor)
-    {
+    public void copyViewport(UIKeyframes lastEditor) {
         this.getDopeSheet().setTrackHeight(lastEditor.getDopeSheet().getTrackHeight());
         this.getXAxis().copy(lastEditor.getXAxis());
         this.getDopeSheet().getYAxis().copy(lastEditor.getDopeSheet().getYAxis());
     }
 
-    private static class PastedKeyframes
-    {
+    private static class PastedKeyframes {
         public IKeyframeFactory factory;
         public List<Keyframe> keyframes = new ArrayList<>();
 
-        public PastedKeyframes(IKeyframeFactory factory)
-        {
+        public PastedKeyframes(IKeyframeFactory factory) {
             this.factory = factory;
         }
     }
 
-    private static class SheetCache
-    {
+    private static class SheetCache {
         public List<Pair<BaseType, UIKeyframeSheet>> data = new ArrayList<>();
 
-        public SheetCache(Collection<UIKeyframeSheet> sheets)
-        {
-            for (UIKeyframeSheet sheet : sheets)
-            {
-                if (sheet.selection.hasAny())
-                {
+        public SheetCache(Collection<UIKeyframeSheet> sheets) {
+            for (UIKeyframeSheet sheet : sheets) {
+                if (sheet.selection.hasAny()) {
                     this.data.add(new Pair<>(sheet.channel.toData(), sheet));
                 }
             }

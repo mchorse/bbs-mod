@@ -14,6 +14,11 @@ import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 
 import java.util.List;
 
+/**
+ * Interface IUIKeyframeGraph represents a graphical editor for managing keyframes.
+ * It provides functionalities for handling keyframe selection, manipulation, state recovery,
+ * and rendering within the user interface.
+ */
 public interface IUIKeyframeGraph
 {
     public static final int TOP_MARGIN = 25;

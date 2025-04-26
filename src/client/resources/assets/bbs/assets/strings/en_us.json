@@ -649,6 +649,7 @@
     "bbs.ui.keyframes.context.select_all": "Select all",
     "bbs.ui.keyframes.context.simplify": "Simplify",
     "bbs.ui.keyframes.context.spread": "Spread keyframes equally",
+    "bbs.ui.keyframes.transfer.selected_replays": "Transfer to selected replays",
     "bbs.ui.keyframes.forced_duration": "Forced duration",
     "bbs.ui.keyframes.keys.category": "Keyframes editor",
     "bbs.ui.keyframes.keys.scale_time": "Scale time",
