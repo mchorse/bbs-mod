@@ -20,11 +20,15 @@ import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.forms.UIFormPalette;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.RayTracing;
@@ -43,6 +47,7 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -93,10 +98,66 @@ public class UIReplayList extends UIList<Replay>
             {
                 menu.action(Icons.ALL_DIRECTIONS, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS, this::processReplays);
                 menu.action(Icons.TIME, UIKeys.SCENE_REPLAYS_CONTEXT_OFFSET_TIME, this::offsetTimeReplays);
+                menu.action(Icons.PASTE, UIKeys.SCENE_REPLAYS_CONTEXT_PASTE_TO_SELECTED_REPLAYS, this::pasteToReplays);
                 menu.action(Icons.DUPE, UIKeys.SCENE_REPLAYS_CONTEXT_DUPE, this::dupeReplay);
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+    }
+
+
+    /**
+     * Copies selected keyframes from the keyframe editor to multiple replay objects in the replay list,
+     * except the currently active replay. The method ensures the inserted keyframes are appropriately
+     * copied to target replays based on their respective property or channel compatibility.
+     *
+     * The method retrieves the current keyframes selected in the editor, formats them, and maps them
+     * to their corresponding keys. These keyframes are then duplicated across all selected replays,
+     * skipping the active replay. If a target replay is missing the required channel or any mismatch
+     * in factories occurs, those keyframes are processed based on associated properties.
+     *
+     * Upon successful operation, a notification is displayed to the user to indicate the
+     * operation's completion.
+     */
+    private void pasteToReplays()
+    {
+        // Getting main components
+        Replay activeReplay = panel.replayEditor.replays.replays.getCurrentFirst();
+        UIKeyframes uiKeyframes = panel.replayEditor.keyframeEditor.view;
+        List<Replay> selectedReplays = panel.replayEditor.replays.replays.getCurrent();
+
+        // Fetching selected keyframes from every sheet
+        Map<String, UIKeyframes.PastedKeyframes> pastedKeyframesMap = uiKeyframes.getFormattedSelectedKeyframes();
+
+        // Inserting keyframes
+        pastedKeyframesMap.forEach((s, pastedKeyframes) ->
+        {
+            selectedReplays.stream().filter(r -> r != activeReplay).forEach(r ->
+            {
+                // Check if it's a "normal" keyframe or a Form Property Editing keyframe
+                KeyframeChannel destinationChannel = (KeyframeChannel) r.keyframes.get(s);
+                if(destinationChannel == null || destinationChannel.getFactory() != pastedKeyframes.factory)
+                {
+                    destinationChannel = (KeyframeChannel) r.properties.get(s);
+                }
+
+                // Insertion
+                KeyframeChannel finalDestChannel = destinationChannel;
+                System.out.println(finalDestChannel.getParent().getClass());
+                pastedKeyframes.keyframes.forEach(keyframe ->
+                {
+                    int index = finalDestChannel.insert(keyframe.getTick(), keyframe.getValue());
+                    Keyframe inserted = finalDestChannel.get(index);
+
+                    inserted.copy(keyframe);
+                });
+            });
+        });
+
+        // Notify and close menu
+        getContext().notifyInfo(UIKeys.SCENE_REPLAYS_CONTEXT_PASTE_TO_SELECTED_REPLAYS_SUCCESS);
+        System.out.println(getParent().getClass());
+        //((UIOverlayPanel) getParent()).close();
     }
 
     private void processReplays()
