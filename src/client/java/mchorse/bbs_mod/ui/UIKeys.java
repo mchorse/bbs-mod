@@ -595,6 +595,8 @@ public class UIKeys
     public static final IKey SCENE_REPLAYS_CONTEXT_OFFSET_TIME_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.context.offset_time-description");
     public static final IKey SCENE_REPLAYS_CONTEXT_OFFSET_TIME_TITLE = L10n.lang("bbs.ui.scene.replays.context.offset_time-title");
     public static final IKey SCENE_REPLAYS_CONTEXT_PASTE = L10n.lang("bbs.ui.scene.replays.context.paste");
+    public static final IKey SCENE_REPLAYS_CONTEXT_PASTE_TO_SELECTED_REPLAYS = L10n.lang("bbs.ui.scene.replays.context.paste.selected-replays");
+    public static final IKey SCENE_REPLAYS_CONTEXT_PASTE_TO_SELECTED_REPLAYS_SUCCESS = L10n.lang("bbs.ui.scene.replays.context.paste.selected-replays.success");
     public static final IKey SCENE_REPLAYS_CONTEXT_PICK_FORM = L10n.lang("bbs.ui.scene.replays.context.pick_form");
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS = L10n.lang("bbs.ui.scene.replays.context.process");
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.context.process-description");

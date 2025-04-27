@@ -736,6 +736,8 @@
     "bbs.ui.scene.replays.context.process-title": "Process replays",
     "bbs.ui.scene.replays.context.process-description": "Input math expression, and select desired channels which will be process all keyframes in selected replays:",
     "bbs.ui.scene.replays.context.paste": "Paste replay(s)",
+    "bbs.ui.scene.replays.context.paste.selected-replays": "Paste keyframes to replay(s)",
+    "bbs.ui.scene.replays.context.paste.selected-replays.success": "Keyframe pasted to replays!",
     "bbs.ui.scene.replays.context.pick_form": "Pick form...",
     "bbs.ui.scene.replays.context.remove": "Remove replay(s)",
     "bbs.ui.search": "Search...",

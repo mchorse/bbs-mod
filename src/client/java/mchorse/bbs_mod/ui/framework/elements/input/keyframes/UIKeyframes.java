@@ -564,7 +564,16 @@ public class UIKeyframes extends UIElement
 
     /* Copy-pasting */
 
-    private Map<String, PastedKeyframes> parseKeyframes(MapType data)
+    /**
+     * Parses keyframe data from the given map structure into a map of keyframes corresponding to their keys.
+     *
+     * @param data the map data containing keyframe information. Each key in the map represents
+     *             a collection of keyframe data, where the associated value contains type and keyframe details.
+     *             If null, the method returns an empty map.
+     * @return a map where each key corresponds to a collection of parsed {@link PastedKeyframes}.
+     *         If no keyframe data is provided or the input is null, an empty map is returned.
+     */
+    public static Map<String, PastedKeyframes> parseKeyframes(MapType data)
     {
         if (data == null)
         {
@@ -591,6 +600,21 @@ public class UIKeyframes extends UIElement
 
         return temp;
     }
+
+    /**
+     * Retrieves a map of formatted keyframes that are currently selected in the keyframe graph.
+     * This method serializes the selected keyframes, processes the data, and parses it into a
+     * structured map linking sheet identifiers to their respective parsed {@link PastedKeyframes} objects.
+     *
+     * @return a map where keys correspond to the identifiers of keyframe sheets and values are the
+     *         parsed {@link PastedKeyframes} objects containing keyframe details. Returns an empty
+     *         map if no keyframes are selected.
+     */
+    public Map<String, PastedKeyframes> getFormattedSelectedKeyframes()
+    {
+        return this.parseKeyframes(this.serializeKeyframes());
+    }
+
 
     private MapType serializeKeyframes()
     {
@@ -1184,7 +1208,7 @@ public class UIKeyframes extends UIElement
         this.getDopeSheet().getYAxis().copy(lastEditor.getDopeSheet().getYAxis());
     }
 
-    private static class PastedKeyframes
+    public static class PastedKeyframes
     {
         public IKeyframeFactory factory;
         public List<Keyframe> keyframes = new ArrayList<>();
