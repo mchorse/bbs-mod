@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ImporterUtils
 {
-    public static boolean checkFileEtension(List<File> files, String... extensions)
+    public static boolean checkFileExtension(List<File> files, String... extensions)
     {
         for (File file : files)
         {

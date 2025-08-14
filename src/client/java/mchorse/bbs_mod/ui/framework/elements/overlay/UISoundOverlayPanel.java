@@ -26,7 +26,7 @@ public class UISoundOverlayPanel extends UIStringOverlayPanel
 
         for (Link link : BBSMod.getProvider().getLinksFromPath(Link.assets("audio")))
         {
-            boolean supportedExtension = link.path.endsWith(".wav") || link.path.endsWith(".ogg");
+            boolean supportedExtension = link.path.endsWith(".wav") || link.path.endsWith(".WAV") || link.path.endsWith(".ogg");
 
             if (supportedExtension)
             {

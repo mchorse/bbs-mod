@@ -28,7 +28,7 @@ public class ToPNGImporter implements IImporter
     @Override
     public boolean canImport(ImporterContext context)
     {
-        return ImporterUtils.checkFileEtension(context.files, this.extensions);
+        return ImporterUtils.checkFileExtension(context.files, this.extensions);
     }
 
     @Override

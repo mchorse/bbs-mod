@@ -20,7 +20,7 @@ public class GIFImporter implements IImporter
     @Override
     public boolean canImport(ImporterContext context)
     {
-        return ImporterUtils.checkFileEtension(context.files, ".gif");
+        return ImporterUtils.checkFileExtension(context.files, ".gif");
     }
 
     @Override

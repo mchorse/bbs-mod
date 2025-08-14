@@ -20,7 +20,7 @@ public class PNGImporter implements IImporter
     @Override
     public boolean canImport(ImporterContext context)
     {
-        return ImporterUtils.checkFileEtension(context.files, ".png");
+        return ImporterUtils.checkFileExtension(context.files, ".png");
     }
 
     @Override
