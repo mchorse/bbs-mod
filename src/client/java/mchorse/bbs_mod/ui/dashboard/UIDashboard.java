@@ -304,7 +304,7 @@ public class UIDashboard extends UIBaseMenu
         Link background = BBSSettings.backgroundImage.get();
         int color = BBSSettings.backgroundColor.get();
 
-         RenderSystem.enableBlend();
+        RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
         if (background == null)
