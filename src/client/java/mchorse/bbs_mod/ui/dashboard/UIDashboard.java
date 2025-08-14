@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.dashboard;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.camera.Camera;
@@ -302,6 +303,9 @@ public class UIDashboard extends UIBaseMenu
     {
         Link background = BBSSettings.backgroundImage.get();
         int color = BBSSettings.backgroundColor.get();
+
+         RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
 
         if (background == null)
         {
