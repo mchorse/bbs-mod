@@ -295,6 +295,7 @@ public class SoundManager implements IWatchDogListener
         Link link = BBSMod.getProvider().getLink(path.toFile());
 
         String pathLower = link.path.toLowerCase();
+
         if (!(pathLower.endsWith(".ogg") || pathLower.endsWith(".wav")))
         {
             return;
