@@ -11,7 +11,8 @@ public class AudioReader
 {
     public static Wave read(AssetProvider provider, Link link) throws Exception
     {
-        if (!link.path.endsWith(".wav") && !link.path.endsWith(".WAV") && !link.path.endsWith(".ogg"))
+        String pathLower = link.path.toLowerCase();
+        if (!pathLower.endsWith(".wav") && !pathLower.endsWith(".ogg"))
         {
             return null;
         }
@@ -20,7 +21,7 @@ public class AudioReader
 
         try (InputStream asset = provider.getAsset(link))
         {
-            if (link.path.endsWith(".wav") || link.path.endsWith(".WAV"))
+            if (pathLower.endsWith(".wav"))
             {
                 return new WaveReader().read(asset);
             }

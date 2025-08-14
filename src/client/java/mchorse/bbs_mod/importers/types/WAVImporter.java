@@ -26,7 +26,7 @@ public class WAVImporter implements IImporter
     @Override
     public boolean canImport(ImporterContext context)
     {
-        return ImporterUtils.checkFileExtension(context.files, ".wav", ".WAV");
+        return ImporterUtils.checkFileExtension(context.files, ".wav");
     }
 
     @Override
