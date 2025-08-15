@@ -186,7 +186,19 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
         try
         {
             File gameDir = FabricLoader.getInstance().getGameDir().toFile();
-            File indexesDir = new File(gameDir, "assets/indexes");
+            
+            // Handle game directory path, remove "versions" part if present
+            File baseDir = gameDir;
+            String gameDirPath = gameDir.getAbsolutePath();
+            
+            if (gameDirPath.contains("versions"))
+            {
+                int versionsIndex = gameDirPath.indexOf("versions");
+                String basePath = gameDirPath.substring(0, versionsIndex);
+                baseDir = new File(basePath);
+            }
+            
+            File indexesDir = new File(baseDir, "assets/indexes");
             
             if (indexesDir.exists() && indexesDir.isDirectory())
             {
@@ -198,13 +210,12 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
                     {
                         if (file.getName().endsWith(".json"))
                         {
-                            // Log found JSON file
-                            System.out.println("Found JSON file: " + file.getAbsolutePath());
+                            // Log JSON file path
+                            System.out.println("[BBS Mod] Loading sounds from: " + file.getAbsolutePath());
                             String jsonText = IOUtils.readText(file);
                             JsonObject jsonObject = JsonParser.parseString(jsonText).getAsJsonObject();
                             JsonObject objects = jsonObject.getAsJsonObject("objects");
                             
-                            int soundCount = 0;
                             for (String key : objects.keySet())
                             {
                                 if (key.contains("sounds"))
@@ -213,7 +224,6 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
                                     if (fileName != null && !fileName.isEmpty())
                                     {
                                         soundFiles.add(fileName);
-                                        soundCount++;
                                     }
                                 }
                             }
@@ -273,8 +283,20 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
             }
             
             File gameDir = FabricLoader.getInstance().getGameDir().toFile();
+            
+            // Handle game directory path, remove "versions" part if present for source file lookup
+            File baseDir = gameDir;
+            String gameDirPath = gameDir.getAbsolutePath();
+            
+            if (gameDirPath.contains("versions"))
+            {
+                int versionsIndex = gameDirPath.indexOf("versions");
+                String basePath = gameDirPath.substring(0, versionsIndex);
+                baseDir = new File(basePath);
+            }
+            
             String hashPrefix = hash.substring(0, 2);
-            File objectsDir = new File(gameDir, "assets/objects/" + hashPrefix);
+            File objectsDir = new File(baseDir, "assets/objects/" + hashPrefix);
             File sourceFile = new File(objectsDir, hash);
             
             if (!sourceFile.exists())
@@ -282,6 +304,7 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
                 return;
             }
             
+            // Use original game directory for target directory
             File audioDir = new File(gameDir, "config/bbs/assets/audio");
             if (!audioDir.exists())
             {
@@ -367,7 +390,19 @@ public class UIVanillaSoundOverlayPanel extends UIOverlayPanel
         try
         {
             File gameDir = FabricLoader.getInstance().getGameDir().toFile();
-            File indexesDir = new File(gameDir, "assets/indexes");
+            
+            // Handle game directory path, remove "versions" part if present
+            File baseDir = gameDir;
+            String gameDirPath = gameDir.getAbsolutePath();
+            
+            if (gameDirPath.contains("versions"))
+            {
+                int versionsIndex = gameDirPath.indexOf("versions");
+                String basePath = gameDirPath.substring(0, versionsIndex);
+                baseDir = new File(basePath);
+            }
+            
+            File indexesDir = new File(baseDir, "assets/indexes");
             
             if (indexesDir.exists() && indexesDir.isDirectory())
             {
