@@ -132,4 +132,7 @@ public class Keys
 
     /* Texture picker */
     public static final KeyCombo TEXTURE_PICKER_FIND = new KeyCombo("find", UIKeys.TEXTURE_KEYS_FIND_ALL, GLFW.GLFW_KEY_F, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("texture_picker");
+
+    /* Sound overlay */
+    public static final KeyCombo ADD_VANILLA_SOUND = new KeyCombo("add_vanilla_sound", UIKeys.ADD_VANILLA_SOUND, GLFW.GLFW_KEY_V, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("sound_overlay");
 }
