@@ -201,7 +201,7 @@ public class Films
 
             if (ClientNetwork.isIsBBSModOnServer())
             {
-                ClientNetwork.sendActionRecording(recorder.film.getId(), recorder.exception, recorder.getTick(), 0, false);
+                ClientNetwork.sendActionRecording(recorder.film.getId(), recorder.exception, recorder.initialTick, 0, false);
             }
 
             recorder.shutdown();
