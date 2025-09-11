@@ -16,7 +16,7 @@ public class SimpleOptionMixin
     {
         SimpleOption option = (SimpleOption) (Object) this;
 
-        if (option == MinecraftClient.getInstance().options.getGamma())
+        if (MinecraftClient.getInstance().options != null && option == MinecraftClient.getInstance().options.getGamma())
         {
             Double value = BBSRendering.getBrightness();
 

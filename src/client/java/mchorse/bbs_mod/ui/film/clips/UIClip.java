@@ -173,9 +173,19 @@ public abstract class UIClip <T extends Clip> extends UIElement
         this.envelope = new UIEnvelope(this);
         this.envelope.channel.setUndoId("envelope_keyframes");
 
-        this.panels = new UIScrollView(ScrollDirection.HORIZONTAL);
+        boolean horizontal = BBSSettings.editorHorizontalClipEditor.get();
+
+        this.panels = new UIScrollView(horizontal ? ScrollDirection.HORIZONTAL : ScrollDirection.VERTICAL);
         this.panels.scroll.cancelScrolling();
-        this.panels.full(this).column(5).scroll().width(140).padding(10);
+
+        if (horizontal)
+        {
+            this.panels.full(this).column(5).scroll().width(140).padding(10);
+        }
+        else
+        {
+            this.panels.full(this).column(5).scroll().vertical().stretch().padding(10);
+        }
 
         this.registerUI();
         this.registerPanels();

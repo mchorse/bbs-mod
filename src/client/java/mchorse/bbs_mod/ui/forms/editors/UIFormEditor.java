@@ -69,7 +69,7 @@ public class UIFormEditor extends UIElement implements IUIFormList
 {
     private static Map<Class, Supplier<UIForm>> panels = new HashMap<>();
 
-    private static int treeWidth = 140;
+    private static float treeWidth = 0F;
     private static boolean TOGGLED = true;
 
     public UIFormPalette palette;
@@ -149,7 +149,7 @@ public class UIFormEditor extends UIElement implements IUIFormList
             });
 
         this.formsArea = new UIElement();
-        this.formsArea.relative(this).x(20).w(treeWidth).h(1F);
+        this.formsArea.relative(this).x(20).minW(140).h(1F);
 
         this.forms = new UIForms((l) -> this.pickForm(l.get(0)));
         this.forms.relative(this.formsArea).w(1F).h(0.5F);
@@ -222,7 +222,10 @@ public class UIFormEditor extends UIElement implements IUIFormList
 
         UIDraggable draggable = new UIDraggable((context) ->
         {
-            treeWidth = MathUtils.clamp(context.mouseX - this.formsArea.area.x, 100, 400);
+            int diff = context.mouseX - this.formsArea.area.x;
+            float f = diff / (float) this.area.w;
+
+            treeWidth = MathUtils.clamp(f, 0F, 0.5F);
 
             this.formsArea.w(treeWidth).resize();
         });

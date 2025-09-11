@@ -146,6 +146,11 @@ public class Flex implements IResizer
             value = Math.min(value, this.w.max);
         }
 
+        if (this.w.min > 0)
+        {
+            value = Math.max(value, this.w.min);
+        }
+
         return value;
     }
 
@@ -178,6 +183,11 @@ public class Flex implements IResizer
             value = Math.min(value, this.h.max);
         }
 
+        if (this.h.min > 0)
+        {
+            value = Math.max(value, this.h.min);
+        }
+
         return value;
     }
 
@@ -188,6 +198,7 @@ public class Flex implements IResizer
     {
         public int offset;
         public float value;
+        public int min;
         public int max;
         public float anchor;
         public IResizer target;
@@ -198,6 +209,7 @@ public class Flex implements IResizer
             this.value = 0F;
             this.offset = 0;
             this.max = 0;
+            this.min = 0;
             this.anchor = 0F;
             this.target = null;
             this.targetAnchor = 0F;
@@ -220,7 +232,10 @@ public class Flex implements IResizer
 
         public int normalize(int value)
         {
-            return this.max > 0 ? Math.min(value, this.max) : value;
+            if (this.min > 0) value = Math.max(value, this.min);
+            if (this.max > 0) value = Math.min(value, this.max);
+
+            return value;
         }
     }
 }

@@ -123,7 +123,7 @@ public class ActionManager
 
     public void startRecording(Film film, ServerPlayerEntity entity, int tick, int countdown, int replayId)
     {
-        ActionPlayer play = this.play(entity, entity.getServerWorld(), film, replayId);
+        ActionPlayer play = this.play(entity, entity.getServerWorld(), film, tick, countdown, replayId);
 
         play.stopDamage = false;
 

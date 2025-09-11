@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class UIFormPanel <T extends Form> extends UIElement
 {
-    private static Map<Class, Integer> widths = new HashMap<>();
+    private static Map<Class, Float> widths = new HashMap<>();
 
     protected UIForm editor;
     protected T form;
@@ -27,11 +27,12 @@ public abstract class UIFormPanel <T extends Form> extends UIElement
 
         this.options = UI.scrollView(5, 10);
         this.options.scroll.cancelScrolling();
-        this.options.relative(this).x(1F).w(widths.getOrDefault(this.getClass(), 140)).h(1F).anchorX(1F);
+        this.options.relative(this).x(1F).w(widths.getOrDefault(this.getClass(), 0F)).minW(140).h(1F).anchorX(1F);
 
         this.draggable = new UIDraggable((context) ->
         {
-            int w = MathUtils.clamp(this.options.area.ex() - context.mouseX, 100, 400);
+            float f = (this.options.area.ex() - context.mouseX) / (float) this.getParent().area.w;
+            float w = MathUtils.clamp(f, 0, 0.5F);
 
             this.options.w(w).resize();
             widths.put(this.getClass(), w);

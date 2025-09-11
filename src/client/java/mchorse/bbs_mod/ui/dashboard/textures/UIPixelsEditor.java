@@ -44,7 +44,7 @@ public class UIPixelsEditor extends UICanvasEditor
     private Color drawColor;
     private Vector2i lastPixel;
 
-    private UndoManager<Pixels> undoManager;
+    protected UndoManager<Pixels> undoManager;
     private PixelsUndo pixelsUndo;
 
     private Supplier<Float> backgroundSupplier = () -> 0.7F;

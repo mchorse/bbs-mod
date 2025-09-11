@@ -5,6 +5,7 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.utils.Scroll;
+import mchorse.bbs_mod.ui.utils.keys.KeyCodes;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Colors;
 
@@ -151,17 +152,21 @@ public abstract class UIList <T> extends UIElement
             return;
         }
 
+        String qwerty = KeyCodes.cyrillicToQwerty(filter);
+
         for (int i = 0; i < this.list.size(); i ++)
         {
             T element = this.list.get(i);
+            String target = this.elementToString(this.getContext(), i, element).toLowerCase();
 
-            if (this.elementToString(this.getContext(), i, element).toLowerCase().contains(filter))
+            if (target.contains(filter) || target.contains(qwerty))
             {
                 this.filtered.add(new Pair<>(element, i));
             }
         }
 
         this.update();
+        this.scroll.updateTarget();
     }
 
     public boolean isFiltering()

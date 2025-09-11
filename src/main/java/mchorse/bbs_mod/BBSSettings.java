@@ -76,6 +76,7 @@ public class BBSSettings
     public static ValueBoolean editorSnapToMarkers;
     public static ValueBoolean editorClipPreview;
     public static ValueBoolean editorRewind;
+    public static ValueBoolean editorHorizontalClipEditor;
 
     public static ValueFloat recordingCountdown;
     public static ValueBoolean recordingSwipeDamage;
@@ -204,6 +205,7 @@ public class BBSSettings
         editorSnapToMarkers = builder.getBoolean("snap_to_markers", false);
         editorClipPreview = builder.getBoolean("clip_preview", true);
         editorRewind = builder.getBoolean("rewind", true);
+        editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
 
         recordingCountdown = builder.category("recording").getFloat("countdown", 1.5F, 0F, 30F);
         recordingSwipeDamage = builder.getBoolean("swipe_damage", false);

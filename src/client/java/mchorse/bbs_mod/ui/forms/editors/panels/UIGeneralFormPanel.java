@@ -74,9 +74,10 @@ public class UIGeneralFormPanel extends UIFormPanel
         this.stepHeight = new UITrackpad((v) -> this.form.stepHeight.set(v.floatValue()));
         this.stepHeight.limit(0F);
 
+        this.options.add(UI.label(UIKeys.FORMS_EDITORS_GENERAL_DISPLAY), this.name);
         this.options.add(this.hotkey, this.visible, this.animatable, this.lighting, this.shaderShadow);
         this.options.add(UI.label(UIKeys.FORMS_EDITORS_GENERAL_UI_SCALE), this.uiScale);
-        this.options.add(UI.label(UIKeys.FORMS_EDITORS_GENERAL_DISPLAY), this.name, this.transform.marginTop(8));
+        this.options.add(this.transform.marginTop(8));
         this.options.add(this.hitbox.marginTop(12), UI.row(this.hitboxWidth, this.hitboxHeight));
         this.options.add(UI.label(UIKeys.FORMS_EDITORS_GENERAL_HITBOX_SNEAK_MULTIPLIER), this.hitboxSneakMultiplier);
         this.options.add(UI.label(UIKeys.FORMS_EDITORS_GENERAL_HITBOX_EYE_HEIGHT), this.hitboxEyeHeight);

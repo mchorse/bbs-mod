@@ -1,5 +1,14 @@
 {
     "block.bbs.model": "Khối model",
+    "item.bbs.gun": "súng BBS",
+    "block.bbs.chroma_red": "Phông đỏ",
+    "block.bbs.chroma_green": "Phông xanh",
+    "block.bbs.chroma_blue": "Phông xanh dương",
+    "block.bbs.chroma_cyan": "Phông xanh da trời",
+    "block.bbs.chroma_magenta": "Phông tím",
+    "block.bbs.chroma_yellow": "Phông vàng",
+    "block.bbs.chroma_black": "Phông đen",
+    "block.bbs.chroma_white": "Phông trắng",
     "item.bbs.gun": "Súng BBS",
     "itemGroup.bbs.main": "BBS mod",
 
@@ -9,8 +18,12 @@
     "key.bbs.open_replays": "Mở phát lại",
     "key.bbs.open_morphing": "Mở menu biến đổi",
     "key.bbs.play_film": "Play film",
-    "key.bbs.record_replay": "Quay phát lại",
-    "key.bbs.record_video": "Quay video",
+    "key.bbs.record_replay": "quay phát lại",
+    "key.bbs.record_video": "quay video",
     "key.bbs.teleport": "Dịch chuyển đến phát lại hiện tại",
-    "category.bbs.main": "BBS mod"
+    "key.bbs.zoom": "Zoom (Súng BBS)",
+    "category.bbs.main": "BBS mod",
+
+    "gamerule.bbsEditing": "Quyền chỉnh sửa của BBS mod"
+}
 }

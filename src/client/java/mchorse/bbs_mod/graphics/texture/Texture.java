@@ -25,6 +25,7 @@ public class Texture
     private boolean mipmap;
     private boolean clearable;
 
+    private AnimatedTexture parent;
     private TextureFormat format = TextureFormat.RGBA_U8;
     private int filter;
 
@@ -61,6 +62,16 @@ public class Texture
         this.target = GL11.GL_TEXTURE_2D;
 
         this.bind();
+    }
+
+    public void setParent(AnimatedTexture parent)
+    {
+        this.parent = parent;
+    }
+
+    public AnimatedTexture getParent()
+    {
+        return this.parent;
     }
 
     public void setClearable(boolean clearable)

@@ -128,6 +128,13 @@ public class UIFilmPreview extends UIElement
         this.perspective.tooltip(UIKeys.FILM_CONTROLLER_KEYS_CHANGE_CAMERA_MODE);
         this.recordReplay = new UIIcon(Icons.SPHERE, (b) -> this.panel.getController().pickRecording());
         this.recordReplay.tooltip(UIKeys.FILM_REPLAY_RECORD);
+        this.recordReplay.context((menu) ->
+        {
+            menu.action(Icons.DOWNLOAD, UIKeys.FILM_CONTROLLER_KEYS_TOGGLE_INSTANT_KEYFRAMES, this.panel.getController().isInstantKeyframes(), () ->
+            {
+                this.panel.getController().toggleInstantKeyframes();
+            });
+        });
         this.recordVideo = new UIIcon(Icons.VIDEO_CAMERA, (b) ->
         {
             if (this.panel.checkShowNoCamera())

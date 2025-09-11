@@ -3,6 +3,7 @@ package mchorse.bbs_mod.camera.clips.misc;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.utils.clips.ClipContext;
 import mchorse.bbs_mod.utils.iris.ShaderCurves;
+import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 
 public class CurveClientClip extends CurveClip
 {
@@ -14,15 +15,18 @@ public class CurveClientClip extends CurveClip
     {
         super.applyClip(context, position);
 
-        String s = this.key.get();
-
-        if (s.startsWith("curve/"))
+        for (KeyframeChannel<Double> channel : this.channels.getChannels())
         {
-            ShaderCurves.ShaderVariable variable = ShaderCurves.variableMap.get(s.substring("curve/".length()));
+            String id = channel.getId();
 
-            if (variable != null)
+            if (id.startsWith(SHADER_CURVES_PREFIX))
             {
-                variable.value = this.channel.interpolate(context.relativeTick + context.transition).floatValue();
+                ShaderCurves.ShaderVariable variable = ShaderCurves.variableMap.get(id.substring(SHADER_CURVES_PREFIX.length()));
+
+                if (variable != null)
+                {
+                    variable.value = channel.interpolate(context.relativeTick + context.transition).floatValue();
+                }
             }
         }
     }

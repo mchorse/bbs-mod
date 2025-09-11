@@ -40,7 +40,11 @@ public class AnimatedTexture
 
             newPixels.drawPixels(pixels, 0, 0, w, h, 0, i * h, w, i * h + h);
             newPixels.rewindBuffer();
-            texture.textures.add(Texture.textureFromPixels(newPixels, GL11.GL_NEAREST));
+
+            Texture e = Texture.textureFromPixels(newPixels, GL11.GL_NEAREST);
+
+            texture.textures.add(e);
+            e.setParent(texture);
         }
 
         if (texture.textures.isEmpty())

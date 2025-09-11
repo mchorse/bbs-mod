@@ -114,11 +114,6 @@ public abstract class UICanvasEditor extends UICanvas
         return true;
     }
 
-    protected Area calculateRelative(int a, int b, int c, int d)
-    {
-        return this.calculate(-this.w / 2 + a, -this.h / 2 + b, -this.w / 2 + c, -this.h / 2 + d);
-    }
-
     protected Area calculate(int ix1, int iy1, int ix2, int iy2)
     {
         int x1 = this.toX(ix1);

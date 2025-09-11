@@ -15,6 +15,8 @@ import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.utils.Area;
+import mchorse.bbs_mod.ui.utils.keys.KeyAction;
 import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.interps.Lerps;
@@ -92,21 +94,26 @@ public class OrbitFilmCameraController implements ICameraController
         this.center = false;
     }
 
-    public boolean keyPressed(UIContext context)
+    public boolean keyPressed(UIContext context, Area area)
     {
         if (!this.enabled || context.isFocused())
         {
             return false;
         }
 
-        int x = this.getFactor(context, Keys.FLIGHT_LEFT, Keys.FLIGHT_RIGHT, this.velocityPosition.x);
-        int y = this.getFactor(context, Keys.FLIGHT_UP, Keys.FLIGHT_DOWN, this.velocityPosition.y);
-        int z = this.getFactor(context, Keys.FLIGHT_FORWARD, Keys.FLIGHT_BACKWARD, this.velocityPosition.z);
-        boolean changed = x != this.velocityPosition.x || y != this.velocityPosition.y || z != this.velocityPosition.z;
+        if (area.isInside(context) || (!this.velocityPosition.equals(0, 0, 0) && context.getKeyAction() == KeyAction.RELEASED))
+        {
+            int x = this.getFactor(context, Keys.FLIGHT_LEFT, Keys.FLIGHT_RIGHT, this.velocityPosition.x);
+            int y = this.getFactor(context, Keys.FLIGHT_UP, Keys.FLIGHT_DOWN, this.velocityPosition.y);
+            int z = this.getFactor(context, Keys.FLIGHT_FORWARD, Keys.FLIGHT_BACKWARD, this.velocityPosition.z);
+            boolean changed = x != this.velocityPosition.x || y != this.velocityPosition.y || z != this.velocityPosition.z;
 
-        this.velocityPosition.set(x, y, z);
+            this.velocityPosition.set(x, y, z);
 
-        return changed;
+            return changed;
+        }
+
+        return false;
     }
 
     protected int getFactor(UIContext context, KeyCombo positive, KeyCombo negative, int x)
@@ -245,7 +252,7 @@ public class OrbitFilmCameraController implements ICameraController
                 {
                     AnchorProperty.Anchor v = form.anchor.get();
                     Matrix4f defaultMatrix = BaseFilmController.getMatrixForRenderWithRotation(entity, x, y, z, transition);
-                    Matrix4f matrix = BaseFilmController.getEntityMatrix(this.controller.getEntities(), x, y, z, v.actor, v.attachment, false, defaultMatrix, transition);
+                    Matrix4f matrix = BaseFilmController.getEntityMatrix(this.controller.getEntities(), x, y, z, v.actor, v.attachment, false, false, defaultMatrix, transition);
 
                     matrix.mul(anchor);
 

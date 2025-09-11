@@ -4,8 +4,44 @@ import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.utils.OS;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class KeyCodes
 {
+    private static final Map<Character, Character> CYRILLIC_TO_QWERTY = new HashMap<>();
+
+    static
+    {
+        String ruLower = "ёйцукенгшщзхъфывапролджэячсмитьбю";
+        String enLower = "`qwertyuiop[]asdfghjkl;'zxcvbnm,.";
+
+        String ruUpper = "ЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ";
+        String enUpper = "~QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>";
+
+        for (int i = 0; i < ruLower.length(); i++) CYRILLIC_TO_QWERTY.put(ruLower.charAt(i), enLower.charAt(i));
+        for (int i = 0; i < ruUpper.length(); i++) CYRILLIC_TO_QWERTY.put(ruUpper.charAt(i), enUpper.charAt(i));
+    }
+
+    public static String cyrillicToQwerty(String input)
+    {
+        if (input == null || input.isEmpty())
+        {
+            return input;
+        }
+
+        StringBuilder out = new StringBuilder(input.length());
+
+        for (int i = 0; i < input.length(); i++)
+        {
+            char ch = input.charAt(i);
+
+            out.append(CYRILLIC_TO_QWERTY.getOrDefault(ch, ch));
+        }
+
+        return out.toString();
+    }
+
     public static String getName(int keyCode)
     {
         if (keyCode == 0)

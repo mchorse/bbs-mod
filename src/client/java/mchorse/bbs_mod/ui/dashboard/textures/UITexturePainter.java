@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.dashboard.textures;
 
+import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.Keys;
@@ -92,6 +93,7 @@ public class UITexturePainter extends UIElement
 
         this.keys().register(Keys.PIXEL_SWAP, this::swapColors).inside().category(category);
         this.keys().register(Keys.PIXEL_PICK, this::pickColor).inside().category(category);
+        this.keys().register(Keys.PIXEL_FILL, this::fillColor).inside().category(category);
     }
 
     private void swapColors()
@@ -121,6 +123,19 @@ public class UITexturePainter extends UIElement
             {
                 this.primary.setColor(color.getRGBColor());
             }
+        }
+    }
+
+    private void fillColor()
+    {
+        UIContext context = this.getContext();
+        UITextureEditor editor = this.getHoverEditor(context);
+
+        if (editor != null)
+        {
+            Vector2i pixel = editor.getHoverPixel(context.mouseX, context.mouseY);
+
+            editor.fillColor(pixel, this.primary.picker.color, Window.isShiftPressed());
         }
     }
 

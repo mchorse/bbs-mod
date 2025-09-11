@@ -74,7 +74,7 @@ public class BOBJArmature
             }
 
             /* Sort bones according to their index */
-            this.orderedBones.sort(Comparator.comparingInt(o -> o.index));
+            this.orderedBones.sort(Comparator.comparingInt((o) -> o.index));
 
             this.matrices = new Matrix4f[this.orderedBones.size()];
             this.initialized = true;

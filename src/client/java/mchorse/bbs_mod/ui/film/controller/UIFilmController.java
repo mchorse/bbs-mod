@@ -67,9 +67,7 @@ import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.Matrix3f;
 import org.joml.Vector2f;
@@ -113,6 +111,7 @@ public class UIFilmController extends UIElement
     private int recordingCountdown;
     private List<String> recordingGroups;
     private BaseType recordingOld;
+    private boolean instantKeyframes;
 
     /* Replay and group picking */
     private IEntity hoveredEntity;
@@ -124,7 +123,6 @@ public class UIFilmController extends UIElement
     private boolean paused;
 
     private WorldRenderContext worldRenderContext;
-    private BlockHitResult blockHitResult;
 
     public UIFilmController(UIFilmPanel panel)
     {
@@ -136,7 +134,11 @@ public class UIFilmController extends UIElement
         Supplier<Boolean> hasTwoOrMoreReplays = () -> this.panel.getData() != null && this.panel.getData().replays.getList().size() >= 2;
 
         this.keys().register(Keys.FILM_CONTROLLER_START_RECORDING, this::pickRecording).active(hasActor).category(category);
-        this.keys().register(Keys.FILM_CONTROLLER_INSERT_FRAME, this::insertFrame).active(hasActor).category(category);
+        this.keys().register(Keys.FILM_CONTROLLER_INSERT_FRAME, () ->
+        {
+            this.insertFrame();
+            UIUtils.playClick();
+        }).active(hasActor).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_TOGGLE_CONTROL, this::toggleControl).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_TOGGLE_ORBIT_MODE, this::toggleOrbitMode).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_MOVE_REPLAY_TO_CURSOR, () ->
@@ -191,9 +193,14 @@ public class UIFilmController extends UIElement
         UIUtils.playClick();
     }
 
-    public BlockHitResult getBlockHitResult()
+    public boolean isInstantKeyframes()
     {
-        return this.blockHitResult;
+        return this.instantKeyframes;
+    }
+
+    public void toggleInstantKeyframes()
+    {
+        this.instantKeyframes = !this.instantKeyframes;
     }
 
     public boolean isPaused()
@@ -814,8 +821,6 @@ public class UIFilmController extends UIElement
             {
                 keyframes.record(this.getTick(), this.getCurrentEntity(), groups);
             });
-
-            UIUtils.playClick();
         }
     }
 
@@ -894,6 +899,11 @@ public class UIFilmController extends UIElement
 
             extraVariables[index * 2] = this.mouseStick.y;
             extraVariables[index * 2 + 1] = this.mouseStick.x;
+        }
+
+        if (this.instantKeyframes)
+        {
+            this.insertFrame();
         }
     }
 
@@ -1037,22 +1047,6 @@ public class UIFilmController extends UIElement
         MatrixStackUtils.restoreMatrices();
 
         RenderSystem.depthFunc(GL11.GL_ALWAYS);
-
-        if (this.blockHitResult != null)
-        {
-            Vec3d pos = this.blockHitResult.getPos();
-            String label = String.format("X: %.2f\nY: %.2f\nZ: %.2f", pos.x, pos.y, pos.z);
-            int y = context.mouseY + 8;
-
-            for (String s : label.split("\n"))
-            {
-                context.batcher.textCard(s, context.mouseX + 12, y);
-
-                y += 13;
-            }
-
-            return;
-        }
 
         this.hoveredEntity = null;
 

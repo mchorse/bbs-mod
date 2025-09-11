@@ -15,6 +15,7 @@ public class ContextAction
 
     public IKey keyCategory;
     public int[] keys;
+    public int order = -1;
 
     public ContextAction(Icon icon, IKey label, Runnable runnable)
     {
@@ -33,6 +34,13 @@ public class ContextAction
     public ContextAction key(int... keys)
     {
         this.keys = keys;
+
+        return this;
+    }
+
+    public ContextAction order(int order)
+    {
+        this.order = order;
 
         return this;
     }

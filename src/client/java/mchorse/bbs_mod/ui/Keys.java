@@ -73,6 +73,7 @@ public class Keys
     /* Pixel editor */
     public static final KeyCombo PIXEL_SWAP = new KeyCombo("swap", UIKeys.TEXTURES_KEYS_SWAP, GLFW.GLFW_KEY_X).categoryKey("pixels");
     public static final KeyCombo PIXEL_PICK = new KeyCombo("pick", UIKeys.TEXTURES_KEYS_PICK, GLFW.GLFW_KEY_R).categoryKey("pixels");
+    public static final KeyCombo PIXEL_FILL = new KeyCombo("fill", UIKeys.TEXTURES_KEYS_FILL, GLFW.GLFW_KEY_B, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("pixels");
 
     /* Keyframes */
     public static final KeyCombo KEYFRAMES_MAXIMIZE = new KeyCombo("maximize", UIKeys.KEYFRAMES_CONTEXT_MAXIMIZE, GLFW.GLFW_KEY_HOME).categoryKey("keyframes");

@@ -17,10 +17,12 @@ public class AnchorProperty extends BaseTweenProperty<AnchorProperty.Anchor>
         public int actor = -1;
         public String attachment = "";
         public boolean translate = false;
+        public boolean scale = false;
 
         public int previousActor = -2;
         public String previousAttachment = "";
         public boolean previousTranslate = false;
+        public boolean previousScale = false;
         public float x;
 
         @Override
@@ -35,7 +37,8 @@ public class AnchorProperty extends BaseTweenProperty<AnchorProperty.Anchor>
             {
                 return this.actor == anchor.actor
                     && this.attachment.equals(anchor.attachment)
-                    && this.translate == anchor.translate;
+                    && this.translate == anchor.translate
+                    && this.scale == anchor.scale;
             }
 
             return false;
@@ -47,6 +50,7 @@ public class AnchorProperty extends BaseTweenProperty<AnchorProperty.Anchor>
             this.actor = data.getInt("actor");
             this.attachment = data.getString("attachment");
             this.translate = data.getBool("translate", false);
+            this.scale = data.getBool("scale", false);
         }
 
         @Override
@@ -55,6 +59,7 @@ public class AnchorProperty extends BaseTweenProperty<AnchorProperty.Anchor>
             data.putInt("actor", this.actor);
             data.putString("attachment", this.attachment);
             data.putBool("translate", this.translate);
+            data.putBool("scale", this.scale);
         }
     }
 }

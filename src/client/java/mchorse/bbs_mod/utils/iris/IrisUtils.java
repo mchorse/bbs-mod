@@ -7,14 +7,17 @@ import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.texture.TextureTracker;
 import net.irisshaders.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.FloatCachedUniform;
+import net.irisshaders.iris.uniforms.custom.cached.IntCachedUniform;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import net.irisshaders.iris.vertices.views.TriView;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,17 @@ import java.util.Set;
 public class IrisUtils
 {
     private static Set<Texture> textureSet = new HashSet<>();
+    private static ShaderProperties properties;
+
+    public static void setShaderProperties(ShaderProperties shaderProperties)
+    {
+        properties = shaderProperties;
+    }
+
+    public static List<String> getSliderProperties()
+    {
+        return properties == null ? Collections.emptyList() : properties.getSliderOptions();
+    }
 
     public static void setup()
     {
@@ -38,9 +52,21 @@ public class IrisUtils
         {
             Link key = CollectionUtils.getKey(textures.textures, texture);
 
+            if (key == null && texture.getParent() != null)
+            {
+                key = CollectionUtils.getKey(textures.animatedTextures, texture.getParent());
+            }
+
             if (key != null)
             {
-                TextureTracker.INSTANCE.trackTexture(texture.id, new IrisTextureWrapper(key));
+                int index = -1;
+
+                if (texture.getParent() != null)
+                {
+                    index = texture.getParent().textures.indexOf(texture);
+                }
+
+                TextureTracker.INSTANCE.trackTexture(texture.id, new IrisTextureWrapper(key, index));
             }
 
             textureSet.add(texture);
@@ -118,7 +144,14 @@ public class IrisUtils
     {
         for (ShaderCurves.ShaderVariable value : variableMap.values())
         {
-            list.add(new FloatCachedUniform(value.uniformName, UniformUpdateFrequency.PER_FRAME, value::getValue));
+            if (value.integer)
+            {
+                list.add(new IntCachedUniform(value.uniformName, UniformUpdateFrequency.PER_FRAME, () -> (int) value.getValue()));
+            }
+            else
+            {
+                list.add(new FloatCachedUniform(value.uniformName, UniformUpdateFrequency.PER_FRAME, value::getValue));
+            }
         }
     }
 

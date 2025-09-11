@@ -8,8 +8,8 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.context.UIContextMenu;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
-import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.presets.DataManager;
@@ -25,9 +25,7 @@ public class UIDataContextMenu extends UIContextMenu
     public UIIcon reset;
     public UIIcon save;
 
-    public UIStringList entries;
-
-    public UITextbox name;
+    public UISearchList<String> entries;
 
     private DataManager manager;
     private String group;
@@ -60,7 +58,7 @@ public class UIDataContextMenu extends UIContextMenu
         this.reset.tooltip(UIKeys.POSE_CONTEXT_RESET);
         this.save = new UIIcon(Icons.SAVED, (b) ->
         {
-            String name = this.name.getText();
+            String name = this.entries.search.getText();
 
             if (!name.isEmpty())
             {
@@ -69,23 +67,21 @@ public class UIDataContextMenu extends UIContextMenu
                 this.data = this.manager.getData(group);
 
                 this.fillPoses();
-                this.name.setText("");
+                this.entries.search.setText("");
             }
         });
         this.save.tooltip(UIKeys.POSE_CONTEXT_SAVE);
 
-        this.entries = new UIStringList((l) -> this.send(this.data.getMap(l.get(0))));
-        this.name = new UITextbox().filename();
-        this.name.placeholder(UIKeys.POSE_CONTEXT_NAME);
+        this.entries = new UISearchList<>(new UIStringList((l) -> this.send(this.data.getMap(l.get(0)))));
+        this.entries.search.filename();
+        this.entries.search.placeholder(UIKeys.POSE_CONTEXT_NAME);
 
         this.row = UI.row(this.copy, this.paste, this.reset, this.save);
 
         this.row.relative(this).xy(5, 5).w(1F, -10).h(20);
-        this.name.relative(this).xy(5, 25).w(1F, -10).h(20);
-        this.entries.relative(this).xy(5, 45).w(1F, -10).hTo(this.area, 1F, -5);
+        this.entries.relative(this).xy(5, 25).w(1F, -10).hTo(this.area, 1F, -5);
 
         this.add(this.row);
-        this.add(this.name);
         this.add(this.entries);
 
         this.fillPoses();
@@ -98,7 +94,7 @@ public class UIDataContextMenu extends UIContextMenu
         this.paste.tooltip(paste);
         this.reset.tooltip(reset);
         this.save.tooltip(save);
-        this.name.placeholder(name);
+        this.entries.search.placeholder(name);
 
         return this;
     }
@@ -113,9 +109,9 @@ public class UIDataContextMenu extends UIContextMenu
 
     private void fillPoses()
     {
-        this.entries.clear();
-        this.entries.add(this.data.keys());
-        this.entries.sort();
+        this.entries.list.clear();
+        this.entries.list.add(this.data.keys());
+        this.entries.list.sort();
     }
 
     @Override
@@ -132,6 +128,6 @@ public class UIDataContextMenu extends UIContextMenu
 
         int i = size * 20 + (size - 1) * 5;
 
-        this.xy(context.mouseX(), context.mouseY()).w(10 + i).h(10 + 40 + UIStringList.DEFAULT_HEIGHT * 8).bounds(context.menu.overlay, 5);
+        this.xy(context.mouseX(), context.mouseY()).w(10 + i).h(10 + 40 + UIStringList.DEFAULT_HEIGHT * 12).bounds(context.menu.overlay, 5);
     }
 }

@@ -52,7 +52,6 @@ public class ExtraFormSection extends FormSection
         ItemForm item = new ItemForm();
         VanillaParticleForm vanillaParticle = new VanillaParticleForm();
         TrailForm trail = new TrailForm();
-        FramebufferForm framebuffer = new FramebufferForm();
 
         billboard.texture.set(Link.assets("textures/error.png"));
         extruded.texture.set(Link.assets("textures/error.png"));
@@ -67,7 +66,6 @@ public class ExtraFormSection extends FormSection
         extra.addForm(item);
         extra.addForm(vanillaParticle);
         extra.addForm(trail);
-        extra.addForm(framebuffer);
 
         this.mobsAnimals = new FormCategory(UIKeys.FORMS_CATEGORIES_MOBS_ANIMALS, this.parent.visibility.get("mobs_animals"));
         this.mobsNeutral = new FormCategory(UIKeys.FORMS_CATEGORIES_MOBS_NEUTRAL, this.parent.visibility.get("mobs_neutral"));

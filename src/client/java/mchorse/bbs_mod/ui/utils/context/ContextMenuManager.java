@@ -12,6 +12,7 @@ import mchorse.bbs_mod.ui.utils.keys.Keybind;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -97,6 +98,8 @@ public class ContextMenuManager
     public UISimpleContextMenu create()
     {
         UISimpleContextMenu contextMenu = this.menu == null ? new UISimpleContextMenu() : this.menu;
+
+        this.actions.sort(Comparator.comparingInt((a) -> a.order));
 
         contextMenu.actions.add(this.actions);
         contextMenu.getEvents().register(UIRemovedEvent.class, this.onClose);

@@ -42,6 +42,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -96,7 +97,7 @@ public abstract class BaseFilmController
 
         if (same)
         {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, defaultMatrix, transition);
+            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
 
             if (matrix != defaultMatrix)
             {
@@ -106,7 +107,7 @@ public abstract class BaseFilmController
         }
         else if (value.x <= 0F && value.previousActor >= -1)
         {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, defaultMatrix, transition);
+            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
 
             if (matrix != defaultMatrix)
             {
@@ -116,8 +117,8 @@ public abstract class BaseFilmController
         }
         else
         {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, defaultMatrix, transition);
-            Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, defaultMatrix, transition);
+            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
+            Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
 
             if (matrix != lastMatrix)
             {
@@ -229,7 +230,7 @@ public abstract class BaseFilmController
         matrices.pop();
     }
 
-    public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, int actor, String attachment, boolean translate, Matrix4f defaultMatrix, float transition)
+    public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, int actor, String attachment, boolean translate, boolean scale, Matrix4f defaultMatrix, float transition)
     {
         IEntity entity = entities.get(actor);
 
@@ -251,6 +252,27 @@ public abstract class BaseFilmController
                 if (matrix != null)
                 {
                     basic.mul(matrix);
+
+                    if (scale)
+                    {
+                        Matrix3f mat = Matrices.TEMP_3F;
+                        Vector3f vec = Vectors.TEMP_3F;
+
+                        basic.get3x3(mat);
+                        mat.getRow(0, vec);
+                        vec.normalize();
+                        mat.setRow(0, vec);
+
+                        mat.getRow(1, vec);
+                        vec.normalize();
+                        mat.setRow(1, vec);
+
+                        mat.getRow(2, vec);
+                        vec.normalize();
+                        mat.setRow(2, vec);
+
+                        basic.set3x3(mat);
+                    }
 
                     if (translate)
                     {

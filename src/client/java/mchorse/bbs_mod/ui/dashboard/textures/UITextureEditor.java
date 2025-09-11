@@ -5,6 +5,7 @@ import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.ui.dashboard.textures.undo.PixelsUndo;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageFolderOverlayPanel;
@@ -14,9 +15,13 @@ import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.PNGEncoder;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.resources.Pixels;
+import org.joml.Vector2i;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class UITextureEditor extends UIPixelsEditor
@@ -97,6 +102,73 @@ public class UITextureEditor extends UIPixelsEditor
     protected void wasChanged()
     {
         this.dirty();
+    }
+
+    public void fillColor(Vector2i pixel, Color color, boolean colorReplace)
+    {
+        PixelsUndo pixelsUndo = new PixelsUndo();
+        Pixels pixels = this.getPixels();
+        Color target = pixels.getColor(pixel.x, pixel.y);
+
+        if (target == null)
+        {
+            return;
+        }
+
+        target = target.copy();
+
+        if (colorReplace)
+        {
+            for (int x = 0; x < pixels.width; x++)
+            {
+                for (int y = 0; y < pixels.height; y++)
+                {
+                    Color current = pixels.getColor(x, y);
+
+                    if (current.getARGBColor() == target.getARGBColor())
+                    {
+                        pixelsUndo.setColor(pixels, x, y, color);
+                    }
+                }
+            }
+        }
+        else
+        {
+            this.floodFill(new HashSet<>(), pixelsUndo, pixels, pixel.x, pixel.y, target.getARGBColor(), color.getARGBColor());
+        }
+
+        this.undoManager.pushUndo(pixelsUndo);
+        this.updateTexture();
+    }
+
+    private void floodFill(Set<Vector2i> set, PixelsUndo undo, Pixels pixels, int x, int y, int targetColor, int replacementColor)
+    {
+        if (x < 0 || y < 0 || x >= pixels.width || y >= pixels.height)
+        {
+            return;
+        }
+
+        int current = pixels.getColor(x, y).getARGBColor();
+
+        if (current != targetColor)
+        {
+            return;
+        }
+
+        Vector2i v = new Vector2i(x, y);
+
+        if (set.contains(v))
+        {
+            return;
+        }
+
+        set.add(v);
+        undo.setColor(pixels, x, y, new Color().set(replacementColor, true));
+
+        this.floodFill(set, undo, pixels, x + 1, y, targetColor, replacementColor);
+        this.floodFill(set, undo, pixels, x - 1, y, targetColor, replacementColor);
+        this.floodFill(set, undo, pixels, x, y + 1, targetColor, replacementColor);
+        this.floodFill(set, undo, pixels, x, y - 1, targetColor, replacementColor);
     }
 
     private void saveTexture()

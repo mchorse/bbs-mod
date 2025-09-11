@@ -1,0 +1,28 @@
+{
+    "block.bbs.model": "모델 블록",
+    "block.bbs.chroma_red": "빨간색 크로마",
+    "block.bbs.chroma_green": "초록색 크로마",
+    "block.bbs.chroma_blue": "파란색 크로마",
+    "block.bbs.chroma_cyan": "청록색 크로마",
+    "block.bbs.chroma_magenta": "자홍색 크로마",
+    "block.bbs.chroma_yellow": "노란색 크로마",
+    "block.bbs.chroma_black": "검은색 크로마",
+    "block.bbs.chroma_white": "하얀색 크로마",
+    "item.bbs.gun": "BBS gun",
+    "itemGroup.bbs.main": "BBS mod",
+
+    "key.bbs.item_editor": "아이템 편집",
+    "key.bbs.dashboard": "대쉬보드",
+    "key.bbs.demorph": "변형",
+    "key.bbs.open_replays": "현재 녹화 열기",
+    "key.bbs.open_morphing": "변형 메뉴 열기",
+    "key.bbs.play_film": "필름 재생",
+    "key.bbs.pause_film": "필름 정지",
+    "key.bbs.record_replay": "현재 녹화 리플레이",
+    "key.bbs.record_video": "영상 녹화",
+    "key.bbs.teleport": "녹화 위치로 텔레포트",
+    "key.bbs.zoom": "Zoom (BBS gun)",
+    "category.bbs.main": "BBS mod",
+
+    "gamerule.bbsEditing": "BBS mod's editing permission"
+}

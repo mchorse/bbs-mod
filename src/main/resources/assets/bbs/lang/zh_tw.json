@@ -17,9 +17,12 @@
     "key.bbs.open_replays": "打開當前回放列表",
     "key.bbs.open_morphing": "打開偽裝菜單",
     "key.bbs.play_film": "播放影片",
+    "key.bbs.pause_film": "暫停影片",
     "key.bbs.record_replay": "錄製當前回放",
     "key.bbs.record_video": "錄製視頻",
     "key.bbs.teleport": "傳送至當前回放",
     "key.bbs.zoom": "瞄準 (BBS 槍)",
-    "category.bbs.main": "BBS mod"
+    "category.bbs.main": "BBS mod",
+
+    "gamerule.bbsEditing": "BBS mod 的編輯權限"
 }

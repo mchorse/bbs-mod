@@ -663,7 +663,7 @@ public class Supporters
         this.add("profishional", "https://www.youtube.com/channel/UCuJYhwn13hW9wv6vB8DYO-A").withDate(2025, 4, 25);
         this.add("Maxym K.", "...", "...").withDate(2025, 5, 1);
         this.add("Googly", "https://www.youtube.com/@googlylegend", "textures/banners/googly.png").withDate(2025, 5, 9);
-        this.add("Jadept", "https://youtube.com/@jadept", "textures/banners/jadept.png").withDate(2025, 5, 10);
+        this.add("JadeBlocks", "https://www.youtube.com/@JadeBlocksYT", "textures/banners/jadept.png").withDate(2025, 5, 10);
         this.add("Minecraft@Home", "https://www.youtube.com/MinecraftAtHome", "textures/banners/minecraftathome.png").withDate(2025, 5, 12);
         this.add("Nick The Skeleton", "https://www.youtube.com/@NickTheSkeletonn").withDate(2025, 5, 17);
         this.add("Aethics", "https://www.youtube.com/@AethicsYT", "textures/banners/aesthics.png").withDate(2025, 5, 17);

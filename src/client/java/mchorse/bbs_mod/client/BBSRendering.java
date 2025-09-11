@@ -41,6 +41,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -483,6 +484,16 @@ public class BBSRendering
         }
 
         IrisUtils.addUniforms(list, variableMap);
+    }
+
+    public static List<String> getShadersSliderOptions()
+    {
+        if (!iris)
+        {
+            return Collections.emptyList();
+        }
+
+        return IrisUtils.getSliderProperties();
     }
 
     /* Time of day */

@@ -809,6 +809,20 @@ public class UIElement implements IUIElement, IUndoElement
         return this;
     }
 
+    public UIElement minW(int max)
+    {
+        this.flex.w.min = max;
+
+        return this;
+    }
+
+    public UIElement minH(int max)
+    {
+        this.flex.h.min = max;
+
+        return this;
+    }
+
     public UIElement maxW(int max)
     {
         this.flex.w.max = max;

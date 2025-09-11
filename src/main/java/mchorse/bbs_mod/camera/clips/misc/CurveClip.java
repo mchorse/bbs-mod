@@ -2,19 +2,22 @@ package mchorse.bbs_mod.camera.clips.misc;
 
 import mchorse.bbs_mod.camera.clips.CameraClip;
 import mchorse.bbs_mod.camera.data.Position;
+import mchorse.bbs_mod.camera.values.ValueChannels;
+import mchorse.bbs_mod.data.types.BaseType;
+import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.ValueString;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
-import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class CurveClip extends CameraClip
 {
-    public final ValueString key = new ValueString("key", "sun_rotation");
-    public final KeyframeChannel<Double> channel = new KeyframeChannel<>("channel", KeyframeFactories.DOUBLE);
+    public static final String SHADER_CURVES_PREFIX = "curve.";
+
+    public final ValueChannels channels = new ValueChannels("channels");
 
     public static Map<String, Double> getValues(ClipContext context)
     {
@@ -32,22 +35,46 @@ public class CurveClip extends CameraClip
 
     public CurveClip()
     {
-        this.add(this.key);
-        this.add(this.channel);
+        this.add(this.channels);
+        this.channels.addChannel("sun_rotation");
     }
 
     @Override
     protected void applyClip(ClipContext context, Position position)
     {
         Map<String, Double> values = getValues(context);
-        String key = this.key.get();
 
-        values.put(key, this.channel.interpolate(context.relativeTick + context.transition));
+        for (KeyframeChannel<Double> channel : this.channels.getChannels())
+        {
+            values.put(channel.getId(), channel.interpolate(context.relativeTick + context.transition));
+        }
     }
 
     @Override
     protected Clip create()
     {
         return new CurveClip();
+    }
+
+    @Override
+    public void fromData(BaseType data)
+    {
+        if (data.isMap())
+        {
+            MapType map = data.asMap();
+
+            if (map.has("key") && map.has("channel"))
+            {
+                ValueString key = new ValueString("key", "sun_rotation");
+
+                key.fromData(map.get("key"));
+
+                KeyframeChannel<Double> channel = this.channels.addChannel(key.get());
+
+                channel.fromData(map.get("channel"));
+            }
+        }
+
+        super.fromData(data);
     }
 }

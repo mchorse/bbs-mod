@@ -30,8 +30,8 @@ public class IrisTextureWrapperLoader implements PBRTextureLoader
             Link normalKey = this.createPrefixedCopy(key, "_n.png");
             Link specularKey = this.createPrefixedCopy(key, "_s.png");
 
-            pbrTextureConsumer.acceptNormalTexture(new IrisTextureWrapper(normalKey, this.defaultNormalTexture));
-            pbrTextureConsumer.acceptSpecularTexture(new IrisTextureWrapper(specularKey, this.defaultSpecularTexture));
+            pbrTextureConsumer.acceptNormalTexture(new IrisTextureWrapper(normalKey, this.defaultNormalTexture, wrapper.index));
+            pbrTextureConsumer.acceptSpecularTexture(new IrisTextureWrapper(specularKey, this.defaultSpecularTexture, wrapper.index));
         }
     }
 

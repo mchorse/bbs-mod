@@ -31,6 +31,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.An
     private UIButton actor;
     private UIButton attachment;
     private UIToggle translate;
+    private UIToggle scale;
 
     public static void displayActors(UIContext context, IntObjectMap<IEntity> entities, int value, Consumer<Integer> callback)
     {
@@ -64,8 +65,10 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.An
         this.attachment = new UIButton(UIKeys.GENERIC_KEYFRAMES_ANCHOR_PICK_ATTACHMENT, (b) -> this.displayAttachments());
         this.translate = new UIToggle(UIKeys.TRANSFORMS_TRANSLATE, (b) -> this.setTranslate(b.getValue()));
         this.translate.setValue(keyframe.getValue().translate);
+        this.scale = new UIToggle(UIKeys.TRANSFORMS_SCALE, (b) -> this.setScale(b.getValue()));
+        this.scale.setValue(keyframe.getValue().scale);
 
-        this.scroll.add(this.actor, this.attachment, this.translate);
+        this.scroll.add(this.actor, this.attachment, this.translate, this.scale);
     }
 
     private void displayActors()
@@ -125,6 +128,11 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.An
     private void setTranslate(boolean translate)
     {
         BaseValue.edit(this.keyframe, (value) -> value.getValue().translate = translate);
+    }
+
+    private void setScale(boolean scale)
+    {
+        BaseValue.edit(this.keyframe, (value) -> value.getValue().scale = scale);
     }
 
     private UIFilmPanel getPanel()

@@ -1,0 +1,30 @@
+{
+    "block.bbs.model": "ﺑﻠﻮﻙ ﺍﻟﻨﻤﻮﺫﺝ",
+    "block.bbs.chroma_red": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺣﻤﺮ",
+    "block.bbs.chroma_green": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺧﻀﺮ",
+    "block.bbs.chroma_blue": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺯﺭﻕ",
+    "block.bbs.chroma_cyan": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺳﻤﺎﻭﻱ",
+    "block.bbs.chroma_magenta": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺭﺟﻮﺍﻧﻲ",
+    "block.bbs.chroma_yellow": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺻﻔﺮ",
+    "block.bbs.chroma_black": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺳﻮﺩ",
+    "block.bbs.chroma_white": "ﺑﻠﻮﻙ ﻛﺮﻭﻡ ﺃﺑﻴﺾ",
+
+    "item.bbs.gun": "ﺳﻼﺡ BBS",
+    "itemGroup.bbs.main": "ﻣﻮﺩ BBS",
+
+    "key.bbs.item_editor": "ﻣﺤﺮﺭ ﺍﻟﻌﻨﺎﺻﺮ",
+    "key.bbs.dashboard": "ﻟﻮﺣﺔ ﺍﻟﺘﺤﻜﻢ",
+    "key.bbs.demorph": "ﺇﻟﻐﺎﺀ ﺍﻟﺘﺤﻮﻝ",
+    "key.bbs.open_replays": "ﻓﺘﺢ ﺍﻹﻋﺎﺩﺍﺕ ﺍﻟﺤﺎﻟﻴﺔ",
+    "key.bbs.open_morphing": "ﻓﺘﺢ ﻗﺎﺋﻤﺔ ﺍﻟﺘﺤﻮﻝ",
+    "key.bbs.play_film": "ﺗﺸﻐﻴﻞ ﺍﻟﻔﻴﻠﻢ",
+    "key.bbs.pause_film": "ﺇﻳﻘﺎﻑ ﺍﻟﻔﻴﻠﻢ ﻣﺆﻗﺘﺎ",
+    "key.bbs.record_replay": "ﺗﺴﺠﻴﻞ ﺍﻹﻋﺎﺩﺓ ﺍﻟﺤﺎﻟﻴﺔ",
+    "key.bbs.record_video": "ﺗﺴﺠﻴﻞ ﻓﻴﺪﻳﻮ",
+    "key.bbs.teleport": "ﺍﻻﻧﺘﻘﺎﻝ ﺇﻟﻰ ﺍﻹﻋﺎﺩﺓ ﺍﻟﺤﺎﻟﻴﺔ",
+    "key.bbs.zoom": "ﺗﻜﺒﻴﺮ (ﺳﻼﺡ BBS)",
+
+    "category.bbs.main": "ﻣﻮﺩ BBS",
+
+    "gamerule.bbsEditing": "ﺇﺫﻥ ﺍﻟﺘﻌﺪﻳﻞ ﻓﻲ ﻣﻮﺩ BBS"
+}

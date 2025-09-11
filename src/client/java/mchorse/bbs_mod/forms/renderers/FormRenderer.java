@@ -83,7 +83,7 @@ public abstract class FormRenderer <T extends Form>
 
     public final void render(FormRenderingContext context)
     {
-        if (this.form.shaderShadow.get() && BBSRendering.isIrisShadowPass())
+        if (!this.form.shaderShadow.get() && BBSRendering.isIrisShadowPass())
         {
             return;
         }
