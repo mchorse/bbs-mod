@@ -142,6 +142,16 @@ public class ActionPlayer
             actor.equipStack(EquipmentSlot.LEGS, replay.keyframes.armorLegs.interpolate(tick, ItemStack.EMPTY));
             actor.equipStack(EquipmentSlot.FEET, replay.keyframes.armorFeet.interpolate(tick, ItemStack.EMPTY));
         }
+        
+        // Apply hotbar selection to real players (for first-person mode)
+        if (actor instanceof ServerPlayerEntity player)
+        {
+            int selectedSlot = replay.keyframes.hotbarSelection.interpolate(tick).intValue();
+            if (selectedSlot >= 0 && selectedSlot < 9)
+            {
+                player.getInventory().selectedSlot = selectedSlot;
+            }
+        }
 
         actor.fallDistance = replay.keyframes.fall.interpolate(tick).floatValue();
     }

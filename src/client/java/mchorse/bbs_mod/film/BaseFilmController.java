@@ -37,7 +37,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -487,21 +486,11 @@ public abstract class BaseFilmController
 
                             player.fallDistance = replay.keyframes.fall.interpolate(ticks).floatValue();
                             
-                            // Apply the recorded mainHand item to the player's selected slot during first person playback
-                            // This ensures the player sees the recorded hotbar scrolling
-                            ItemStack recordedMainHand = replay.keyframes.mainHand.interpolate(ticks);
-                            if (recordedMainHand != null && !recordedMainHand.isEmpty())
+                            // Apply the recorded hotbar selection during first person playback
+                            int selectedSlot = replay.keyframes.hotbarSelection.interpolate(ticks).intValue();
+                            if (selectedSlot >= 0 && selectedSlot < 9)
                             {
-                                // Find the slot that contains this item and set it as selected
-                                for (int slotIndex = 0; slotIndex < 9; slotIndex++)
-                                {
-                                    ItemStack slotItem = player.getInventory().getStack(slotIndex);
-                                    if (ItemStack.areEqual(slotItem, recordedMainHand))
-                                    {
-                                        player.getInventory().selectedSlot = slotIndex;
-                                        break;
-                                    }
-                                }
+                                player.getInventory().selectedSlot = selectedSlot;
                             }
                         }
                     }
