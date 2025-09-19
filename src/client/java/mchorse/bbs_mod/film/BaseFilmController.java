@@ -47,6 +47,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,11 @@ public abstract class BaseFilmController
 
     public boolean paused;
     public int exception = -1;
+    
+    // Inventory backup for first-person mode
+    private List<net.minecraft.item.ItemStack> originalInventory = null;
+    private int originalSelectedSlot = 0;
+    private boolean inventoryBackedUp = false;
 
     /* Rendering helpers */
 
@@ -486,11 +492,24 @@ public abstract class BaseFilmController
 
                             player.fallDistance = replay.keyframes.fall.interpolate(ticks).floatValue();
                             
-                            // Apply the recorded hotbar selection during first person playback
+                            // Apply the recorded hotbar selection and inventory during first person playback
                             int selectedSlot = replay.keyframes.hotbarSelection.interpolate(ticks).intValue();
                             if (selectedSlot >= 0 && selectedSlot < 9)
                             {
                                 player.getInventory().selectedSlot = selectedSlot;
+                            }
+                            
+                            // Apply the recorded inventory
+                            List<net.minecraft.item.ItemStack> recordedInventory = replay.keyframes.inventory.interpolate(ticks);
+                            if (recordedInventory != null && !recordedInventory.isEmpty())
+                            {
+                                // Backup the original inventory on first application
+                                this.backupPlayerInventory();
+                                
+                                for (int j = 0; j < Math.min(recordedInventory.size(), player.getInventory().size()); j++)
+                                {
+                                    player.getInventory().setStack(j, recordedInventory.get(j).copy());
+                                }
                             }
                         }
                     }
@@ -623,7 +642,51 @@ public abstract class BaseFilmController
     }
 
     public void shutdown()
-    {}
+    {
+        // Restore the player's original inventory for first-person mode
+        this.restorePlayerInventory();
+    }
+
+    private void backupPlayerInventory()
+    {
+        if (!this.inventoryBackedUp)
+        {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null)
+            {
+                this.originalInventory = new ArrayList<>();
+                for (int i = 0; i < player.getInventory().size(); i++)
+                {
+                    this.originalInventory.add(player.getInventory().getStack(i).copy());
+                }
+                this.originalSelectedSlot = player.getInventory().selectedSlot;
+                this.inventoryBackedUp = true;
+            }
+        }
+    }
+    
+    private void restorePlayerInventory()
+    {
+        if (this.inventoryBackedUp && this.originalInventory != null)
+        {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null)
+            {
+                // Clear all inventory slots first to remove any ghost items
+                for (int i = 0; i < player.getInventory().size(); i++)
+                {
+                    player.getInventory().setStack(i, net.minecraft.item.ItemStack.EMPTY);
+                }
+                
+                // Restore original inventory
+                for (int i = 0; i < Math.min(this.originalInventory.size(), player.getInventory().size()); i++)
+                {
+                    player.getInventory().setStack(i, this.originalInventory.get(i).copy());
+                }
+                player.getInventory().selectedSlot = this.originalSelectedSlot;
+            }
+        }
+    }
 
     public static enum UpdateMode
     {
