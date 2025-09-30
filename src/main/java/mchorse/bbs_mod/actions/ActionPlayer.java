@@ -147,6 +147,23 @@ public class ActionPlayer
             actor.equipStack(EquipmentSlot.CHEST, replay.keyframes.armorChest.interpolate(tick, ItemStack.EMPTY));
             actor.equipStack(EquipmentSlot.LEGS, replay.keyframes.armorLegs.interpolate(tick, ItemStack.EMPTY));
             actor.equipStack(EquipmentSlot.FEET, replay.keyframes.armorFeet.interpolate(tick, ItemStack.EMPTY));
+
+            // Provide recorded inventory to ActorEntity so it can drop it on death
+            if (actor instanceof mchorse.bbs_mod.entity.ActorEntity actorEntity)
+            {
+                java.util.List<ItemStack> recordedInventory = replay.keyframes.inventory.interpolate(tick);
+                if (recordedInventory != null && !recordedInventory.isEmpty())
+                {
+                    actorEntity.setRecordedInventory(recordedInventory);
+                }
+
+                // Set recorded XP so actor drops the same experience on death
+                Double xp = replay.keyframes.experience.interpolate(tick);
+                if (xp != null)
+                {
+                    actorEntity.setXpToDrop(xp.intValue());
+                }
+            }
         }
         
         // Apply hotbar selection and inventory to real players (for first-person mode)

@@ -27,7 +27,7 @@ public class ReplayKeyframes extends ValueGroup
     public static final String GROUP_EXTRA1 = "extra1";
     public static final String GROUP_EXTRA2 = "extra2";
 
-    public static final List<String> CURATED_CHANNELS = Arrays.asList("x", "y", "z", "pitch", "yaw", "headYaw", "bodyYaw", "sneaking", "sprinting", "item_main_hand", "item_off_hand", "item_head", "item_chest", "item_legs", "item_feet", "stick_lx", "stick_ly", "stick_rx", "stick_ry", "trigger_l", "trigger_r", "extra1_x", "extra1_y", "extra2_x", "extra2_y", "grounded", "damage", "vX", "vY", "vZ", "hotbar_selection", "inventory");
+    public static final List<String> CURATED_CHANNELS = Arrays.asList("x", "y", "z", "pitch", "yaw", "headYaw", "bodyYaw", "sneaking", "sprinting", "item_main_hand", "item_off_hand", "item_head", "item_chest", "item_legs", "item_feet", "stick_lx", "stick_ly", "stick_rx", "stick_ry", "trigger_l", "trigger_r", "extra1_x", "extra1_y", "extra2_x", "extra2_y", "grounded", "damage", "vX", "vY", "vZ", "hotbar_selection", "inventory", "experience");
 
     public final KeyframeChannel<Double> x = new KeyframeChannel<>("x", KeyframeFactories.DOUBLE);
     public final KeyframeChannel<Double> y = new KeyframeChannel<>("y", KeyframeFactories.DOUBLE);
@@ -69,6 +69,7 @@ public class ReplayKeyframes extends ValueGroup
     public final KeyframeChannel<ItemStack> armorFeet = new KeyframeChannel<>("item_feet", KeyframeFactories.ITEM_STACK);
     public final KeyframeChannel<Double> hotbarSelection = new KeyframeChannel<>("hotbar_selection", KeyframeFactories.DOUBLE);
     public final KeyframeChannel<List<ItemStack>> inventory = new KeyframeChannel<>("inventory", KeyframeFactories.INVENTORY);
+    public final KeyframeChannel<Double> experience = new KeyframeChannel<>("experience", KeyframeFactories.DOUBLE);
 
     public ReplayKeyframes(String id)
     {
@@ -108,6 +109,7 @@ public class ReplayKeyframes extends ValueGroup
         this.add(this.armorFeet);
         this.add(this.hotbarSelection);
         this.add(this.inventory);
+        this.add(this.experience);
     }
 
     public List<KeyframeChannel<?>> getChannels()
@@ -228,7 +230,7 @@ public class ReplayKeyframes extends ValueGroup
             this.armorLegs.insert(tick, entity.getEquipmentStack(EquipmentSlot.LEGS).copy());
             this.armorFeet.insert(tick, entity.getEquipmentStack(EquipmentSlot.FEET).copy());
             
-            // Record hotbar selection and inventory for player entities
+            // Record hotbar selection, inventory, and experience for player entities
             if (entity instanceof mchorse.bbs_mod.forms.entities.MCEntity mcEntity)
             {
                 net.minecraft.entity.Entity mcEntityInstance = mcEntity.getMcEntity();
@@ -243,6 +245,9 @@ public class ReplayKeyframes extends ValueGroup
                         inventory.add(player.getInventory().getStack(i).copy());
                     }
                     this.inventory.insert(tick, inventory);
+
+                    // Total experience (sum of all levels and progress)
+                    this.experience.insert(tick, (double) player.totalExperience);
                 }
             }
         }
