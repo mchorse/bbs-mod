@@ -438,4 +438,159 @@ public class Draw
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
     }
+
+    /**
+     * Render a 3D torus (tube ring) centered at origin in the XY plane.
+     * radius: distance from center to tube center. tubeRadius: radius of tube cross-section.
+     * segments: around the main ring. tubeSegments: around the tube.
+     */
+    public static void renderTorus(MatrixStack stack, float radius, float tubeRadius, int segments, int tubeSegments, float r, float g, float b, float a)
+    {
+        if (segments < 24) segments = 24;
+        if (tubeSegments < 8) tubeSegments = 8;
+
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+        Matrix4f m = stack.peek().getPositionMatrix();
+
+        for (int i = 0; i < segments; i++)
+        {
+            float theta0 = (float) (2 * Math.PI * i / segments);
+            float theta1 = (float) (2 * Math.PI * (i + 1) / segments);
+
+            float cos0 = (float) Math.cos(theta0);
+            float sin0 = (float) Math.sin(theta0);
+            float cos1 = (float) Math.cos(theta1);
+            float sin1 = (float) Math.sin(theta1);
+
+            for (int j = 0; j < tubeSegments; j++)
+            {
+                float phi0 = (float) (2 * Math.PI * j / tubeSegments);
+                float phi1 = (float) (2 * Math.PI * (j + 1) / tubeSegments);
+
+                float c0 = (float) Math.cos(phi0);
+                float s0 = (float) Math.sin(phi0);
+                float c1t = (float) Math.cos(phi1);
+                float s1t = (float) Math.sin(phi1);
+
+                // Four points on tube quad
+                float x00 = (radius + tubeRadius * c0) * cos0;
+                float y00 = (radius + tubeRadius * c0) * sin0;
+                float z00 = tubeRadius * s0;
+
+                float x01 = (radius + tubeRadius * c1t) * cos0;
+                float y01 = (radius + tubeRadius * c1t) * sin0;
+                float z01 = tubeRadius * s1t;
+
+                float x10 = (radius + tubeRadius * c0) * cos1;
+                float y10 = (radius + tubeRadius * c0) * sin1;
+                float z10 = tubeRadius * s0;
+
+                float x11 = (radius + tubeRadius * c1t) * cos1;
+                float y11 = (radius + tubeRadius * c1t) * sin1;
+                float z11 = tubeRadius * s1t;
+
+                // Two triangles per quad, double-sided
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+                builder.vertex(m, x10, y10, z10).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x01, y01, z01).color(r, g, b, a).next();
+
+                // back faces
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x10, y10, z10).color(r, g, b, a).next();
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+
+                builder.vertex(m, x01, y01, z01).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+            }
+        }
+
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+    }
+
+    /**
+     * Dashed version of renderTorus: skips whole main segments to create dashed 3D tube.
+     * period: number of main segments per on+off cycle. dutyCycle: fraction rendered per cycle.
+     */
+    public static void renderDashedTorus(MatrixStack stack, float radius, float tubeRadius, int segments, int tubeSegments, int period, float dutyCycle, float r, float g, float b, float a)
+    {
+        if (segments < 24) segments = 24;
+        if (tubeSegments < 8) tubeSegments = 8;
+        if (period < 2) period = 2;
+        if (dutyCycle < 0F) dutyCycle = 0F; else if (dutyCycle > 1F) dutyCycle = 1F;
+
+        int onCount = Math.max(1, Math.round(period * dutyCycle));
+
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+        Matrix4f m = stack.peek().getPositionMatrix();
+
+        for (int i = 0; i < segments; i++)
+        {
+            int idx = i % period;
+            if (idx >= onCount) continue; // gap segment
+
+            float theta0 = (float) (2 * Math.PI * i / segments);
+            float theta1 = (float) (2 * Math.PI * (i + 1) / segments);
+
+            float cos0 = (float) Math.cos(theta0);
+            float sin0 = (float) Math.sin(theta0);
+            float cos1 = (float) Math.cos(theta1);
+            float sin1 = (float) Math.sin(theta1);
+
+            for (int j = 0; j < tubeSegments; j++)
+            {
+                float phi0 = (float) (2 * Math.PI * j / tubeSegments);
+                float phi1 = (float) (2 * Math.PI * (j + 1) / tubeSegments);
+
+                float c0 = (float) Math.cos(phi0);
+                float s0 = (float) Math.sin(phi0);
+                float c1t = (float) Math.cos(phi1);
+                float s1t = (float) Math.sin(phi1);
+
+                float x00 = (radius + tubeRadius * c0) * cos0;
+                float y00 = (radius + tubeRadius * c0) * sin0;
+                float z00 = tubeRadius * s0;
+
+                float x01 = (radius + tubeRadius * c1t) * cos0;
+                float y01 = (radius + tubeRadius * c1t) * sin0;
+                float z01 = tubeRadius * s1t;
+
+                float x10 = (radius + tubeRadius * c0) * cos1;
+                float y10 = (radius + tubeRadius * c0) * sin1;
+                float z10 = tubeRadius * s0;
+
+                float x11 = (radius + tubeRadius * c1t) * cos1;
+                float y11 = (radius + tubeRadius * c1t) * sin1;
+                float z11 = tubeRadius * s1t;
+
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+                builder.vertex(m, x10, y10, z10).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x01, y01, z01).color(r, g, b, a).next();
+
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x10, y10, z10).color(r, g, b, a).next();
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+
+                builder.vertex(m, x01, y01, z01).color(r, g, b, a).next();
+                builder.vertex(m, x11, y11, z11).color(r, g, b, a).next();
+                builder.vertex(m, x00, y00, z00).color(r, g, b, a).next();
+            }
+        }
+
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+    }
 }

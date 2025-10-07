@@ -129,7 +129,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Matrix4f mvp = new Matrix4f(this.camera.projection).mul(this.camera.view).mul(origin);
 
         // Ring picking in screen space (reliable from any angle)
-        float pickTol = 20F; // pixels
+        float pickTolBase = 20F; // pixels
 
         Vector2f p0 = projectToScreen(mvp, 0, 0, 0);
         if (p0 == null)
@@ -139,10 +139,25 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
         Vector2f mouse = new Vector2f(context.mouseX, context.mouseY);
 
+        // Determine on-screen radius to scale tolerance with size
+        float R = 0.35F; // keep in sync with render
+        float tube = 0.06F; // torus tube radius used in render
+        Vector2f pR = projectToScreen(mvp, R, 0, 0);
+        Vector2f pRt = projectToScreen(mvp, R + tube * 0.9F, 0, 0);
+        float pickTol = pickTolBase;
+        if (p0 != null && pR != null)
+        {
+            float rpx = p0.distance(pR);
+            float tpx = pRt != null ? Math.abs(pR.distance(pRt)) : 0F;
+            pickTol = Math.max(pickTolBase, Math.max(rpx * 0.14F, tpx * 0.9F));
+        }
+
         // Sample three rings (XY -> Z, XZ -> Y, YZ -> X)
         Axis ringHit = null;
-        float R = 0.35F; // keep in sync with render
-        int samples = 72;
+        int samples = 128;
+        int period = 8; // must match render dashes
+        float duty = 0.55F;
+        int onCount = Math.max(1, Math.round(period * duty));
 
         // Camera-relative weighting: prefer ring whose plane is most perpendicular to view (most visible)
         Matrix4f viewOrigin = new Matrix4f(this.camera.view).mul(origin);
@@ -152,7 +167,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         org.joml.Vector3f ny = new org.joml.Vector3f(0, 1, 0).mul(normalMat).normalize();
         org.joml.Vector3f nz = new org.joml.Vector3f(0, 0, 1).mul(normalMat).normalize();
         float wX = Math.abs(nx.z), wY = Math.abs(ny.z), wZ = Math.abs(nz.z);
-        float bias = 12F; // px advantage for fully face-on ring
+        float bias = 8F; // px advantage for fully face-on ring (gentler)
 
         // Helper to test one ring defined by function producing (x,y,z)
         java.util.function.Function<Float, Vector2f> projectPoint = (t) ->
@@ -205,6 +220,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
             for (int i = 0; i <= samples; i++)
             {
                 float t = (float) (2 * Math.PI * i / samples);
+                int seg = (int) Math.floor((float) i / samples * period) % period;
+                if (seg >= onCount) { prev = null; continue; } // respect gaps
                 Vector2f cur = proj.apply(t);
                 if (cur == null)
                 {
@@ -375,21 +392,21 @@ public class UIPickableFormRenderer extends UIFormRenderer
                 hover = center.distance(new Vector2f(context.mouseX, context.mouseY)) <= pxTol;
             }
 
-            // 3 colored rotation rings (dashed)
+            // 3 colored rotation rings (3D torus)
             float ringRadius = baseRadius;
-            float band = 0.07F; // much thicker
+            float band = 0.06F; // torus tube radius
 
             // XY plane (Z rotation) - blue
-            Draw.renderDashedRing(stack, ringRadius, band, 96, 8, 0.5F, 0F, 0F, 1F, 0.95F);
+            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 0F, 0F, 1F, 0.95F);
             // XZ plane (Y rotation) - green
             stack.push();
             stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
-            Draw.renderDashedRing(stack, ringRadius, band, 96, 8, 0.5F, 0F, 1F, 0F, 0.95F);
+            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 0F, 1F, 0F, 0.95F);
             stack.pop();
             // YZ plane (X rotation) - red
             stack.push();
             stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90F));
-            Draw.renderDashedRing(stack, ringRadius, band, 96, 8, 0.5F, 1F, 0F, 0F, 0.95F);
+            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 1F, 0F, 0F, 0.95F);
             stack.pop();
 
             // center sphere hover feedback

@@ -886,7 +886,7 @@ public class UIReplaysEditor extends UIElement
         /* Projection * View from last rendered frame */
         Matrix4f mvp = new Matrix4f(this.filmPanel.lastProjection).mul(this.filmPanel.lastView).mul(world);
 
-        float pickTol = 28F; /* pixels - ring picking, easier while flying */
+        float pickTolBase = 34F; /* base pixels - thicker torus */
 
         Vector2f p0 = projectToScreen(mvp, area, 0, 0, 0);
         if (p0 == null)
@@ -894,13 +894,26 @@ public class UIReplaysEditor extends UIElement
             return false;
         }
 
+        // Scale tolerance with on-screen radius to keep selection easy at any zoom
+        float R = 0.35F;
+        float tube = 0.06F; // torus tube radius used in render
+        Vector2f pR = projectToScreen(mvp, area, R, 0, 0);
+        Vector2f pRt = projectToScreen(mvp, area, R + tube * 0.9F, 0, 0);
+        float pickTol = pickTolBase;
+        if (pR != null)
+        {
+            float rpx = p0.distance(pR);
+            float tpx = pRt != null ? Math.abs(pR.distance(pRt)) : 0F;
+            pickTol = Math.max(pickTolBase, Math.max(rpx * 0.14F, tpx * 0.9F));
+        }
+
         Vector2f mouse = new Vector2f(context.mouseX, context.mouseY);
 
         // Ring picking via screen-space sampling
         Axis ringHit = null;
         float best = Float.MAX_VALUE;
-        float R = 0.35F;
-        int samples = 48;
+        int samples = 128;
+        int period = 8; float duty = 0.55F; int onCount = Math.max(1, Math.round(period * duty));
         java.util.function.Function<Vector4f, Vector2f> project = (vec) ->
         {
             Vector4f vv = new Vector4f(vec);
@@ -925,6 +938,8 @@ public class UIReplaysEditor extends UIElement
                 if (axis == Axis.Z) v = new Vector4f((float) Math.cos(t) * R, (float) Math.sin(t) * R, 0, 1);
                 else if (axis == Axis.Y) v = new Vector4f((float) Math.cos(t) * R, 0, (float) Math.sin(t) * R, 1);
                 else v = new Vector4f(0, (float) Math.cos(t) * R, (float) Math.sin(t) * R, 1);
+                int seg = (int) Math.floor((float) i / samples * period) % period;
+                if (seg >= onCount) { prev = null; continue; }
                 Vector2f cur = project.apply(v);
                 if (cur == null) { prev = null; continue; }
                 if (prev != null)
