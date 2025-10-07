@@ -34,6 +34,13 @@ public abstract class Form implements IMapSerializable
     public final StringProperty name = new StringProperty(this, "name", "");
     public final TransformProperty transform = new TransformProperty(this, "transform", new Transform());
     public final TransformProperty transformOverlay = new TransformProperty(this, "transform_overlay", new Transform());
+    public final TransformProperty transformOverlay1 = new TransformProperty(this, "transform_overlay_1", new Transform());
+    public final TransformProperty transformOverlay2 = new TransformProperty(this, "transform_overlay_2", new Transform());
+    public final TransformProperty transformOverlay3 = new TransformProperty(this, "transform_overlay_3", new Transform());
+    public final TransformProperty transformOverlay4 = new TransformProperty(this, "transform_overlay_4", new Transform());
+    public final TransformProperty transformOverlay5 = new TransformProperty(this, "transform_overlay_5", new Transform());
+    public final TransformProperty transformOverlay6 = new TransformProperty(this, "transform_overlay_6", new Transform());
+    public final TransformProperty transformOverlay7 = new TransformProperty(this, "transform_overlay_7", new Transform());
     public final FloatProperty uiScale = new FloatProperty(this, "uiScale", 1F);
     public final BodyPartManager parts = new BodyPartManager(this);
     public final AnchorProperty anchor = new AnchorProperty(this, "anchor");
@@ -72,6 +79,13 @@ public abstract class Form implements IMapSerializable
         this.register(this.name);
         this.register(this.transform);
         this.register(this.transformOverlay);
+        this.register(this.transformOverlay1);
+        this.register(this.transformOverlay2);
+        this.register(this.transformOverlay3);
+        this.register(this.transformOverlay4);
+        this.register(this.transformOverlay5);
+        this.register(this.transformOverlay6);
+        this.register(this.transformOverlay7);
         this.register(this.uiScale);
         this.register(this.anchor);
         this.register(this.shaderShadow);

@@ -164,26 +164,41 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     public Pose getPose()
     {
         Pose pose = this.form.pose.get().copy();
-        Pose overlay = this.form.poseOverlay.get().copy();
+        
+        Pose[] overlays = {
+            this.form.poseOverlay.get(),
+            this.form.poseOverlay1.get(),
+            this.form.poseOverlay2.get(),
+            this.form.poseOverlay3.get(),
+            this.form.poseOverlay4.get(),
+            this.form.poseOverlay5.get(),
+            this.form.poseOverlay6.get(),
+            this.form.poseOverlay7.get()
+        };
 
-        for (Map.Entry<String, PoseTransform> entry : overlay.transforms.entrySet())
+        for (Pose overlay : overlays)
         {
-            PoseTransform poseTransform = pose.get(entry.getKey());
-            PoseTransform value = entry.getValue();
+            Pose overlayCopy = overlay.copy();
+            
+            for (Map.Entry<String, PoseTransform> entry : overlayCopy.transforms.entrySet())
+            {
+                PoseTransform poseTransform = pose.get(entry.getKey());
+                PoseTransform value = entry.getValue();
 
-            if (value.fix != 0)
-            {
-                poseTransform.translate.lerp(value.translate, value.fix);
-                poseTransform.scale.lerp(value.scale, value.fix);
-                poseTransform.rotate.lerp(value.rotate, value.fix);
-                poseTransform.rotate2.lerp(value.rotate2, value.fix);
-            }
-            else
-            {
-                poseTransform.translate.add(value.translate);
-                poseTransform.scale.add(value.scale).sub(1, 1, 1);
-                poseTransform.rotate.add(value.rotate);
-                poseTransform.rotate2.add(value.rotate2);
+                if (value.fix != 0)
+                {
+                    poseTransform.translate.lerp(value.translate, value.fix);
+                    poseTransform.scale.lerp(value.scale, value.fix);
+                    poseTransform.rotate.lerp(value.rotate, value.fix);
+                    poseTransform.rotate2.lerp(value.rotate2, value.fix);
+                }
+                else
+                {
+                    poseTransform.translate.add(value.translate);
+                    poseTransform.scale.add(value.scale).sub(1, 1, 1);
+                    poseTransform.rotate.add(value.rotate);
+                    poseTransform.rotate2.add(value.rotate2);
+                }
             }
         }
 

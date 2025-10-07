@@ -53,7 +53,7 @@ public class MobFormRenderer extends FormRenderer<MobForm> implements ITickable
     private static final Map<Class, Map<String, ModelPart>> parts = new HashMap<>();
     private static final Map<ModelPart, Transform> cache = new HashMap<>();
     private static Pose currentPose;
-    private static Pose currentPoseOverlay;
+    private static Pose[] currentPoseOverlays = new Pose[8];
 
     public static final GameProfile WIDE = new GameProfile(UUID.fromString("b99a2400-28a8-4288-92dc-924beafbf756"), "McHorseYT");
     public static final GameProfile SLIM = new GameProfile(UUID.fromString("5477bd28-e672-4f87-a209-c03cf75f3606"), "osmiq");
@@ -73,9 +73,9 @@ public class MobFormRenderer extends FormRenderer<MobForm> implements ITickable
         return currentPose;
     }
 
-    public static Pose getCurrentPoseOverlay()
+    public static Pose[] getCurrentPoseOverlays()
     {
-        return currentPoseOverlay;
+        return currentPoseOverlays;
     }
 
     public static Map<Class, Map<String, ModelPart>> getParts()
@@ -317,11 +317,22 @@ public class MobFormRenderer extends FormRenderer<MobForm> implements ITickable
             }
 
             currentPose = this.form.pose.get();
-            currentPoseOverlay = this.form.poseOverlay.get();
+            currentPoseOverlays[0] = this.form.poseOverlay.get();
+            currentPoseOverlays[1] = this.form.poseOverlay1.get();
+            currentPoseOverlays[2] = this.form.poseOverlay2.get();
+            currentPoseOverlays[3] = this.form.poseOverlay3.get();
+            currentPoseOverlays[4] = this.form.poseOverlay4.get();
+            currentPoseOverlays[5] = this.form.poseOverlay5.get();
+            currentPoseOverlays[6] = this.form.poseOverlay6.get();
+            currentPoseOverlays[7] = this.form.poseOverlay7.get();
 
             MinecraftClient.getInstance().getEntityRenderDispatcher().render(this.entity, 0D, 0D, 0D, 0F, context.getTransition(), context.stack, consumers, light);
 
-            currentPose = currentPoseOverlay = null;
+            currentPose = null;
+            for (int i = 0; i < currentPoseOverlays.length; i++)
+            {
+                currentPoseOverlays[i] = null;
+            }
 
             consumers.draw();
             CustomVertexConsumerProvider.clearRunnables();
