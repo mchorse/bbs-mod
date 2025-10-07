@@ -6,17 +6,16 @@ import mchorse.bbs_mod.network.ServerNetwork;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Arm;
-import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
@@ -39,6 +38,8 @@ public class ActorEntity extends LivingEntity implements IEntityFormProvider
     private Form form;
 
     private Map<EquipmentSlot, ItemStack> equipment = new HashMap<>();
+    private List<ItemStack> recordedInventory;
+    private int xpToDrop;
 
     public ActorEntity(EntityType<? extends LivingEntity> entityType, World world)
     {
@@ -135,25 +136,6 @@ public class ActorEntity extends LivingEntity implements IEntityFormProvider
         {
             return;
         }
-
-        /* Pickup items */
-        Box box = this.getBoundingBox().expand(1D, 0.5D, 1D);
-        List<Entity> list = this.getWorld().getOtherEntities(this, box);
-
-        for (Entity entity : list)
-        {
-            if (entity instanceof ItemEntity itemEntity)
-            {
-                ItemStack itemStack = itemEntity.getStack();
-                int i = itemStack.getCount();
-
-                if (!entity.isRemoved() && !itemEntity.cannotPickup())
-                {
-                    ((ServerWorld) this.getWorld()).getChunkManager().sendToOtherNearbyPlayers(entity, new ItemPickupAnimationS2CPacket(entity.getId(), this.getId(), i));
-                    entity.discard();
-                }
-            }
-        }
     }
 
     @Override
@@ -189,5 +171,60 @@ public class ActorEntity extends LivingEntity implements IEntityFormProvider
         super.writeCustomDataToNbt(nbt);
 
         nbt.putBoolean("despawn", true);
+    }
+
+    /**
+     * Allow Action playback to provide recorded inventory and optional XP to drop.
+     */
+    public void setRecordedInventory(List<ItemStack> inventory)
+    {
+        this.recordedInventory = inventory;
+    }
+
+    public void setXpToDrop(int xp)
+    {
+        this.xpToDrop = Math.max(0, xp);
+    }
+
+    @Override
+    public void onDeath(DamageSource damageSource)
+    {
+        super.onDeath(damageSource);
+
+        if (this.getWorld().isClient())
+        {
+            return;
+        }
+
+        // Drop equipped items
+        for (EquipmentSlot slot : EquipmentSlot.values())
+        {
+            ItemStack stack = this.getEquippedStack(slot);
+            if (stack != null && !stack.isEmpty())
+            {
+                this.dropStack(stack.copy());
+                this.equipStack(slot, ItemStack.EMPTY);
+            }
+        }
+
+        // Drop recorded inventory, if any
+        if (this.recordedInventory != null && !this.recordedInventory.isEmpty())
+        {
+            for (ItemStack stack : this.recordedInventory)
+            {
+                if (stack != null && !stack.isEmpty())
+                {
+                    this.dropStack(stack.copy());
+                }
+            }
+            this.recordedInventory = null;
+        }
+
+        // Drop some XP if specified
+        if (this.xpToDrop > 0)
+        {
+            ExperienceOrbEntity.spawn((ServerWorld) this.getWorld(), this.getPos(), this.xpToDrop);
+            this.xpToDrop = 0;
+        }
     }
 }

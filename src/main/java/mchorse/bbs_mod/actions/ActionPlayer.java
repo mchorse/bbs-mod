@@ -17,6 +17,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ public class ActionPlayer
     private int duration;
 
     private Map<String, LivingEntity> actors = new HashMap<>();
+    private List<ItemStack> originalInventory = null;
+    private int originalSelectedSlot = 0;
 
     public ActionPlayer(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception)
     {
@@ -47,6 +50,9 @@ public class ActionPlayer
         this.serverPlayer = serverPlayer;
 
         this.duration = film.camera.calculateDuration();
+
+        // Backup the player's original inventory for first-person mode
+        this.backupPlayerInventory();
 
         this.updateReplayEntities();
     }
@@ -130,12 +136,55 @@ public class ActionPlayer
         actor.setBodyYaw(yawBody);
         actor.setSneaking(replay.keyframes.sneaking.interpolate(tick) > 0);
         actor.setOnGround(replay.keyframes.grounded.interpolate(tick) > 0);
-        actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
-        actor.equipStack(EquipmentSlot.OFFHAND, replay.keyframes.offHand.interpolate(tick, ItemStack.EMPTY));
-        actor.equipStack(EquipmentSlot.HEAD, replay.keyframes.armorHead.interpolate(tick, ItemStack.EMPTY));
-        actor.equipStack(EquipmentSlot.CHEST, replay.keyframes.armorChest.interpolate(tick, ItemStack.EMPTY));
-        actor.equipStack(EquipmentSlot.LEGS, replay.keyframes.armorLegs.interpolate(tick, ItemStack.EMPTY));
-        actor.equipStack(EquipmentSlot.FEET, replay.keyframes.armorFeet.interpolate(tick, ItemStack.EMPTY));
+        
+        // Only apply equipment changes to ActorEntity instances, not to real players
+        // This prevents inventory duplication issues in first person mode
+        if (!(actor instanceof ServerPlayerEntity))
+        {
+            actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
+            actor.equipStack(EquipmentSlot.OFFHAND, replay.keyframes.offHand.interpolate(tick, ItemStack.EMPTY));
+            actor.equipStack(EquipmentSlot.HEAD, replay.keyframes.armorHead.interpolate(tick, ItemStack.EMPTY));
+            actor.equipStack(EquipmentSlot.CHEST, replay.keyframes.armorChest.interpolate(tick, ItemStack.EMPTY));
+            actor.equipStack(EquipmentSlot.LEGS, replay.keyframes.armorLegs.interpolate(tick, ItemStack.EMPTY));
+            actor.equipStack(EquipmentSlot.FEET, replay.keyframes.armorFeet.interpolate(tick, ItemStack.EMPTY));
+
+            // Provide recorded inventory to ActorEntity so it can drop it on death
+            if (actor instanceof mchorse.bbs_mod.entity.ActorEntity actorEntity)
+            {
+                java.util.List<ItemStack> recordedInventory = replay.keyframes.inventory.interpolate(tick);
+                if (recordedInventory != null && !recordedInventory.isEmpty())
+                {
+                    actorEntity.setRecordedInventory(recordedInventory);
+                }
+
+                // Set recorded XP so actor drops the same experience on death
+                Double xp = replay.keyframes.experience.interpolate(tick);
+                if (xp != null)
+                {
+                    actorEntity.setXpToDrop(xp.intValue());
+                }
+            }
+        }
+        
+        // Apply hotbar selection and inventory to real players (for first-person mode)
+        if (actor instanceof ServerPlayerEntity player)
+        {
+            int selectedSlot = replay.keyframes.hotbarSelection.interpolate(tick).intValue();
+            if (selectedSlot >= 0 && selectedSlot < 9)
+            {
+                player.getInventory().selectedSlot = selectedSlot;
+            }
+            
+            // Apply the recorded inventory
+            List<ItemStack> recordedInventory = replay.keyframes.inventory.interpolate(tick);
+            if (recordedInventory != null && !recordedInventory.isEmpty())
+            {
+                for (int i = 0; i < Math.min(recordedInventory.size(), player.getInventory().size()); i++)
+                {
+                    player.getInventory().setStack(i, recordedInventory.get(i).copy());
+                }
+            }
+        }
 
         actor.fallDistance = replay.keyframes.fall.interpolate(tick).floatValue();
     }
@@ -246,6 +295,9 @@ public class ActionPlayer
 
     public void stop()
     {
+        // Restore the player's original inventory for first-person mode
+        this.restorePlayerInventory();
+        
         for (LivingEntity value : this.actors.values())
         {
             if (!value.isPlayer())
@@ -258,5 +310,37 @@ public class ActionPlayer
     public void toggle()
     {
         this.playing = !this.playing;
+    }
+
+    private void backupPlayerInventory()
+    {
+        if (this.serverPlayer != null)
+        {
+            this.originalInventory = new ArrayList<>();
+            for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
+            {
+                this.originalInventory.add(this.serverPlayer.getInventory().getStack(i).copy());
+            }
+            this.originalSelectedSlot = this.serverPlayer.getInventory().selectedSlot;
+        }
+    }
+
+    private void restorePlayerInventory()
+    {
+        if (this.serverPlayer != null && this.originalInventory != null)
+        {
+            // Clear all inventory slots first to remove any ghost items
+            for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
+            {
+                this.serverPlayer.getInventory().setStack(i, ItemStack.EMPTY);
+            }
+            
+            // Restore original inventory
+            for (int i = 0; i < Math.min(this.originalInventory.size(), this.serverPlayer.getInventory().size()); i++)
+            {
+                this.serverPlayer.getInventory().setStack(i, this.originalInventory.get(i).copy());
+            }
+            this.serverPlayer.getInventory().selectedSlot = this.originalSelectedSlot;
+        }
     }
 }

@@ -20,6 +20,7 @@ public class KeyframeFactories
     public static final AnchorKeyframeFactory ANCHOR = new AnchorKeyframeFactory();
     public static final BlockStateKeyframeFactory BLOCK_STATE = new BlockStateKeyframeFactory();
     public static final ItemStackKeyframeFactory ITEM_STACK = new ItemStackKeyframeFactory();
+    public static final InventoryKeyframeFactory INVENTORY = new InventoryKeyframeFactory();
     public static final ActionsConfigKeyframeFactory ACTIONS_CONFIG = new ActionsConfigKeyframeFactory();
     public static final ShapeKeysKeyframeFactory SHAPE_KEYS = new ShapeKeysKeyframeFactory();
     public static final ParticleSettingsKeyframeFactory PARTICLE_SETTINGS = new ParticleSettingsKeyframeFactory();
@@ -46,6 +47,7 @@ public class KeyframeFactories
         FACTORIES.put("anchor", ANCHOR);
         FACTORIES.put("block_state", BLOCK_STATE);
         FACTORIES.put("item_stack", ITEM_STACK);
+        FACTORIES.put("inventory", INVENTORY);
         FACTORIES.put("actions_config", ACTIONS_CONFIG);
         FACTORIES.put("shape_keys", SHAPE_KEYS);
         FACTORIES.put("particle_settings", PARTICLE_SETTINGS);
