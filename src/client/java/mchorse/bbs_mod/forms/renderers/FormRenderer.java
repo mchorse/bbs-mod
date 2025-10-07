@@ -135,13 +135,30 @@ public abstract class FormRenderer <T extends Form>
     protected Transform createTransform()
     {
         Transform transform = new Transform();
-        Transform overlay = this.form.transformOverlay.get();
+        
+        Transform[] overlays = {
+            this.form.transformOverlay.get(),
+            this.form.transformOverlay1.get(),
+            this.form.transformOverlay2.get(),
+            this.form.transformOverlay3.get(),
+            this.form.transformOverlay4.get(),
+            this.form.transformOverlay5.get(),
+            this.form.transformOverlay6.get(),
+            this.form.transformOverlay7.get()
+        };
 
         transform.copy(this.form.transform.get());
-        transform.translate.add(overlay.translate);
-        transform.scale.add(overlay.scale).sub(1, 1, 1);
-        transform.rotate.add(overlay.rotate);
-        transform.rotate2.add(overlay.rotate2);
+        
+        for (Transform overlay : overlays)
+        {
+            if (overlay != null)
+            {
+                transform.translate.add(overlay.translate);
+                transform.scale.add(overlay.scale).sub(1, 1, 1);
+                transform.rotate.add(overlay.rotate);
+                transform.rotate2.add(overlay.rotate2);
+            }
+        }
 
         return transform;
     }

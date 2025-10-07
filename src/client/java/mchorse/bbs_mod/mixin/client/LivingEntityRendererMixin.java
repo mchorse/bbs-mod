@@ -41,30 +41,36 @@ public abstract class LivingEntityRendererMixin
         LivingEntityRenderer renderer = (LivingEntityRenderer) (Object) this;
 
         Pose pose = MobFormRenderer.getCurrentPose();
-        Pose poseOverlay = MobFormRenderer.getCurrentPoseOverlay();
+        Pose[] poseOverlays = MobFormRenderer.getCurrentPoseOverlays();
 
         if (pose != null)
         {
             pose = pose.copy();
 
-            for (Map.Entry<String, PoseTransform> transformEntry : poseOverlay.transforms.entrySet())
+            for (Pose poseOverlay : poseOverlays)
             {
-                PoseTransform poseTransform = pose.get(transformEntry.getKey());
-                PoseTransform value = transformEntry.getValue();
+                if (poseOverlay != null)
+                {
+                    for (Map.Entry<String, PoseTransform> transformEntry : poseOverlay.transforms.entrySet())
+                    {
+                        PoseTransform poseTransform = pose.get(transformEntry.getKey());
+                        PoseTransform value = transformEntry.getValue();
 
-                if (value.fix != 0)
-                {
-                    poseTransform.translate.lerp(value.translate, value.fix);
-                    poseTransform.scale.lerp(value.scale, value.fix);
-                    poseTransform.rotate.lerp(value.rotate, value.fix);
-                    poseTransform.rotate2.lerp(value.rotate2, value.fix);
-                }
-                else
-                {
-                    poseTransform.translate.add(value.translate);
-                    poseTransform.scale.add(value.scale).sub(1, 1, 1);
-                    poseTransform.rotate.add(value.rotate);
-                    poseTransform.rotate2.add(value.rotate2);
+                        if (value.fix != 0)
+                        {
+                            poseTransform.translate.lerp(value.translate, value.fix);
+                            poseTransform.scale.lerp(value.scale, value.fix);
+                            poseTransform.rotate.lerp(value.rotate, value.fix);
+                            poseTransform.rotate2.lerp(value.rotate2, value.fix);
+                        }
+                        else
+                        {
+                            poseTransform.translate.add(value.translate);
+                            poseTransform.scale.add(value.scale).sub(1, 1, 1);
+                            poseTransform.rotate.add(value.rotate);
+                            poseTransform.rotate2.add(value.rotate2);
+                        }
+                    }
                 }
             }
 

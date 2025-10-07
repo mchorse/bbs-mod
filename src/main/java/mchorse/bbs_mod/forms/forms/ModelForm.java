@@ -19,6 +19,13 @@ public class ModelForm extends Form
     public final StringProperty model = new StringProperty(this, "model", "");
     public final PoseProperty pose = new PoseProperty(this, "pose", new Pose());
     public final PoseProperty poseOverlay = new PoseProperty(this, "pose_overlay", new Pose());
+    public final PoseProperty poseOverlay1 = new PoseProperty(this, "pose_overlay_1", new Pose());
+    public final PoseProperty poseOverlay2 = new PoseProperty(this, "pose_overlay_2", new Pose());
+    public final PoseProperty poseOverlay3 = new PoseProperty(this, "pose_overlay_3", new Pose());
+    public final PoseProperty poseOverlay4 = new PoseProperty(this, "pose_overlay_4", new Pose());
+    public final PoseProperty poseOverlay5 = new PoseProperty(this, "pose_overlay_5", new Pose());
+    public final PoseProperty poseOverlay6 = new PoseProperty(this, "pose_overlay_6", new Pose());
+    public final PoseProperty poseOverlay7 = new PoseProperty(this, "pose_overlay_7", new Pose());
     public final ActionsConfigProperty actions = new ActionsConfigProperty(this, "actions", new ActionsConfig());
     public final ColorProperty color = new ColorProperty(this, "color", Color.white());
     public final ShapeKeysProperty shapeKeys = new ShapeKeysProperty(this, "shape_keys", new ShapeKeys());
@@ -32,6 +39,13 @@ public class ModelForm extends Form
         this.register(this.model);
         this.register(this.pose);
         this.register(this.poseOverlay);
+        this.register(this.poseOverlay1);
+        this.register(this.poseOverlay2);
+        this.register(this.poseOverlay3);
+        this.register(this.poseOverlay4);
+        this.register(this.poseOverlay5);
+        this.register(this.poseOverlay6);
+        this.register(this.poseOverlay7);
         this.register(this.actions);
         this.register(this.color);
         this.register(this.shapeKeys);
