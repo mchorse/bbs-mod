@@ -20,8 +20,10 @@ import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.properties.IFormProperty;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
+import mchorse.bbs_mod.film.BaseFilmController;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.math.molang.MolangParser;
@@ -40,6 +42,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
@@ -56,6 +59,7 @@ import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
@@ -67,6 +71,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
+import net.minecraft.client.util.math.MatrixStack;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector4f;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -732,6 +740,13 @@ public class UIReplaysEditor extends UIElement
 
     public boolean clickViewport(UIContext context, Area area)
     {
+        /* Try to pick gizmo ring/axis first (even while flying) */
+        if (context.mouseButton == 0 && this.tryPickGizmoAxis(context, area))
+        {
+            System.out.println("[Gizmo] ReplaysEditor: gizmo axis engaged");
+            return true;
+        }
+
         if (this.filmPanel.isFlying())
         {
             return false;
@@ -810,6 +825,198 @@ public class UIReplaysEditor extends UIElement
         }
 
         return false;
+    }
+
+    private boolean tryPickGizmoAxis(UIContext context, Area area)
+    {
+        UIKeyframeEditor keyframeEditor = this.keyframeEditor;
+
+        if (keyframeEditor == null || !(keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory))
+        {
+            System.out.println("[Gizmo] ReplaysEditor: not a pose editor");
+            return false;
+        }
+
+        Pair<String, Boolean> boneData = this.filmPanel.getController().getBone();
+
+        if (boneData == null)
+        {
+            System.out.println("[Gizmo] ReplaysEditor: no bone selected");
+            return false;
+        }
+
+        String bonePath = boneData.a;
+
+        IEntity entity = this.filmPanel.getController().getCurrentEntity();
+        if (entity == null)
+        {
+            System.out.println("[Gizmo] ReplaysEditor: no current entity");
+            return false;
+        }
+
+        Form form = entity.getForm();
+        if (form == null)
+        {
+            System.out.println("[Gizmo] ReplaysEditor: entity has no form");
+            return false;
+        }
+
+        /* Build bone world matrix similar to BaseFilmController.renderEntity */
+        Matrix4f defaultMatrix = BaseFilmController.getMatrixForRenderWithRotation(entity,
+            this.filmPanel.getCamera().position.x,
+            this.filmPanel.getCamera().position.y,
+            this.filmPanel.getCamera().position.z,
+            0F);
+
+        Form root = FormUtils.getRoot(form);
+        MatrixStack tempStack = new MatrixStack();
+        Map<String, Matrix4f> map = new HashMap<>();
+
+        FormUtilsClient.getRenderer(root).collectMatrices(entity, null, tempStack, map, "", 0F);
+        Matrix4f local = map.get(bonePath);
+
+        if (local == null)
+        {
+            System.out.println("[Gizmo] ReplaysEditor: couldn't resolve bone matrix for " + bonePath);
+            return false;
+        }
+
+        Matrix4f world = new Matrix4f(defaultMatrix).mul(local);
+
+        /* Projection * View from last rendered frame */
+        Matrix4f mvp = new Matrix4f(this.filmPanel.lastProjection).mul(this.filmPanel.lastView).mul(world);
+
+        float pickTol = 28F; /* pixels - ring picking, easier while flying */
+
+        Vector2f p0 = projectToScreen(mvp, area, 0, 0, 0);
+        if (p0 == null)
+        {
+            return false;
+        }
+
+        Vector2f mouse = new Vector2f(context.mouseX, context.mouseY);
+
+        // Ring picking via screen-space sampling
+        Axis ringHit = null;
+        float best = Float.MAX_VALUE;
+        float R = 0.35F;
+        int samples = 48;
+        java.util.function.Function<Vector4f, Vector2f> project = (vec) ->
+        {
+            Vector4f vv = new Vector4f(vec);
+            mvp.transform(vv);
+            if (Math.abs(vv.w) < 1e-5f) return null;
+            float nx = vv.x / vv.w;
+            float ny = vv.y / vv.w;
+            float sx = area.x + (nx * 0.5F + 0.5F) * area.w;
+            float sy = area.y + ((-ny) * 0.5F + 0.5F) * area.h;
+            return new Vector2f(sx, sy);
+        };
+
+        final float[] bestRef = new float[] { Float.MAX_VALUE };
+        java.util.function.BiFunction<Axis, Integer, Float> test = (axis, dummy) ->
+        {
+            float ringLocal = Float.MAX_VALUE;
+            Vector2f prev = null;
+            for (int i = 0; i <= samples; i++)
+            {
+                float t = (float) (2 * Math.PI * i / samples);
+                Vector4f v;
+                if (axis == Axis.Z) v = new Vector4f((float) Math.cos(t) * R, (float) Math.sin(t) * R, 0, 1);
+                else if (axis == Axis.Y) v = new Vector4f((float) Math.cos(t) * R, 0, (float) Math.sin(t) * R, 1);
+                else v = new Vector4f(0, (float) Math.cos(t) * R, (float) Math.sin(t) * R, 1);
+                Vector2f cur = project.apply(v);
+                if (cur == null) { prev = null; continue; }
+                if (prev != null)
+                {
+                    float d = distanceToSegment(mouse, prev, cur);
+                    if (d < ringLocal) ringLocal = d;
+                }
+                prev = cur;
+            }
+            if (ringLocal < bestRef[0])
+            {
+                bestRef[0] = ringLocal;
+            }
+            return ringLocal;
+        };
+
+        // Camera-relative weighting: prefer ring most visible to camera
+        float dZ = test.apply(Axis.Z, 0);
+        float dY = test.apply(Axis.Y, 0);
+        float dX = test.apply(Axis.X, 0);
+
+        Matrix4f viewOrigin = new Matrix4f(this.filmPanel.lastView).mul(world);
+        org.joml.Matrix3f normalMat = new org.joml.Matrix3f();
+        viewOrigin.normal(normalMat);
+        org.joml.Vector3f nx = new org.joml.Vector3f(1, 0, 0).mul(normalMat).normalize();
+        org.joml.Vector3f ny = new org.joml.Vector3f(0, 1, 0).mul(normalMat).normalize();
+        org.joml.Vector3f nz = new org.joml.Vector3f(0, 0, 1).mul(normalMat).normalize();
+        float wX = Math.abs(nx.z), wY = Math.abs(ny.z), wZ = Math.abs(nz.z);
+        float bias = 12F;
+
+        float scoreZ = dZ - bias * wZ;
+        float scoreY = dY - bias * wY;
+        float scoreX = dX - bias * wX;
+
+        ringHit = null;
+        float bestScore = Float.MAX_VALUE;
+        if (dZ <= pickTol && scoreZ < bestScore) { ringHit = Axis.Z; bestScore = scoreZ; }
+        if (dY <= pickTol && scoreY < bestScore) { ringHit = Axis.Y; bestScore = scoreY; }
+        if (dX <= pickTol && scoreX < bestScore) { ringHit = Axis.X; bestScore = scoreX; }
+
+        if (ringHit != null)
+        {
+            UIPropTransform transform = poseFactory.poseEditor.transform;
+            transform.beginRotate();
+            transform.setAxis(ringHit);
+            System.out.println("[Gizmo] ReplaysEditor: picked rotation ring axis=" + ringHit + " best=" + bestRef[0]);
+            return true;
+        }
+
+        System.out.println("[Gizmo] ReplaysEditor: rotation ring not hit");
+        return false;
+    }
+
+    private Vector2f projectToScreen(Matrix4f mvp, Area area, float x, float y, float z)
+    {
+        Vector4f v = new Vector4f(x, y, z, 1);
+        mvp.transform(v);
+
+        if (Math.abs(v.w) < 1e-5f)
+        {
+            return null;
+        }
+
+        float nx = v.x / v.w;
+        float ny = v.y / v.w;
+
+        float sx = area.x + (nx * 0.5F + 0.5F) * area.w;
+        float sy = area.y + ((-ny) * 0.5F + 0.5F) * area.h;
+
+        return new Vector2f(sx, sy);
+    }
+
+    private float distanceToSegment(Vector2f p, Vector2f a, Vector2f b)
+    {
+        float vx = b.x - a.x;
+        float vy = b.y - a.y;
+        float wx = p.x - a.x;
+        float wy = p.y - a.y;
+
+        float c1 = vx * wx + vy * wy;
+        if (c1 <= 0) return p.distance(a);
+
+        float c2 = vx * vx + vy * vy;
+        if (c2 <= c1) return p.distance(b);
+
+        float t = c1 / c2;
+        float px = a.x + t * vx;
+        float py = a.y + t * vy;
+        float dx = p.x - px;
+        float dy = p.y - py;
+
+        return (float) Math.sqrt(dx * dx + dy * dy);
     }
 
     public void close()

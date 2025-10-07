@@ -8,6 +8,7 @@ import mchorse.bbs_mod.entity.ActorEntity;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
+import net.minecraft.util.math.RotationAxis;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.MCEntity;
 import mchorse.bbs_mod.forms.entities.StubEntity;
@@ -178,7 +179,30 @@ public abstract class BaseFilmController
             {
                 stack.push();
                 MatrixStackUtils.multiply(stack, matrix);
-                Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+                // Rotation gizmo: three colored rings and a center sphere, always on top
+                RenderSystem.disableDepthTest();
+                RenderSystem.disableCull();
+
+                float base = 0.6F;      // radius of rotation rings
+                float band = 0.06F;    // ring thickness (thicker both visually and for readability)
+
+                // XY (Z rotation) - blue (dashed)
+                Draw.renderDashedRing(stack, base, band, 96, 8, 0.5F, 0F, 0F, 1F, 0.95F);
+                // XZ (Y rotation) - green (rotate ring around X axis)
+                stack.push();
+                stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
+                Draw.renderDashedRing(stack, base, band, 96, 8, 0.5F, 0F, 1F, 0F, 0.95F);
+                stack.pop();
+                // YZ (X rotation) - red (rotate ring around Y axis)
+                stack.push();
+                stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90F));
+                Draw.renderDashedRing(stack, base, band, 96, 8, 0.5F, 1F, 0F, 0F, 0.95F);
+                stack.pop();
+
+                // center sphere for selection feedback
+                Draw.renderSphere(stack, 0.08F, 14, 22, 1F, 1F, 1F, 0.35F);
+                Draw.renderSphere(stack, 0.09F, 14, 22, 0F, 0F, 0F, 0.25F);
+                RenderSystem.enableCull();
                 RenderSystem.enableDepthTest();
                 stack.pop();
             }
