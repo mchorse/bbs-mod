@@ -186,8 +186,6 @@ public abstract class BaseFilmController
                 // Apply the same scale as the X/Y/Z axes
                 float scale = BBSSettings.axesScale.get();
 
-                System.out.println("[Gizmo Debug] RENDERING GIZMO at bone: " + context.bone);
-
                 // Render the complete transformation gizmo
                 Draw.renderTransformationGizmo(stack, scale, 1F, 1F, 1F, 0.95F);
                 

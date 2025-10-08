@@ -1173,8 +1173,6 @@ public class UIFilmController extends UIElement
                 UIKeyframeSheet sheet = keyframeEditor.getSheet(editor.getKeyframe());
                 String currentFirst = pose.poseEditor.groups.getCurrentFirst();
 
-                System.out.println("[Gizmo Debug] getBone() - sheet: " + (sheet != null ? sheet.id : "null") + ", currentFirst: " + currentFirst);
-
                 if (sheet != null && (sheet.id.endsWith("pose") || sheet.id.contains("pose_overlay")))
                 {
                     String separator = sheet.id.endsWith("/pose") || sheet.id.contains("/pose_overlay") ? "/" : "";
@@ -1190,7 +1188,6 @@ public class UIFilmController extends UIElement
                     }
                     
                     local = pose.poseEditor.transform.isLocal();
-                    System.out.println("[Gizmo Debug] getBone() result - bone: " + bone + ", local: " + local);
                 }
                 else
                 {

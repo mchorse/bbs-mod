@@ -39,7 +39,9 @@ import mchorse.bbs_mod.ui.forms.editors.forms.UIParticleForm;
 import mchorse.bbs_mod.ui.forms.editors.forms.UITrailForm;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIVanillaParticleForm;
 import mchorse.bbs_mod.ui.forms.editors.utils.UIPickableFormRenderer;
+import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.utils.keys.KeyAction;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
@@ -425,6 +427,58 @@ public class UIFormEditor extends UIElement implements IUIFormList
     public boolean isEditing()
     {
         return this.form != null;
+    }
+
+    @Override
+    public boolean subKeyPressed(UIContext context)
+    {
+        /* Handle A/D keys for bone navigation during form editing */
+        if ((context.getKeyCode() == 65 || context.getKeyCode() == 68) && context.getKeyAction() == KeyAction.PRESSED) // A or D key, only on press
+        {
+            if (this.isEditing() && this.bone != null && !this.bone.getList().isEmpty())
+            {
+                this.navigateBoneList(context.getKeyCode() == 65); // true for A (previous), false for D (next)
+                return true;
+            }
+        }
+        
+        return super.subKeyPressed(context);
+    }
+
+    private void navigateBoneList(boolean previous)
+    {
+        if (this.bone == null || this.bone.getList().isEmpty())
+        {
+            return;
+        }
+        
+        List<String> boneList = this.bone.getList();
+        String currentBone = this.bone.getCurrentFirst();
+        int currentIndex = boneList.indexOf(currentBone);
+        
+        if (currentIndex == -1)
+        {
+            return; // Current bone not found in list
+        }
+        
+        int newIndex;
+        if (previous)
+        {
+            // A key - go to previous bone
+            newIndex = currentIndex > 0 ? currentIndex - 1 : boneList.size() - 1;
+        }
+        else
+        {
+            // D key - go to next bone
+            newIndex = currentIndex < boneList.size() - 1 ? currentIndex + 1 : 0;
+        }
+        
+        String newBone = boneList.get(newIndex);
+        System.out.println("[Form Editor Bone Navigation] " + (previous ? "Previous" : "Next") + " bone: " + currentBone + " -> " + newBone);
+        
+        // Select the new bone
+        this.bone.setCurrentScroll(newBone);
+        this.editor.pickBone(newBone);
     }
 
     public boolean edit(Form form)
