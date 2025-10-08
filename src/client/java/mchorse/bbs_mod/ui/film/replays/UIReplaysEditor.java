@@ -914,8 +914,10 @@ public class UIReplaysEditor extends UIElement
         }
 
         // Scale tolerance with on-screen radius to keep selection easy at any zoom
-        float R = 0.35F;
-        float tube = 0.06F; // torus tube radius used in render
+        // Apply the same scale as the X/Y/Z axes
+        float scale = BBSSettings.axesScale.get();
+        float R = 0.35F * scale;
+        float tube = 0.06F * scale; // torus tube radius used in render
         Vector2f pR = projectToScreen(mvp, area, R, 0, 0);
         Vector2f pRt = projectToScreen(mvp, area, R + tube * 0.9F, 0, 0);
         float pickTol = pickTolBase;
@@ -946,6 +948,7 @@ public class UIReplaysEditor extends UIElement
         };
 
         final float[] bestRef = new float[] { Float.MAX_VALUE };
+        final float finalR = R; // capture scaled R for lambda
         java.util.function.BiFunction<Axis, Integer, Float> test = (axis, dummy) ->
         {
             float ringLocal = Float.MAX_VALUE;
@@ -954,9 +957,9 @@ public class UIReplaysEditor extends UIElement
             {
                 float t = (float) (2 * Math.PI * i / samples);
                 Vector4f v;
-                if (axis == Axis.Z) v = new Vector4f((float) Math.cos(t) * R, (float) Math.sin(t) * R, 0, 1);
-                else if (axis == Axis.Y) v = new Vector4f((float) Math.cos(t) * R, 0, (float) Math.sin(t) * R, 1);
-                else v = new Vector4f(0, (float) Math.cos(t) * R, (float) Math.sin(t) * R, 1);
+                if (axis == Axis.Z) v = new Vector4f((float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 0, 1);
+                else if (axis == Axis.Y) v = new Vector4f((float) Math.cos(t) * finalR, 0, (float) Math.sin(t) * finalR, 1);
+                else v = new Vector4f(0, (float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 1);
                 int seg = (int) Math.floor((float) i / samples * period) % period;
                 if (seg >= onCount) { prev = null; continue; }
                 Vector2f cur = project.apply(v);

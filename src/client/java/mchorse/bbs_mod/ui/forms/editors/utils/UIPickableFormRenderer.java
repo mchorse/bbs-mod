@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.forms.editors.utils;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
@@ -140,8 +141,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Vector2f mouse = new Vector2f(context.mouseX, context.mouseY);
 
         // Determine on-screen radius to scale tolerance with size
-        float R = 0.35F; // keep in sync with render
-        float tube = 0.06F; // torus tube radius used in render
+        // Apply the same scale as the X/Y/Z axes
+        float scale = BBSSettings.axesScale.get();
+        float R = 0.35F * scale; // keep in sync with render
+        float tube = 0.06F * scale; // torus tube radius used in render
         Vector2f pR = projectToScreen(mvp, R, 0, 0);
         Vector2f pRt = projectToScreen(mvp, R + tube * 0.9F, 0, 0);
         float pickTol = pickTolBase;
@@ -170,9 +173,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
         float bias = 8F; // px advantage for fully face-on ring (gentler)
 
         // Helper to test one ring defined by function producing (x,y,z)
+        final float finalR = R; // capture scaled R for lambda
         java.util.function.Function<Float, Vector2f> projectPoint = (t) ->
         {
-            Vector4f v = new Vector4f((float) Math.cos(t) * R, (float) Math.sin(t) * R, 0, 1);
+            Vector4f v = new Vector4f((float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 0, 1);
             Vector4f vv = new Vector4f(v);
             mvp.transform(vv);
             if (Math.abs(vv.w) < 1e-5f) return null;
@@ -186,7 +190,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         // For XZ ring (rotate around Y): rotate base ring by +90 around X
         java.util.function.Function<Float, Vector2f> projectPointXZ = (t) ->
         {
-            Vector4f v = new Vector4f((float) Math.cos(t) * R, 0, (float) Math.sin(t) * R, 1);
+            Vector4f v = new Vector4f((float) Math.cos(t) * finalR, 0, (float) Math.sin(t) * finalR, 1);
             Vector4f vv = new Vector4f(v);
             mvp.transform(vv);
             if (Math.abs(vv.w) < 1e-5f) return null;
@@ -200,7 +204,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         // For YZ ring (rotate around X): rotate base ring by +90 around Y
         java.util.function.Function<Float, Vector2f> projectPointYZ = (t) ->
         {
-            Vector4f v = new Vector4f(0, (float) Math.cos(t) * R, (float) Math.sin(t) * R, 1);
+            Vector4f v = new Vector4f(0, (float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 1);
             Vector4f vv = new Vector4f(v);
             mvp.transform(vv);
             if (Math.abs(vv.w) < 1e-5f) return null;
@@ -377,8 +381,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
             RenderSystem.disableDepthTest();
             RenderSystem.disableCull();
 
-            float baseRadius = 0.35F; // match on-model ring size
-            float hoverRadius = baseRadius + 0.02F;
+            // Apply the same scale as the X/Y/Z axes
+            float scale = BBSSettings.axesScale.get();
+            float baseRadius = 0.35F * scale; // match on-model ring size
+            float hoverRadius = baseRadius + 0.02F * scale;
 
             Matrix4f mvp = new Matrix4f(this.camera.projection).mul(this.camera.view);
             Matrix4f origin = this.formEditor.editor.getOrigin(context.getTransition());
@@ -394,7 +400,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
             // 3 colored rotation rings (3D torus)
             float ringRadius = baseRadius;
-            float band = 0.06F; // torus tube radius
+            float band = 0.06F * scale; // torus tube radius
 
             // XY plane (Z rotation) - blue
             Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 0F, 0F, 1F, 0.95F);
@@ -412,7 +418,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
             // center sphere hover feedback
             if (hover)
             {
-                Draw.renderSphere(stack, 0.09F, 14, 22, 1F, 1F, 0F, 0.8F);
+                Draw.renderSphere(stack, 0.09F * scale, 14, 22, 1F, 1F, 0F, 0.8F);
             }
 
             RenderSystem.enableCull();

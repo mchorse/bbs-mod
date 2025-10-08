@@ -3,6 +3,7 @@ package mchorse.bbs_mod.film;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.renderer.ModelBlockEntityRenderer;
 import mchorse.bbs_mod.entity.ActorEntity;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -164,8 +165,6 @@ public abstract class BaseFilmController
         stack.push();
         MatrixStackUtils.multiply(stack, target == null ? defaultMatrix : target);
         FormUtilsClient.render(form, formContext);
-
-        System.out.println("[Gizmo Debug] BaseFilmController.renderEntity - bone: " + context.bone + ", renderAxes: " + UIBaseMenu.renderAxes);
         
         if (context.bone != null && UIBaseMenu.renderAxes)
         {
@@ -177,8 +176,6 @@ public abstract class BaseFilmController
 
             Matrix4f matrix = map.get(context.bone);
 
-            System.out.println("[Gizmo Debug] Bone matrix lookup - bone: " + context.bone + ", matrix: " + (matrix != null ? "found" : "NULL"));
-
             if (matrix != null)
             {
                 stack.push();
@@ -187,8 +184,10 @@ public abstract class BaseFilmController
                 RenderSystem.disableDepthTest();
                 RenderSystem.disableCull();
 
-                float base = 0.6F;      // radius of rotation rings
-                float band = 0.06F;    // ring thickness (thicker both visually and for readability)
+                // Apply the same scale as the X/Y/Z axes
+                float scale = BBSSettings.axesScale.get();
+                float base = 0.6F * scale;      // radius of rotation rings
+                float band = 0.06F * scale;    // ring thickness (thicker both visually and for readability)
 
                 System.out.println("[Gizmo Debug] RENDERING GIZMO at bone: " + context.bone);
 
@@ -206,8 +205,8 @@ public abstract class BaseFilmController
                 stack.pop();
 
                 // center sphere for selection feedback
-                Draw.renderSphere(stack, 0.08F, 14, 22, 1F, 1F, 1F, 0.35F);
-                Draw.renderSphere(stack, 0.09F, 14, 22, 0F, 0F, 0F, 0.25F);
+                Draw.renderSphere(stack, 0.08F * scale, 14, 22, 1F, 1F, 1F, 0.35F);
+                Draw.renderSphere(stack, 0.09F * scale, 14, 22, 0F, 0F, 0F, 0.25F);
                 RenderSystem.enableCull();
                 RenderSystem.enableDepthTest();
                 stack.pop();
