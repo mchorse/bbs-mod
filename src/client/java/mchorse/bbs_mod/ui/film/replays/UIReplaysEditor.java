@@ -37,12 +37,14 @@ import mchorse.bbs_mod.ui.film.clips.renderer.IUIClipRenderer;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.utils.keys.KeyAction;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
@@ -755,6 +757,71 @@ public class UIReplaysEditor extends UIElement
 
             this.filmPanel.setCursor((int) closest.getTick());
         }
+    }
+
+    @Override
+    public boolean subKeyPressed(UIContext context)
+    {
+        /* Handle A/D keys for bone navigation during keyframe editing */
+        if ((context.getKeyCode() == 65 || context.getKeyCode() == 68) && context.getKeyAction() == KeyAction.PRESSED) // A or D key, only on press
+        {
+            if (this.isVisible() && this.keyframeEditor != null && 
+                this.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+            {
+                this.navigateBoneList(context.getKeyCode() == 65); // true for A (previous), false for D (next)
+                return true;
+            }
+        }
+        
+        return super.subKeyPressed(context);
+    }
+
+    private void navigateBoneList(boolean previous)
+    {
+        UIKeyframeEditor keyframeEditor = this.keyframeEditor;
+        
+        if (keyframeEditor == null || !(keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory))
+        {
+            return;
+        }
+        
+        UIPoseEditor poseEditor = poseFactory.poseEditor;
+        if (poseEditor == null || poseEditor.groups == null)
+        {
+            return;
+        }
+        
+        List<String> boneList = poseEditor.groups.getList();
+        if (boneList.isEmpty())
+        {
+            return;
+        }
+        
+        String currentBone = poseEditor.groups.getCurrentFirst();
+        int currentIndex = boneList.indexOf(currentBone);
+        
+        if (currentIndex == -1)
+        {
+            return; // Current bone not found in list
+        }
+        
+        int newIndex;
+        if (previous)
+        {
+            // A key - go to previous bone
+            newIndex = currentIndex > 0 ? currentIndex - 1 : boneList.size() - 1;
+        }
+        else
+        {
+            // D key - go to next bone
+            newIndex = currentIndex < boneList.size() - 1 ? currentIndex + 1 : 0;
+        }
+        
+        String newBone = boneList.get(newIndex);
+        System.out.println("[Bone Navigation] " + (previous ? "Previous" : "Next") + " bone: " + currentBone + " -> " + newBone);
+        
+        // Select the new bone
+        poseEditor.selectBone(newBone);
     }
 
     public boolean clickViewport(UIContext context, Area area)

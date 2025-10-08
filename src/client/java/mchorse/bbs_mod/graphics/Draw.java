@@ -593,4 +593,116 @@ public class Draw
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
     }
+
+    /**
+     * Render a refined 3D transformation gizmo with thin arrows, compact cubes, and slender rings.
+     * Based on the desired appearance from the reference image.
+     */
+    public static void renderTransformationGizmo(MatrixStack stack, float scale, float r, float g, float b, float a)
+    {
+        float axisLength = 0.5F * scale;
+        float axisThickness = 0.008F * scale;  // Much thinner shafts
+        float cubeSize = 0.04F * scale;        // Smaller, more compact cubes
+        float arrowLength = 0.08F * scale;     // Shorter arrowheads
+        float arrowWidth = 0.03F * scale;      // Much thinner arrowheads
+        float ringRadius = 0.35F * scale;
+        float ringThickness = 0.015F * scale;  // Much thinner rings
+        float originSize = 0.04F * scale;      // Smaller origin sphere
+
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+        // X axis (red) - horizontal with negative extension
+        renderAxisArrowWithNegative(builder, stack, axisLength, axisThickness, cubeSize, arrowLength, arrowWidth, 1F, 0F, 0F, a);
+        
+        // Y axis (green) - vertical with negative extension
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90F));
+        renderAxisArrowWithNegative(builder, stack, axisLength, axisThickness, cubeSize, arrowLength, arrowWidth, 0F, 1F, 0F, a);
+        stack.pop();
+        
+        // Z axis (blue) - depth with negative extension
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90F));
+        renderAxisArrowWithNegative(builder, stack, axisLength, axisThickness, cubeSize, arrowLength, arrowWidth, 0F, 0F, 1F, a);
+        stack.pop();
+
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+
+        // Rotation rings - much thinner
+        // XY plane (Z rotation) - blue
+        renderRing(stack, ringRadius, ringThickness, 64, 0F, 0F, 1F, a);
+        
+        // XZ plane (Y rotation) - green
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
+        renderRing(stack, ringRadius, ringThickness, 64, 0F, 1F, 0F, a);
+        stack.pop();
+        
+        // YZ plane (X rotation) - red
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90F));
+        renderRing(stack, ringRadius, ringThickness, 64, 1F, 0F, 0F, a);
+        stack.pop();
+
+        // Central origin point - smaller and brighter
+        renderSphere(stack, originSize, 12, 16, 1F, 1F, 1F, a);
+    }
+
+    /**
+     * Render a single axis arrow with cube at base, arrowhead at tip, and negative axis line.
+     * Creates a refined, thin appearance matching the reference image.
+     */
+    private static void renderAxisArrowWithNegative(BufferBuilder builder, MatrixStack stack, float length, float thickness, float cubeSize, float arrowLength, float arrowWidth, float r, float g, float b, float a)
+    {
+        Matrix4f m = stack.peek().getPositionMatrix();
+
+        // Small cube at the base (origin)
+        float halfCube = cubeSize / 2F;
+        fillBox(builder, stack, -halfCube, -halfCube, -halfCube, halfCube, halfCube, halfCube, r, g, b, a);
+
+        // Positive axis shaft (thinner)
+        float shaftEnd = length - arrowLength;
+        fillBox(builder, stack, 0, -thickness, -thickness, shaftEnd, thickness, thickness, r, g, b, a);
+
+        // Negative axis line (even thinner)
+        float negThickness = thickness * 0.6F;
+        fillBox(builder, stack, -length * 0.3F, -negThickness, -negThickness, 0, negThickness, negThickness, r, g, b, a);
+
+        // Sharp, thin arrowhead (pyramid)
+        float halfArrow = arrowWidth / 2F;
+        
+        // Arrowhead faces - much sharper and thinner
+        // Front face
+        builder.vertex(m, shaftEnd, -halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+
+        // Back face
+        builder.vertex(m, shaftEnd, halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, -halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+
+        // Top face
+        builder.vertex(m, shaftEnd, halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+
+        // Bottom face
+        builder.vertex(m, shaftEnd, -halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, -halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+
+        // Left face
+        builder.vertex(m, shaftEnd, -halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, halfArrow, halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+
+        // Right face
+        builder.vertex(m, shaftEnd, halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, shaftEnd, -halfArrow, -halfArrow).color(r, g, b, a).next();
+        builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+    }
+
 }
