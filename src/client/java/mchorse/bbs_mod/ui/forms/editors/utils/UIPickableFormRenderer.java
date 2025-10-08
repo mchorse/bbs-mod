@@ -26,12 +26,16 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
-import org.joml.Vector2f;
-import org.joml.Vector4f;
 
 import java.util.function.Supplier;
 
@@ -46,6 +50,11 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
     private IEntity target;
     private Supplier<Boolean> renderForm;
+    
+    // Hover state tracking
+    private Axis hoveredRing = null;
+    private Axis hoveredArrow = null;
+    private Axis hoveredCube = null;
 
     public UIPickableFormRenderer(UIFormEditor formEditor)
     {
@@ -112,250 +121,258 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
     private boolean tryPickGizmoAxis(UIContext context)
     {
+        if (!(this.formEditor.editor instanceof UIModelForm))
+        {
+            return false;
+        }
+
+        // Use stencil-based picking for pixel-perfect accuracy
+        return this.tryPickGizmoWithStencil(context);
+    }
+
+    private boolean tryPickGizmoWithStencil(UIContext context)
+    {
         if (!(this.formEditor.editor instanceof UIModelForm uiModelForm))
         {
-            System.out.println("[Gizmo] Not in UIModelForm, skipping gizmo pick");
             return false;
         }
 
         Matrix4f origin = this.formEditor.editor.getOrigin(context.getTransition());
         if (origin == null)
         {
-            System.out.println("[Gizmo] Origin matrix is null, skipping gizmo pick");
             return false;
         }
 
-        /* Build MVP = projection * view * origin */
-        Matrix4f mvp = new Matrix4f(this.camera.projection).mul(this.camera.view).mul(origin);
-
-        // Ring picking in screen space (reliable from any angle)
-        float pickTolBase = 25F; // pixels - increased for better selection
-
-        Vector2f p0 = projectToScreen(mvp, 0, 0, 0);
-        if (p0 == null)
+        // Set up stencil rendering for gizmo picking
+        this.ensureFramebuffer();
+        
+        // Render gizmo elements with unique IDs to stencil buffer
+        this.stencilMap.setup();
+        this.stencil.apply();
+        
+        MatrixStack stack = context.render.batcher.getContext().getMatrices();
+        stack.push();
+        
+        if (origin != null)
         {
-            return false;
+            MatrixStackUtils.multiply(stack, origin);
         }
 
-        Vector2f mouse = new Vector2f(context.mouseX, context.mouseY);
-
-        // Determine on-screen radius to scale tolerance with size
-        // Apply the same scale as the X/Y/Z axes
         float scale = BBSSettings.axesScale.get();
-        float R = 0.35F * scale; // Updated to match new ring radius
-        float tube = 0.015F * scale; // Updated to match new ring thickness
-        Vector2f pR = projectToScreen(mvp, R, 0, 0);
-        Vector2f pRt = projectToScreen(mvp, R + tube * 0.9F, 0, 0);
-        float pickTol = pickTolBase;
-        if (p0 != null && pR != null)
+        
+        // Render gizmo elements with unique stencil IDs
+        this.renderGizmoForPicking(stack, scale);
+        
+        stack.pop();
+        
+        // Pick at mouse position
+        this.stencil.pickGUI(context, this.area);
+        this.stencil.unbind(this.stencilMap);
+        
+        // Check what was picked
+        if (this.stencil.hasPicked())
         {
-            float rpx = p0.distance(pR);
-            float tpx = pRt != null ? Math.abs(pR.distance(pRt)) : 0F;
-            pickTol = Math.max(pickTolBase, Math.max(rpx * 0.16F, tpx * 1.2F));
+            int pickedId = this.stencil.getIndex();
+            return this.handleGizmoPick(pickedId, uiModelForm);
+        }
+        
+            return false;
         }
 
-        // Sample three rings (XY -> Z, XZ -> Y, YZ -> X)
-        Axis ringHit = null;
-        int samples = 72;
+    private void renderGizmoForPicking(MatrixStack stack, float scale)
+    {
+        // Define unique IDs for each gizmo element
+        final int RING_X_ID = 1001; // Red ring (X rotation)
+        final int RING_Y_ID = 1002; // Green ring (Y rotation)  
+        final int RING_Z_ID = 1003; // Blue ring (Z rotation)
+        final int ARROW_X_ID = 2001; // X arrow
+        final int ARROW_Y_ID = 2002; // Y arrow
+        final int ARROW_Z_ID = 2003; // Z arrow
+        final int CUBE_X_ID = 3001;  // X scaling cubes
+        final int CUBE_Y_ID = 3002;  // Y scaling cubes
+        final int CUBE_Z_ID = 3003;  // Z scaling cubes
 
-        // Camera-relative weighting: prefer ring whose plane is most perpendicular to view (most visible)
-        Matrix4f viewOrigin = new Matrix4f(this.camera.view).mul(origin);
-        org.joml.Matrix3f normalMat = new org.joml.Matrix3f();
-        viewOrigin.normal(normalMat);
-        org.joml.Vector3f nx = new org.joml.Vector3f(1, 0, 0).mul(normalMat).normalize();
-        org.joml.Vector3f ny = new org.joml.Vector3f(0, 1, 0).mul(normalMat).normalize();
-        org.joml.Vector3f nz = new org.joml.Vector3f(0, 0, 1).mul(normalMat).normalize();
-        float wX = Math.abs(nx.z), wY = Math.abs(ny.z), wZ = Math.abs(nz.z);
-        float bias = 12F; // px advantage for fully face-on ring
+        // Set up picking shader
+        ShaderProgram pickingProgram = BBSShaders.getPickerModelsProgram();
+        RenderSystem.setShader(() -> pickingProgram);
+        
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION);
 
-        // Helper to test one ring defined by function producing (x,y,z)
-        final float finalR = R; // capture scaled R for lambda
-        java.util.function.Function<Float, Vector2f> projectPoint = (t) ->
+        // Render rings with unique IDs
+        this.stencilMap.objectIndex = RING_X_ID;
+        this.renderRingForPicking(builder, stack, 0.35F * scale, 0.015F * scale, 64, 0, 90, 0); // YZ plane (X rotation)
+        
+        this.stencilMap.objectIndex = RING_Y_ID;
+        this.renderRingForPicking(builder, stack, 0.35F * scale, 0.015F * scale, 64, 90, 0, 0); // XZ plane (Y rotation)
+        
+        this.stencilMap.objectIndex = RING_Z_ID;
+        this.renderRingForPicking(builder, stack, 0.35F * scale, 0.015F * scale, 64, 0, 0, 0); // XY plane (Z rotation)
+
+        // Render arrows with unique IDs
+        this.stencilMap.objectIndex = ARROW_X_ID;
+        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // X axis
+        
+        this.stencilMap.objectIndex = ARROW_Y_ID;
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90F));
+        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Y axis
+        stack.pop();
+        
+        this.stencilMap.objectIndex = ARROW_Z_ID;
+        stack.push();
+        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90F));
+        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Z axis
+        stack.pop();
+
+        // Render cubes with unique IDs
+        this.stencilMap.objectIndex = CUBE_X_ID;
+        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 0, 90, 0); // YZ plane cubes
+        
+        this.stencilMap.objectIndex = CUBE_Y_ID;
+        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 90, 0, 0); // XZ plane cubes
+        
+        this.stencilMap.objectIndex = CUBE_Z_ID;
+        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 0, 0, 0); // XY plane cubes
+
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+    }
+
+    private void renderRingForPicking(BufferBuilder builder, MatrixStack stack, float radius, float thickness, int segments, float rotX, float rotY, float rotZ)
+    {
+        Matrix4f m = stack.peek().getPositionMatrix();
+        
+        // Apply rotations
+        if (rotX != 0) stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX));
+        if (rotY != 0) stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY));
+        if (rotZ != 0) stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ));
+        
+        m = stack.peek().getPositionMatrix();
+        
+        float halfThickness = thickness / 2F;
+        
+        for (int i = 0; i < segments; i++)
         {
-            Vector4f v = new Vector4f((float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 0, 1);
-            Vector4f vv = new Vector4f(v);
-            mvp.transform(vv);
-            if (Math.abs(vv.w) < 1e-5f) return null;
-            float nxp = vv.x / vv.w;
-            float nyp = vv.y / vv.w;
-            float sx = this.area.x + (nxp * 0.5F + 0.5F) * this.area.w;
-            float sy = this.area.y + ((-nyp) * 0.5F + 0.5F) * this.area.h;
-            return new Vector2f(sx, sy);
-        };
+            float t1 = (float) (2 * Math.PI * i / segments);
+            float t2 = (float) (2 * Math.PI * (i + 1) / segments);
+            
+            float x1 = (float) Math.cos(t1) * radius;
+            float y1 = (float) Math.sin(t1) * radius;
+            float x2 = (float) Math.cos(t2) * radius;
+            float y2 = (float) Math.sin(t2) * radius;
+            
+            // Create a thick ring by rendering quads
+            builder.vertex(m, x1 - halfThickness, y1, 0).next();
+            builder.vertex(m, x1 + halfThickness, y1, 0).next();
+            builder.vertex(m, x2 + halfThickness, y2, 0).next();
+            builder.vertex(m, x2 - halfThickness, y2, 0).next();
+        }
+    }
 
-        // For XZ ring (rotate around Y): rotate base ring by +90 around X
-        java.util.function.Function<Float, Vector2f> projectPointXZ = (t) ->
+    private void renderArrowForPicking(BufferBuilder builder, MatrixStack stack, float length, float thickness, float arrowLength, float arrowWidth, float rotX, float rotY, float rotZ)
+    {
+        Matrix4f m = stack.peek().getPositionMatrix();
+        
+        // Apply rotations
+        if (rotX != 0) stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX));
+        if (rotY != 0) stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY));
+        if (rotZ != 0) stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ));
+        
+        m = stack.peek().getPositionMatrix();
+        
+        float halfThickness = thickness / 2F;
+        float shaftEnd = length - arrowLength;
+        
+        // Render arrow shaft
+        builder.vertex(m, -length * 0.3F, -halfThickness, -halfThickness).next();
+        builder.vertex(m, shaftEnd, -halfThickness, -halfThickness).next();
+        builder.vertex(m, shaftEnd, halfThickness, -halfThickness).next();
+        builder.vertex(m, -length * 0.3F, halfThickness, -halfThickness).next();
+        
+        // Render arrow head (simplified as a triangle)
+        builder.vertex(m, shaftEnd, -arrowWidth, -arrowWidth).next();
+        builder.vertex(m, length, 0, 0).next();
+        builder.vertex(m, shaftEnd, arrowWidth, -arrowWidth).next();
+    }
+
+    private void renderCubesForPicking(BufferBuilder builder, MatrixStack stack, float radius, float cubeSize, float rotX, float rotY, float rotZ)
+    {
+        Matrix4f m = stack.peek().getPositionMatrix();
+        
+        // Apply rotations
+        if (rotX != 0) stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX));
+        if (rotY != 0) stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY));
+        if (rotZ != 0) stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ));
+        
+        m = stack.peek().getPositionMatrix();
+        
+        float halfCube = cubeSize / 2F;
+        
+        // Render 4 cubes at cardinal directions
+        this.renderCubeAt(builder, m, radius, 0, 0, halfCube);
+        this.renderCubeAt(builder, m, -radius, 0, 0, halfCube);
+        this.renderCubeAt(builder, m, 0, radius, 0, halfCube);
+        this.renderCubeAt(builder, m, 0, -radius, 0, halfCube);
+    }
+
+    private void renderCubeAt(BufferBuilder builder, Matrix4f m, float x, float y, float z, float halfSize)
+    {
+        // Render a simple cube as 6 quads
+        float x1 = x - halfSize, x2 = x + halfSize;
+        float y1 = y - halfSize, y2 = y + halfSize;
+        float z1 = z - halfSize, z2 = z + halfSize;
+        
+        // Front face
+        builder.vertex(m, x1, y1, z2).next();
+        builder.vertex(m, x2, y1, z2).next();
+        builder.vertex(m, x2, y2, z2).next();
+        builder.vertex(m, x1, y2, z2).next();
+        
+        // Back face
+        builder.vertex(m, x2, y1, z1).next();
+        builder.vertex(m, x1, y1, z1).next();
+        builder.vertex(m, x1, y2, z1).next();
+        builder.vertex(m, x2, y2, z1).next();
+    }
+
+    private boolean handleGizmoPick(int pickedId, UIModelForm uiModelForm)
+    {
+        UIPropTransform transform = uiModelForm.modelPanel.poseEditor.transform;
+        
+        // Handle ring picks (rotation)
+        if (pickedId >= 1001 && pickedId <= 1003)
         {
-            Vector4f v = new Vector4f((float) Math.cos(t) * finalR, 0, (float) Math.sin(t) * finalR, 1);
-            Vector4f vv = new Vector4f(v);
-            mvp.transform(vv);
-            if (Math.abs(vv.w) < 1e-5f) return null;
-            float nxp = vv.x / vv.w;
-            float nyp = vv.y / vv.w;
-            float sx = this.area.x + (nxp * 0.5F + 0.5F) * this.area.w;
-            float sy = this.area.y + ((-nyp) * 0.5F + 0.5F) * this.area.h;
-            return new Vector2f(sx, sy);
-        };
-
-        // For YZ ring (rotate around X): rotate base ring by +90 around Y
-        java.util.function.Function<Float, Vector2f> projectPointYZ = (t) ->
-        {
-            Vector4f v = new Vector4f(0, (float) Math.cos(t) * finalR, (float) Math.sin(t) * finalR, 1);
-            Vector4f vv = new Vector4f(v);
-            mvp.transform(vv);
-            if (Math.abs(vv.w) < 1e-5f) return null;
-            float nxp = vv.x / vv.w;
-            float nyp = vv.y / vv.w;
-            float sx = this.area.x + (nxp * 0.5F + 0.5F) * this.area.w;
-            float sy = this.area.y + ((-nyp) * 0.5F + 0.5F) * this.area.h;
-            return new Vector2f(sx, sy);
-        };
-
-        // Test a ring by polyline distance
-        final float[] bestRef = new float[] { Float.MAX_VALUE };
-        java.util.function.BiFunction<java.util.function.Function<Float, Vector2f>, Axis, Float> testRing = (proj, axis) ->
-        {
-            float localBest = Float.MAX_VALUE;
-            Vector2f prev = null;
-            for (int i = 0; i <= samples; i++)
-            {
-                float t = (float) (2 * Math.PI * i / samples);
-                Vector2f cur = proj.apply(t);
-                if (cur == null)
-                {
-                    prev = null;
-                    continue;
-                }
-                if (prev != null)
-                {
-                    float d = distanceToSegment(mouse, prev, cur);
-                    if (d < localBest) localBest = d;
-                }
-                prev = cur;
-            }
-            if (localBest < bestRef[0])
-            {
-                bestRef[0] = localBest;
-                return localBest;
-            }
-            return localBest;
-        };
-
-        float dZ = testRing.apply(projectPoint, Axis.Z);
-        float dY = testRing.apply(projectPointXZ, Axis.Y);
-        float dX = testRing.apply(projectPointYZ, Axis.X);
-
-        float scoreZ = dZ - bias * wZ;
-        float scoreY = dY - bias * wY;
-        float scoreX = dX - bias * wX;
-
-        ringHit = null;
-        float bestScore = Float.MAX_VALUE;
-        if (dZ <= pickTol && scoreZ < bestScore) { ringHit = Axis.Z; bestScore = scoreZ; }
-        if (dY <= pickTol && scoreY < bestScore) { ringHit = Axis.Y; bestScore = scoreY; }
-        if (dX <= pickTol && scoreX < bestScore) { ringHit = Axis.X; bestScore = scoreX; }
-
-        if (ringHit != null)
-        {
-            UIPropTransform transform = uiModelForm.modelPanel.poseEditor.transform;
+            Axis axis = pickedId == 1001 ? Axis.X : (pickedId == 1002 ? Axis.Y : Axis.Z);
             transform.beginRotate();
-            transform.setAxis(ringHit);
-            System.out.println("[Gizmo] Picked rotation ring axis=" + ringHit + " best=" + bestRef[0]);
+            transform.setAxis(axis);
+            System.out.println("[Gizmo] Picked rotation ring axis=" + axis + " (ID=" + pickedId + ")");
             return true;
         }
-
-        // Check for axis arrow hits (for translation/scaling)
-        Axis axisHit = tryPickAxisArrow(mvp, mouse, scale);
-        if (axisHit != null)
+        
+        // Handle arrow picks (translation)
+        if (pickedId >= 2001 && pickedId <= 2003)
         {
-            UIPropTransform transform = uiModelForm.modelPanel.poseEditor.transform;
+            Axis axis = pickedId == 2001 ? Axis.X : (pickedId == 2002 ? Axis.Y : Axis.Z);
             transform.beginTranslate();
-            transform.setAxis(axisHit);
-            System.out.println("[Gizmo] Picked axis arrow axis=" + axisHit);
+            transform.setAxis(axis);
+            System.out.println("[Gizmo] Picked axis arrow axis=" + axis + " (ID=" + pickedId + ")");
             return true;
         }
-
-        System.out.println("[Gizmo] No gizmo element hit");
-
+        
+        // Handle cube picks (scaling)
+        if (pickedId >= 3001 && pickedId <= 3003)
+        {
+            Axis axis = pickedId == 3001 ? Axis.X : (pickedId == 3002 ? Axis.Y : Axis.Z);
+            transform.beginScale();
+            transform.setAxis(axis);
+            System.out.println("[Gizmo] Picked ring cube axis=" + axis + " (ID=" + pickedId + ")");
+            return true;
+        }
+        
         return false;
     }
 
-    private Vector2f projectToScreen(Matrix4f mvp, float x, float y, float z)
-    {
-        Vector4f v = new Vector4f(x, y, z, 1);
-        mvp.transform(v);
 
-        if (Math.abs(v.w) < 1e-5f)
-        {
-            return null;
-        }
-
-        float nx = v.x / v.w;
-        float ny = v.y / v.w;
-
-        // NDC [-1,1] -> viewport pixels
-        float sx = this.area.x + (nx * 0.5F + 0.5F) * this.area.w;
-        float sy = this.area.y + ((-ny) * 0.5F + 0.5F) * this.area.h;
-
-        return new Vector2f(sx, sy);
-    }
-
-    private float distanceToSegment(Vector2f p, Vector2f a, Vector2f b)
-    {
-        float vx = b.x - a.x;
-        float vy = b.y - a.y;
-        float wx = p.x - a.x;
-        float wy = p.y - a.y;
-
-        float c1 = vx * wx + vy * wy;
-        if (c1 <= 0) return p.distance(a);
-
-        float c2 = vx * vx + vy * vy;
-        if (c2 <= c1) return p.distance(b);
-
-        float t = c1 / c2;
-        float px = a.x + t * vx;
-        float py = a.y + t * vy;
-        float dx = p.x - px;
-        float dy = p.y - py;
-
-        return (float) Math.sqrt(dx * dx + dy * dy);
-    }
-
-    private Axis tryPickAxisArrow(Matrix4f mvp, Vector2f mouse, float scale)
-    {
-        float axisLength = 0.5F * scale; // Updated to match new axis length
-        float pickTol = 15F; // pixels - reduced for thinner elements
-
-        // Test X axis (red) - horizontal
-        Vector2f xStart = projectToScreen(mvp, 0, 0, 0);
-        Vector2f xEnd = projectToScreen(mvp, axisLength, 0, 0);
-        if (xStart != null && xEnd != null)
-        {
-            float dist = distanceToSegment(mouse, xStart, xEnd);
-            if (dist <= pickTol) return Axis.X;
-        }
-
-        // Test Y axis (green) - vertical
-        Vector2f yStart = projectToScreen(mvp, 0, 0, 0);
-        Vector2f yEnd = projectToScreen(mvp, 0, axisLength, 0);
-        if (yStart != null && yEnd != null)
-        {
-            float dist = distanceToSegment(mouse, yStart, yEnd);
-            if (dist <= pickTol) return Axis.Y;
-        }
-
-        // Test Z axis (blue) - depth
-        Vector2f zStart = projectToScreen(mvp, 0, 0, 0);
-        Vector2f zEnd = projectToScreen(mvp, 0, 0, axisLength);
-        if (zStart != null && zEnd != null)
-        {
-            float dist = distanceToSegment(mouse, zStart, zEnd);
-            if (dist <= pickTol) return Axis.Z;
-        }
-
-        return null;
-    }
 
     @Override
     protected void renderUserModel(UIContext context)
@@ -429,21 +446,24 @@ public class UIPickableFormRenderer extends UIFormRenderer
             Matrix4f origin = this.formEditor.editor.getOrigin(context.getTransition());
             if (origin != null) mvp.mul(origin);
 
-            Vector2f center = projectToScreen(mvp, 0, 0, 0);
-            boolean hover = false;
-            if (center != null)
-            {
-                float pxTol = 35F; // Increased tolerance for better selection
-                hover = center.distance(new Vector2f(context.mouseX, context.mouseY)) <= pxTol;
-            }
-
             // Render the complete transformation gizmo
             Draw.renderTransformationGizmo(stack, scale, 1F, 1F, 1F, 0.95F);
 
-            // Enhanced hover feedback - highlight the origin
-            if (hover)
+            // Enhanced hover feedback - highlight hovered elements
+            if (this.hoveredRing != null || this.hoveredArrow != null || this.hoveredCube != null)
             {
+                // Highlight the origin when any element is hovered
                 Draw.renderSphere(stack, 0.06F * scale, 12, 16, 1F, 1F, 0F, 0.8F);
+                
+                // Add additional hover effects
+                if (this.hoveredRing != null)
+                {
+                    // Highlight the hovered ring with a brighter version
+                    float r = this.hoveredRing == Axis.X ? 1F : 0F;
+                    float g = this.hoveredRing == Axis.Y ? 1F : 0F;
+                    float b = this.hoveredRing == Axis.Z ? 1F : 0F;
+                    Draw.renderRing(stack, 0.35F * scale, 0.025F * scale, 64, r, g, b, 1F);
+                }
             }
 
             RenderSystem.enableCull();
