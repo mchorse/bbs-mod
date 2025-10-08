@@ -996,11 +996,12 @@ public class UIReplaysEditor extends UIElement
         float scoreY = dY - bias * wY;
         float scoreX = dX - bias * wX;
 
+        // Find the closest ring that's within tolerance
         ringHit = null;
-        float bestScore = Float.MAX_VALUE;
-        if (dZ <= pickTol && scoreZ < bestScore) { ringHit = Axis.Z; bestScore = scoreZ; }
-        if (dY <= pickTol && scoreY < bestScore) { ringHit = Axis.Y; bestScore = scoreY; }
-        if (dX <= pickTol && scoreX < bestScore) { ringHit = Axis.X; bestScore = scoreX; }
+        float bestDist = Float.MAX_VALUE;
+        if (dZ <= pickTol && dZ < bestDist) { ringHit = Axis.Z; bestDist = dZ; }
+        if (dY <= pickTol && dY < bestDist) { ringHit = Axis.Y; bestDist = dY; }
+        if (dX <= pickTol && dX < bestDist) { ringHit = Axis.X; bestDist = dX; }
 
         if (ringHit != null)
         {
@@ -1011,7 +1012,29 @@ public class UIReplaysEditor extends UIElement
             return true;
         }
 
-        System.out.println("[Gizmo] ReplaysEditor: rotation ring not hit");
+        // Check for axis arrow hits (for positioning) - check these first as they're more specific
+        Axis axisHit = tryPickAxisArrow(mvp, mouse, scale, area);
+        if (axisHit != null)
+        {
+            UIPropTransform transform = poseFactory.poseEditor.transform;
+            transform.beginTranslate();
+            transform.setAxis(axisHit);
+            System.out.println("[Gizmo] ReplaysEditor: picked axis arrow axis=" + axisHit);
+            return true;
+        }
+
+        // Check for ring cube hits (for scaling)
+        Axis cubeHit = tryPickRingCubes(mvp, mouse, scale, area);
+        if (cubeHit != null)
+        {
+            UIPropTransform transform = poseFactory.poseEditor.transform;
+            transform.beginScale();
+            transform.setAxis(cubeHit);
+            System.out.println("[Gizmo] ReplaysEditor: picked ring cube axis=" + cubeHit);
+            return true;
+        }
+
+        System.out.println("[Gizmo] ReplaysEditor: no gizmo element hit");
         return false;
     }
 
@@ -1054,6 +1077,94 @@ public class UIReplaysEditor extends UIElement
         float dy = p.y - py;
 
         return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+
+    private Axis tryPickRingCubes(Matrix4f mvp, Vector2f mouse, float scale, Area area)
+    {
+        float ringRadius = 0.35F * scale;
+        float pickTol = 35F; // Increased tolerance
+
+        // Test cubes on XY plane (Z rotation ring) - 4 cubes at cardinal directions
+        Vector2f xyXPos = projectToScreen(mvp, area, ringRadius, 0, 0);
+        Vector2f xyXNeg = projectToScreen(mvp, area, -ringRadius, 0, 0);
+        Vector2f xyYPos = projectToScreen(mvp, area, 0, ringRadius, 0);
+        Vector2f xyYNeg = projectToScreen(mvp, area, 0, -ringRadius, 0);
+
+        if (xyXPos != null && mouse.distance(xyXPos) <= pickTol) return Axis.X;
+        if (xyXNeg != null && mouse.distance(xyXNeg) <= pickTol) return Axis.X;
+        if (xyYPos != null && mouse.distance(xyYPos) <= pickTol) return Axis.Y;
+        if (xyYNeg != null && mouse.distance(xyYNeg) <= pickTol) return Axis.Y;
+
+        // Test cubes on XZ plane (Y rotation ring) - rotated 90° around X axis
+        Vector2f xzXPos = projectToScreen(mvp, area, ringRadius, 0, 0);
+        Vector2f xzXNeg = projectToScreen(mvp, area, -ringRadius, 0, 0);
+        Vector2f xzZPos = projectToScreen(mvp, area, 0, 0, ringRadius);
+        Vector2f xzZNeg = projectToScreen(mvp, area, 0, 0, -ringRadius);
+
+        if (xzXPos != null && mouse.distance(xzXPos) <= pickTol) return Axis.X;
+        if (xzXNeg != null && mouse.distance(xzXNeg) <= pickTol) return Axis.X;
+        if (xzZPos != null && mouse.distance(xzZPos) <= pickTol) return Axis.Z;
+        if (xzZNeg != null && mouse.distance(xzZNeg) <= pickTol) return Axis.Z;
+
+        // Test cubes on YZ plane (X rotation ring) - rotated 90° around Y axis
+        Vector2f yzYPos = projectToScreen(mvp, area, 0, ringRadius, 0);
+        Vector2f yzYNeg = projectToScreen(mvp, area, 0, -ringRadius, 0);
+        Vector2f yzZPos = projectToScreen(mvp, area, 0, 0, ringRadius);
+        Vector2f yzZNeg = projectToScreen(mvp, area, 0, 0, -ringRadius);
+
+        if (yzYPos != null && mouse.distance(yzYPos) <= pickTol) return Axis.Y;
+        if (yzYNeg != null && mouse.distance(yzYNeg) <= pickTol) return Axis.Y;
+        if (yzZPos != null && mouse.distance(yzZPos) <= pickTol) return Axis.Z;
+        if (yzZNeg != null && mouse.distance(yzZNeg) <= pickTol) return Axis.Z;
+
+        return null;
+    }
+
+    private Axis tryPickAxisArrow(Matrix4f mvp, Vector2f mouse, float scale, Area area)
+    {
+        float axisLength = 0.5F * scale;
+        float pickTol = 30F; // pixels - increased for better selection
+
+        // Test X axis (red) - horizontal with negative extension
+        Vector2f xStart = projectToScreen(mvp, area, -axisLength * 0.3F, 0, 0);
+        Vector2f xEnd = projectToScreen(mvp, area, axisLength, 0, 0);
+        if (xStart != null && xEnd != null)
+        {
+            float dist = distanceToSegment(mouse, xStart, xEnd);
+            if (dist <= pickTol) 
+            {
+                System.out.println("[Gizmo Debug] ReplaysEditor X arrow hit, dist=" + dist + " tol=" + pickTol);
+                return Axis.X;
+            }
+        }
+
+        // Test Y axis (green) - vertical with negative extension
+        Vector2f yStart = projectToScreen(mvp, area, 0, -axisLength * 0.3F, 0);
+        Vector2f yEnd = projectToScreen(mvp, area, 0, axisLength, 0);
+        if (yStart != null && yEnd != null)
+        {
+            float dist = distanceToSegment(mouse, yStart, yEnd);
+            if (dist <= pickTol) 
+            {
+                System.out.println("[Gizmo Debug] ReplaysEditor Y arrow hit, dist=" + dist + " tol=" + pickTol);
+                return Axis.Y;
+            }
+        }
+
+        // Test Z axis (blue) - depth with negative extension
+        Vector2f zStart = projectToScreen(mvp, area, 0, 0, -axisLength * 0.3F);
+        Vector2f zEnd = projectToScreen(mvp, area, 0, 0, axisLength);
+        if (zStart != null && zEnd != null)
+        {
+            float dist = distanceToSegment(mouse, zStart, zEnd);
+            if (dist <= pickTol) 
+            {
+                System.out.println("[Gizmo Debug] ReplaysEditor Z arrow hit, dist=" + dist + " tol=" + pickTol);
+                return Axis.Z;
+            }
+        }
+
+        return null;
     }
 
     public void close()

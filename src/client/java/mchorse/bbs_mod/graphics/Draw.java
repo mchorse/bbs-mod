@@ -608,6 +608,7 @@ public class Draw
         float ringRadius = 0.35F * scale;
         float ringThickness = 0.015F * scale;  // Much thinner rings
         float originSize = 0.04F * scale;      // Smaller origin sphere
+        float ringCubeSize = 0.06F * scale;    // Slightly larger cubes on rings for scaling
 
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -630,20 +631,20 @@ public class Draw
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
 
-        // Rotation rings - much thinner
+        // Rotation rings with scaling cubes - much thinner
         // XY plane (Z rotation) - blue
-        renderRing(stack, ringRadius, ringThickness, 64, 0F, 0F, 1F, a);
+        renderRingWithCubes(stack, ringRadius, ringThickness, ringCubeSize, 64, 0F, 0F, 1F, a);
         
         // XZ plane (Y rotation) - green
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
-        renderRing(stack, ringRadius, ringThickness, 64, 0F, 1F, 0F, a);
+        renderRingWithCubes(stack, ringRadius, ringThickness, ringCubeSize, 64, 0F, 1F, 0F, a);
         stack.pop();
         
         // YZ plane (X rotation) - red
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90F));
-        renderRing(stack, ringRadius, ringThickness, 64, 1F, 0F, 0F, a);
+        renderRingWithCubes(stack, ringRadius, ringThickness, ringCubeSize, 64, 1F, 0F, 0F, a);
         stack.pop();
 
         // Central origin point - smaller and brighter
@@ -703,6 +704,59 @@ public class Draw
         builder.vertex(m, shaftEnd, halfArrow, -halfArrow).color(r, g, b, a).next();
         builder.vertex(m, shaftEnd, -halfArrow, -halfArrow).color(r, g, b, a).next();
         builder.vertex(m, length, 0, 0).color(r, g, b, a).next();
+    }
+
+    /**
+     * Render a rotation ring with scaling cubes positioned at cardinal directions.
+     * The cubes are used for scaling operations when clicked.
+     */
+    private static void renderRingWithCubes(MatrixStack stack, float radius, float thickness, float cubeSize, int segments, float r, float g, float b, float a)
+    {
+        // First render the ring itself
+        renderRing(stack, radius, thickness, segments, r, g, b, a);
+        
+        // Then render the scaling cubes at cardinal directions
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        
+        float halfCube = cubeSize / 2F;
+        
+        // Determine cube colors based on ring color
+        float cubeR, cubeG, cubeB;
+        if (r > 0.5f) { // Red ring (X rotation)
+            cubeR = 1f; cubeG = 0.8f; cubeB = 0.8f; // Light red cubes
+        } else if (g > 0.5f) { // Green ring (Y rotation)  
+            cubeR = 0.8f; cubeG = 1f; cubeB = 0.8f; // Light green cubes
+        } else { // Blue ring (Z rotation)
+            cubeR = 0.8f; cubeG = 0.8f; cubeB = 1f; // Light blue cubes
+        }
+        
+        // Cube at positive X (right)
+        stack.push();
+        stack.translate(radius, 0, 0);
+        fillBox(builder, stack, -halfCube, -halfCube, -halfCube, halfCube, halfCube, halfCube, cubeR, cubeG, cubeB, a);
+        stack.pop();
+        
+        // Cube at negative X (left)
+        stack.push();
+        stack.translate(-radius, 0, 0);
+        fillBox(builder, stack, -halfCube, -halfCube, -halfCube, halfCube, halfCube, halfCube, cubeR, cubeG, cubeB, a);
+        stack.pop();
+        
+        // Cube at positive Y (up)
+        stack.push();
+        stack.translate(0, radius, 0);
+        fillBox(builder, stack, -halfCube, -halfCube, -halfCube, halfCube, halfCube, halfCube, cubeR, cubeG, cubeB, a);
+        stack.pop();
+        
+        // Cube at negative Y (down)
+        stack.push();
+        stack.translate(0, -radius, 0);
+        fillBox(builder, stack, -halfCube, -halfCube, -halfCube, halfCube, halfCube, halfCube, cubeR, cubeG, cubeB, a);
+        stack.pop();
+        
+        BufferRenderer.drawWithGlobalProgram(builder.end());
     }
 
 }
