@@ -29,7 +29,6 @@ import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -130,7 +129,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Matrix4f mvp = new Matrix4f(this.camera.projection).mul(this.camera.view).mul(origin);
 
         // Ring picking in screen space (reliable from any angle)
-        float pickTolBase = 20F; // pixels
+        float pickTolBase = 25F; // pixels - increased for better selection
 
         Vector2f p0 = projectToScreen(mvp, 0, 0, 0);
         if (p0 == null)
@@ -143,8 +142,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
         // Determine on-screen radius to scale tolerance with size
         // Apply the same scale as the X/Y/Z axes
         float scale = BBSSettings.axesScale.get();
-        float R = 0.35F * scale; // keep in sync with render
-        float tube = 0.06F * scale; // torus tube radius used in render
+        float R = 0.35F * scale; // Updated to match new ring radius
+        float tube = 0.015F * scale; // Updated to match new ring thickness
         Vector2f pR = projectToScreen(mvp, R, 0, 0);
         Vector2f pRt = projectToScreen(mvp, R + tube * 0.9F, 0, 0);
         float pickTol = pickTolBase;
@@ -152,15 +151,12 @@ public class UIPickableFormRenderer extends UIFormRenderer
         {
             float rpx = p0.distance(pR);
             float tpx = pRt != null ? Math.abs(pR.distance(pRt)) : 0F;
-            pickTol = Math.max(pickTolBase, Math.max(rpx * 0.14F, tpx * 0.9F));
+            pickTol = Math.max(pickTolBase, Math.max(rpx * 0.16F, tpx * 1.2F));
         }
 
         // Sample three rings (XY -> Z, XZ -> Y, YZ -> X)
         Axis ringHit = null;
-        int samples = 128;
-        int period = 8; // must match render dashes
-        float duty = 0.55F;
-        int onCount = Math.max(1, Math.round(period * duty));
+        int samples = 72;
 
         // Camera-relative weighting: prefer ring whose plane is most perpendicular to view (most visible)
         Matrix4f viewOrigin = new Matrix4f(this.camera.view).mul(origin);
@@ -170,7 +166,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         org.joml.Vector3f ny = new org.joml.Vector3f(0, 1, 0).mul(normalMat).normalize();
         org.joml.Vector3f nz = new org.joml.Vector3f(0, 0, 1).mul(normalMat).normalize();
         float wX = Math.abs(nx.z), wY = Math.abs(ny.z), wZ = Math.abs(nz.z);
-        float bias = 8F; // px advantage for fully face-on ring (gentler)
+        float bias = 12F; // px advantage for fully face-on ring
 
         // Helper to test one ring defined by function producing (x,y,z)
         final float finalR = R; // capture scaled R for lambda
@@ -224,8 +220,6 @@ public class UIPickableFormRenderer extends UIFormRenderer
             for (int i = 0; i <= samples; i++)
             {
                 float t = (float) (2 * Math.PI * i / samples);
-                int seg = (int) Math.floor((float) i / samples * period) % period;
-                if (seg >= onCount) { prev = null; continue; } // respect gaps
                 Vector2f cur = proj.apply(t);
                 if (cur == null)
                 {
@@ -270,7 +264,18 @@ public class UIPickableFormRenderer extends UIFormRenderer
             return true;
         }
 
-        System.out.println("[Gizmo] Rotation ring not hit");
+        // Check for axis arrow hits (for translation/scaling)
+        Axis axisHit = tryPickAxisArrow(mvp, mouse, scale);
+        if (axisHit != null)
+        {
+            UIPropTransform transform = uiModelForm.modelPanel.poseEditor.transform;
+            transform.beginTranslate();
+            transform.setAxis(axisHit);
+            System.out.println("[Gizmo] Picked axis arrow axis=" + axisHit);
+            return true;
+        }
+
+        System.out.println("[Gizmo] No gizmo element hit");
 
         return false;
     }
@@ -315,6 +320,41 @@ public class UIPickableFormRenderer extends UIFormRenderer
         float dy = p.y - py;
 
         return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+
+    private Axis tryPickAxisArrow(Matrix4f mvp, Vector2f mouse, float scale)
+    {
+        float axisLength = 0.5F * scale; // Updated to match new axis length
+        float pickTol = 15F; // pixels - reduced for thinner elements
+
+        // Test X axis (red) - horizontal
+        Vector2f xStart = projectToScreen(mvp, 0, 0, 0);
+        Vector2f xEnd = projectToScreen(mvp, axisLength, 0, 0);
+        if (xStart != null && xEnd != null)
+        {
+            float dist = distanceToSegment(mouse, xStart, xEnd);
+            if (dist <= pickTol) return Axis.X;
+        }
+
+        // Test Y axis (green) - vertical
+        Vector2f yStart = projectToScreen(mvp, 0, 0, 0);
+        Vector2f yEnd = projectToScreen(mvp, 0, axisLength, 0);
+        if (yStart != null && yEnd != null)
+        {
+            float dist = distanceToSegment(mouse, yStart, yEnd);
+            if (dist <= pickTol) return Axis.Y;
+        }
+
+        // Test Z axis (blue) - depth
+        Vector2f zStart = projectToScreen(mvp, 0, 0, 0);
+        Vector2f zEnd = projectToScreen(mvp, 0, 0, axisLength);
+        if (zStart != null && zEnd != null)
+        {
+            float dist = distanceToSegment(mouse, zStart, zEnd);
+            if (dist <= pickTol) return Axis.Z;
+        }
+
+        return null;
     }
 
     @Override
@@ -375,7 +415,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
             MatrixStackUtils.multiply(stack, matrix);
         }
 
-        /* Sphere-only gizmo with clear hover highlight, always visible (no depth test) */
+        /* Proper 3D transformation gizmo with axis arrows, rotation rings, and central origin */
         if (UIBaseMenu.renderAxes)
         {
             RenderSystem.disableDepthTest();
@@ -383,9 +423,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
             // Apply the same scale as the X/Y/Z axes
             float scale = BBSSettings.axesScale.get();
-            float baseRadius = 0.35F * scale; // match on-model ring size
-            float hoverRadius = baseRadius + 0.02F * scale;
 
+            // Check for hover state on the gizmo
             Matrix4f mvp = new Matrix4f(this.camera.projection).mul(this.camera.view);
             Matrix4f origin = this.formEditor.editor.getOrigin(context.getTransition());
             if (origin != null) mvp.mul(origin);
@@ -394,31 +433,17 @@ public class UIPickableFormRenderer extends UIFormRenderer
             boolean hover = false;
             if (center != null)
             {
-                float pxTol = 28F;
+                float pxTol = 35F; // Increased tolerance for better selection
                 hover = center.distance(new Vector2f(context.mouseX, context.mouseY)) <= pxTol;
             }
 
-            // 3 colored rotation rings (3D torus)
-            float ringRadius = baseRadius;
-            float band = 0.06F * scale; // torus tube radius
+            // Render the complete transformation gizmo
+            Draw.renderTransformationGizmo(stack, scale, 1F, 1F, 1F, 0.95F);
 
-            // XY plane (Z rotation) - blue
-            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 0F, 0F, 1F, 0.95F);
-            // XZ plane (Y rotation) - green
-            stack.push();
-            stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
-            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 0F, 1F, 0F, 0.95F);
-            stack.pop();
-            // YZ plane (X rotation) - red
-            stack.push();
-            stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90F));
-            Draw.renderDashedTorus(stack, ringRadius, band, 96, 16, 8, 0.55F, 1F, 0F, 0F, 0.95F);
-            stack.pop();
-
-            // center sphere hover feedback
+            // Enhanced hover feedback - highlight the origin
             if (hover)
             {
-                Draw.renderSphere(stack, 0.09F * scale, 14, 22, 1F, 1F, 0F, 0.8F);
+                Draw.renderSphere(stack, 0.06F * scale, 12, 16, 1F, 1F, 0F, 0.8F);
             }
 
             RenderSystem.enableCull();
