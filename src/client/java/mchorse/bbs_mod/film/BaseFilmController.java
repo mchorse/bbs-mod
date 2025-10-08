@@ -165,6 +165,8 @@ public abstract class BaseFilmController
         MatrixStackUtils.multiply(stack, target == null ? defaultMatrix : target);
         FormUtilsClient.render(form, formContext);
 
+        System.out.println("[Gizmo Debug] BaseFilmController.renderEntity - bone: " + context.bone + ", renderAxes: " + UIBaseMenu.renderAxes);
+        
         if (context.bone != null && UIBaseMenu.renderAxes)
         {
             Form root = FormUtils.getRoot(form);
@@ -174,6 +176,8 @@ public abstract class BaseFilmController
             FormUtilsClient.getRenderer(root).collectMatrices(entity, context.local ? null : context.bone, tempStack, map, "", transition);
 
             Matrix4f matrix = map.get(context.bone);
+
+            System.out.println("[Gizmo Debug] Bone matrix lookup - bone: " + context.bone + ", matrix: " + (matrix != null ? "found" : "NULL"));
 
             if (matrix != null)
             {
@@ -185,6 +189,8 @@ public abstract class BaseFilmController
 
                 float base = 0.6F;      // radius of rotation rings
                 float band = 0.06F;    // ring thickness (thicker both visually and for readability)
+
+                System.out.println("[Gizmo Debug] RENDERING GIZMO at bone: " + context.bone);
 
                 // XY (Z rotation) - blue 3D torus
                 Draw.renderDashedTorus(stack, base, band, 96, 16, 8, 0.55F, 0F, 0F, 1F, 0.95F);

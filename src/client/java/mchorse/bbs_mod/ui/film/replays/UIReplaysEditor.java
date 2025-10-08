@@ -501,7 +501,9 @@ public class UIReplaysEditor extends UIElement
                     int mouseY = this.getContext().mouseY;
                     UIKeyframeSheet sheet = this.keyframeEditor.view.getGraph().getSheet(mouseY);
 
-                    if (sheet != null && sheet.channel.getFactory() == KeyframeFactories.POSE && sheet.id.equals("pose"))
+                    // Allow animation to keyframes conversion for main pose and all pose overlays
+                    if (sheet != null && sheet.channel.getFactory() == KeyframeFactories.POSE && 
+                        (sheet.id.equals("pose") || sheet.id.contains("pose_overlay")))
                     {
                         menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () -> this.animationToPoses(modelForm, sheet));
                         // TODO: menu.action(Icons.UPLOAD, IKey.raw("Copy as .bbs.json animation"), () -> this.copyAaBBSJSON(sheet));
@@ -658,9 +660,26 @@ public class UIReplaysEditor extends UIElement
         Keyframe selected = this.keyframeEditor.view.getGraph().getSelected();
         String type = "pose";
 
-        if (selected != null && selected.getParent().getId().endsWith("pose_overlay"))
+        if (selected != null)
         {
-            type = "pose_overlay";
+            String parentId = selected.getParent().getId();
+            
+            // Check if it's any pose_overlay variant (pose_overlay, pose_overlay_1, etc.)
+            if (parentId.contains("pose_overlay"))
+            {
+                // Extract the exact pose type from the parent ID (e.g., "pose_overlay_3")
+                int poseIndex = parentId.lastIndexOf("pose");
+                if (poseIndex >= 0)
+                {
+                    type = parentId.substring(poseIndex);
+                    
+                    // Remove any path prefix if present (e.g., "form/pose_overlay_1" -> "pose_overlay_1")
+                    if (type.contains("/"))
+                    {
+                        type = type.substring(type.lastIndexOf("/") + 1);
+                    }
+                }
+            }
         }
 
         this.pickProperty(bone, StringUtils.combinePaths(path, type), false);

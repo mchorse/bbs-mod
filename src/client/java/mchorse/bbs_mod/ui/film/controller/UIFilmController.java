@@ -1173,10 +1173,28 @@ public class UIFilmController extends UIElement
                 UIKeyframeSheet sheet = keyframeEditor.getSheet(editor.getKeyframe());
                 String currentFirst = pose.poseEditor.groups.getCurrentFirst();
 
-                if (sheet != null && sheet.id.endsWith("pose"))
+                System.out.println("[Gizmo Debug] getBone() - sheet: " + (sheet != null ? sheet.id : "null") + ", currentFirst: " + currentFirst);
+
+                if (sheet != null && (sheet.id.endsWith("pose") || sheet.id.contains("pose_overlay")))
                 {
-                    bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
+                    String separator = sheet.id.endsWith("/pose") || sheet.id.contains("/pose_overlay") ? "/" : "";
+                    int separatorIndex = sheet.id.lastIndexOf(separator + "pose");
+                    
+                    if (separatorIndex > 0 && !separator.isEmpty())
+                    {
+                        bone = sheet.id.substring(0, separatorIndex + 1) + currentFirst;
+                    }
+                    else
+                    {
+                        bone = currentFirst;
+                    }
+                    
                     local = pose.poseEditor.transform.isLocal();
+                    System.out.println("[Gizmo Debug] getBone() result - bone: " + bone + ", local: " + local);
+                }
+                else
+                {
+                    System.out.println("[Gizmo Debug] getBone() - sheet check failed");
                 }
             }
             else if (editor instanceof UITransformKeyframeFactory)
