@@ -450,23 +450,27 @@ public class UIPropTransform extends UITransform
         @Override
         protected boolean subMouseClicked(UIContext context)
         {
-            if (this.transform.editing)
+            // Right-click cancels during drag
+            if (this.transform.editing && context.mouseButton == 1)
             {
-                if (context.mouseButton == 0)
-                {
-                    this.transform.acceptChanges();
-
-                    return true;
-                }
-                else if (context.mouseButton == 1)
-                {
-                    this.transform.rejectChanges();
-
-                    return true;
-                }
+                this.transform.rejectChanges();
+                return true;
             }
             
             return super.subMouseClicked(context);
+        }
+
+        @Override
+        protected boolean subMouseReleased(UIContext context)
+        {
+            // Left mouse release commits changes
+            if (this.transform.editing && context.mouseButton == 0)
+            {
+                this.transform.acceptChanges();
+                return true;
+            }
+
+            return super.subMouseReleased(context);
         }
     }
 }
