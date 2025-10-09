@@ -1128,8 +1128,8 @@ public class UIReplaysEditor extends UIElement
 
     private Axis tryPickAxisArrow(Matrix4f mvp, Vector2f mouse, float scale, Area area)
     {
-        float axisLength = 0.5F * scale;
-        float pickTol = 30F; // pixels - increased for better selection
+        float axisLength = 0.8F * scale;  // Longer arrows - matches visual
+        float pickTol = 40F; // pixels - increased tolerance for larger arrows
 
         // Test X axis (red) - horizontal with negative extension
         Vector2f xStart = projectToScreen(mvp, area, -axisLength * 0.3F, 0, 0);
@@ -1139,7 +1139,6 @@ public class UIReplaysEditor extends UIElement
             float dist = distanceToSegment(mouse, xStart, xEnd);
             if (dist <= pickTol) 
             {
-                System.out.println("[Gizmo Debug] ReplaysEditor X arrow hit, dist=" + dist + " tol=" + pickTol);
                 return Axis.X;
             }
         }
@@ -1152,7 +1151,6 @@ public class UIReplaysEditor extends UIElement
             float dist = distanceToSegment(mouse, yStart, yEnd);
             if (dist <= pickTol) 
             {
-                System.out.println("[Gizmo Debug] ReplaysEditor Y arrow hit, dist=" + dist + " tol=" + pickTol);
                 return Axis.Y;
             }
         }
@@ -1165,7 +1163,6 @@ public class UIReplaysEditor extends UIElement
             float dist = distanceToSegment(mouse, zStart, zEnd);
             if (dist <= pickTol) 
             {
-                System.out.println("[Gizmo Debug] ReplaysEditor Z arrow hit, dist=" + dist + " tol=" + pickTol);
                 return Axis.Z;
             }
         }

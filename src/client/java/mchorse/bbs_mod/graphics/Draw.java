@@ -600,14 +600,14 @@ public class Draw
      */
     public static void renderTransformationGizmo(MatrixStack stack, float scale, float r, float g, float b, float a)
     {
-        float axisLength = 0.5F * scale;
-        float axisThickness = 0.008F * scale;  // Thin shafts
-        float cubeSize = 0.04F * scale;        // Small cubes at base
-        float arrowLength = 0.08F * scale;     // Short arrowheads
-        float arrowWidth = 0.03F * scale;      // Thin arrowheads
-        float ringRadius = 0.35F * scale;
-        float ringThickness = 0.015F * scale;  // Thin rings
-        float originSize = 0.04F * scale;      // Small origin sphere
+        float axisLength = 0.8F * scale;       // Longer arrows (was 0.5F)
+        float axisThickness = 0.016F * scale;  // Thicker shafts - 2x (was 0.008F)
+        float cubeSize = 0.08F * scale;        // Larger cubes at base - 2x (was 0.04F)
+        float arrowLength = 0.16F * scale;     // Longer arrowheads - 2x (was 0.08F)
+        float arrowWidth = 0.06F * scale;      // Wider arrowheads - 2x (was 0.03F)
+        float ringRadius = 0.35F * scale;      // Keep ring size the same
+        float ringThickness = 0.015F * scale;  // Keep ring thickness the same
+        float originSize = 0.04F * scale;      // Keep origin sphere size the same
 
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);

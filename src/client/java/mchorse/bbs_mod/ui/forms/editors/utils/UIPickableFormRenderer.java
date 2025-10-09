@@ -206,20 +206,20 @@ public class UIPickableFormRenderer extends UIFormRenderer
         this.stencilMap.objectIndex = RING_Z_ID;
         this.renderRingForPicking(builder, stack, 0.35F * scale, 0.015F * scale, 64, 0, 0, 0); // XY plane (Z rotation)
 
-        // Render arrows with unique IDs
+        // Render arrows with unique IDs - increased size for easier selection
         this.stencilMap.objectIndex = ARROW_X_ID;
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // X axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // X axis
         
         this.stencilMap.objectIndex = ARROW_Y_ID;
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90F));
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Y axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // Y axis
         stack.pop();
         
         this.stencilMap.objectIndex = ARROW_Z_ID;
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90F));
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Z axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // Z axis
         stack.pop();
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
