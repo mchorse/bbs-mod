@@ -1191,7 +1191,7 @@ public class UIFilmController extends UIElement
                 }
                 else
                 {
-                    System.out.println("[Gizmo Debug] getBone() - sheet check failed");
+                    // Sheet check failed
                 }
             }
             else if (editor instanceof UITransformKeyframeFactory)

@@ -185,12 +185,9 @@ public class UIPickableFormRenderer extends UIFormRenderer
         final int RING_X_ID = 1001; // Red ring (X rotation)
         final int RING_Y_ID = 1002; // Green ring (Y rotation)  
         final int RING_Z_ID = 1003; // Blue ring (Z rotation)
-        final int ARROW_X_ID = 2001; // X arrow
-        final int ARROW_Y_ID = 2002; // Y arrow
-        final int ARROW_Z_ID = 2003; // Z arrow
-        final int CUBE_X_ID = 3001;  // X scaling cubes
-        final int CUBE_Y_ID = 3002;  // Y scaling cubes
-        final int CUBE_Z_ID = 3003;  // Z scaling cubes
+        final int ARROW_X_ID = 2001; // X arrow (translation)
+        final int ARROW_Y_ID = 2002; // Y arrow (translation)
+        final int ARROW_Z_ID = 2003; // Z arrow (translation)
 
         // Set up picking shader
         ShaderProgram pickingProgram = BBSShaders.getPickerModelsProgram();
@@ -209,31 +206,21 @@ public class UIPickableFormRenderer extends UIFormRenderer
         this.stencilMap.objectIndex = RING_Z_ID;
         this.renderRingForPicking(builder, stack, 0.35F * scale, 0.015F * scale, 64, 0, 0, 0); // XY plane (Z rotation)
 
-        // Render arrows with unique IDs
+        // Render arrows with unique IDs - increased size for easier selection
         this.stencilMap.objectIndex = ARROW_X_ID;
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // X axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // X axis
         
         this.stencilMap.objectIndex = ARROW_Y_ID;
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90F));
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Y axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // Y axis
         stack.pop();
         
         this.stencilMap.objectIndex = ARROW_Z_ID;
         stack.push();
         stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90F));
-        this.renderArrowForPicking(builder, stack, 0.5F * scale, 0.008F * scale, 0.08F * scale, 0.03F * scale, 0, 0, 0); // Z axis
+        this.renderArrowForPicking(builder, stack, 0.8F * scale, 0.016F * scale, 0.16F * scale, 0.06F * scale, 0, 0, 0); // Z axis
         stack.pop();
-
-        // Render cubes with unique IDs
-        this.stencilMap.objectIndex = CUBE_X_ID;
-        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 0, 90, 0); // YZ plane cubes
-        
-        this.stencilMap.objectIndex = CUBE_Y_ID;
-        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 90, 0, 0); // XZ plane cubes
-        
-        this.stencilMap.objectIndex = CUBE_Z_ID;
-        this.renderCubesForPicking(builder, stack, 0.35F * scale, 0.06F * scale, 0, 0, 0); // XY plane cubes
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
     }
@@ -295,46 +282,6 @@ public class UIPickableFormRenderer extends UIFormRenderer
         builder.vertex(m, shaftEnd, arrowWidth, -arrowWidth).next();
     }
 
-    private void renderCubesForPicking(BufferBuilder builder, MatrixStack stack, float radius, float cubeSize, float rotX, float rotY, float rotZ)
-    {
-        Matrix4f m = stack.peek().getPositionMatrix();
-        
-        // Apply rotations
-        if (rotX != 0) stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX));
-        if (rotY != 0) stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY));
-        if (rotZ != 0) stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ));
-        
-        m = stack.peek().getPositionMatrix();
-        
-        float halfCube = cubeSize / 2F;
-        
-        // Render 4 cubes at cardinal directions
-        this.renderCubeAt(builder, m, radius, 0, 0, halfCube);
-        this.renderCubeAt(builder, m, -radius, 0, 0, halfCube);
-        this.renderCubeAt(builder, m, 0, radius, 0, halfCube);
-        this.renderCubeAt(builder, m, 0, -radius, 0, halfCube);
-    }
-
-    private void renderCubeAt(BufferBuilder builder, Matrix4f m, float x, float y, float z, float halfSize)
-    {
-        // Render a simple cube as 6 quads
-        float x1 = x - halfSize, x2 = x + halfSize;
-        float y1 = y - halfSize, y2 = y + halfSize;
-        float z1 = z - halfSize, z2 = z + halfSize;
-        
-        // Front face
-        builder.vertex(m, x1, y1, z2).next();
-        builder.vertex(m, x2, y1, z2).next();
-        builder.vertex(m, x2, y2, z2).next();
-        builder.vertex(m, x1, y2, z2).next();
-        
-        // Back face
-        builder.vertex(m, x2, y1, z1).next();
-        builder.vertex(m, x1, y1, z1).next();
-        builder.vertex(m, x1, y2, z1).next();
-        builder.vertex(m, x2, y2, z1).next();
-    }
-
     private boolean handleGizmoPick(int pickedId, UIModelForm uiModelForm)
     {
         UIPropTransform transform = uiModelForm.modelPanel.poseEditor.transform;
@@ -345,7 +292,6 @@ public class UIPickableFormRenderer extends UIFormRenderer
             Axis axis = pickedId == 1001 ? Axis.X : (pickedId == 1002 ? Axis.Y : Axis.Z);
             transform.beginRotate();
             transform.setAxis(axis);
-            System.out.println("[Gizmo] Picked rotation ring axis=" + axis + " (ID=" + pickedId + ")");
             return true;
         }
         
@@ -355,17 +301,6 @@ public class UIPickableFormRenderer extends UIFormRenderer
             Axis axis = pickedId == 2001 ? Axis.X : (pickedId == 2002 ? Axis.Y : Axis.Z);
             transform.beginTranslate();
             transform.setAxis(axis);
-            System.out.println("[Gizmo] Picked axis arrow axis=" + axis + " (ID=" + pickedId + ")");
-            return true;
-        }
-        
-        // Handle cube picks (scaling)
-        if (pickedId >= 3001 && pickedId <= 3003)
-        {
-            Axis axis = pickedId == 3001 ? Axis.X : (pickedId == 3002 ? Axis.Y : Axis.Z);
-            transform.beginScale();
-            transform.setAxis(axis);
-            System.out.println("[Gizmo] Picked ring cube axis=" + axis + " (ID=" + pickedId + ")");
             return true;
         }
         
