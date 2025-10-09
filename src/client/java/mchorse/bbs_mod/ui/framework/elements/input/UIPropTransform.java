@@ -179,7 +179,6 @@ public class UIPropTransform extends UITransform
 
         this.editing = true;
         this.mode = mode;
-        System.out.println("[Gizmo] UIPropTransform.enableMode mode=" + mode + " local=" + this.local + " axis=" + this.axis + " lastX=" + this.lastX);
 
         this.cache.copy(this.transform);
 
@@ -389,7 +388,6 @@ public class UIPropTransform extends UITransform
             else
             {
                 int dx = context.mouseX - this.lastX;
-                System.out.println("[Gizmo] UIPropTransform.render dx=" + dx + " mouseX=" + context.mouseX + " lastX=" + this.lastX + " mode=" + this.mode + " axis=" + this.axis);
                 Vector3f vector = this.getValue();
                 boolean all = Window.isAltPressed();
 
@@ -414,9 +412,9 @@ public class UIPropTransform extends UITransform
                     if (this.axis == Axis.Y || all) vector3f.y += factor * dx;
                     if (this.axis == Axis.Z || all) vector3f.z += factor * dx;
 
-                    if (this.mode == 0) { System.out.println("[Gizmo] setT " + vector3f); this.setT(null, vector3f.x, vector3f.y, vector3f.z); }
-                    if (this.mode == 1) { System.out.println("[Gizmo] setS " + vector3f); this.setS(null, vector3f.x, vector3f.y, vector3f.z); }
-                    if (this.mode == 2) { System.out.println("[Gizmo] setR " + vector3f); this.setR(null, vector3f.x, vector3f.y, vector3f.z); }
+                    if (this.mode == 0) { this.setT(null, vector3f.x, vector3f.y, vector3f.z); }
+                    if (this.mode == 1) { this.setS(null, vector3f.x, vector3f.y, vector3f.z); }
+                    if (this.mode == 2) { this.setR(null, vector3f.x, vector3f.y, vector3f.z); }
                 }
 
                 this.setTransform(this.transform);
