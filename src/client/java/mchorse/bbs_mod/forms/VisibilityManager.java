@@ -4,7 +4,7 @@ import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -29,7 +29,6 @@ import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.Scroll;
 import mchorse.bbs_mod.ui.utils.ScrollDirection;
 import mchorse.bbs_mod.ui.utils.UIUtils;
-import mchorse.bbs_mod.ui.utils.context.ContextAction;
 import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UICopyPasteController;
@@ -459,7 +458,7 @@ public class UIClips extends UIElement
         Clip original = this.delegate.getClip();
         int offset = this.delegate.getCursor();
 
-        this.clips.preNotifyParent();
+        this.clips.preNotify();
 
         for (Clip clip : selectedClips)
         {
@@ -479,7 +478,7 @@ public class UIClips extends UIElement
             }
         }
 
-        this.clips.postNotifyParent();
+        this.clips.postNotify();
 
         this.addSelected(original);
     }

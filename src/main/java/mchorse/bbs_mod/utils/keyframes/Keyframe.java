@@ -2,7 +2,7 @@ package mchorse.bbs_mod.utils.keyframes;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
@@ -58,11 +58,11 @@ public class Keyframe <T> extends ValueGroup
 
     public void setTick(float tick, boolean dirty)
     {
-        if (dirty) this.preNotifyParent();
+        if (dirty) this.preNotify();
 
         this.tick = tick;
 
-        if (dirty) this.postNotifyParent();
+        if (dirty) this.postNotify();
     }
 
     public float getDuration()
@@ -72,9 +72,9 @@ public class Keyframe <T> extends ValueGroup
 
     public void setDuration(float duration)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.duration = Math.max(0, duration);
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public T getValue()
@@ -94,11 +94,11 @@ public class Keyframe <T> extends ValueGroup
 
     public void setValue(T value, boolean dirty)
     {
-        if (dirty) this.preNotifyParent();
+        if (dirty) this.preNotify();
 
         this.value = value;
 
-        if (dirty) this.postNotifyParent();
+        if (dirty) this.postNotify();
     }
 
     public Interpolation getInterpolation()
@@ -120,9 +120,9 @@ public class Keyframe <T> extends ValueGroup
         MapType data = new MapType();
 
         data.putFloat("tick", this.tick);
-        data.putFloat("duration", this.duration);
         data.put("value", this.factory.toData(this.value));
-        data.put("interp", this.interp.toData());
+        if (this.duration != 0F) data.putFloat("duration", this.duration);
+        if (this.interp.getInterp() != Interpolations.LINEAR) data.put("interp", this.interp.toData());
         if (this.lx != 5F) data.putFloat("lx", this.lx);
         if (this.ly != 0F) data.putFloat("ly", this.ly);
         if (this.rx != 5F) data.putFloat("rx", this.rx);

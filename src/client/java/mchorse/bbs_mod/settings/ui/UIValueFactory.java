@@ -1,12 +1,11 @@
 package mchorse.bbs_mod.settings.ui;
 
 import mchorse.bbs_mod.l10n.L10n;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueDouble;
-import mchorse.bbs_mod.settings.values.ValueFloat;
-import mchorse.bbs_mod.settings.values.ValueInt;
-import mchorse.bbs_mod.settings.values.ValueLong;
-import mchorse.bbs_mod.settings.values.ValueString;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueDouble;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
@@ -102,21 +101,6 @@ public class UIValueFactory
         color.setColor(value.get());
 
         return color;
-    }
-
-    public static UITrackpad longUI(ValueLong value, Consumer<Double> callback)
-    {
-        UITrackpad trackpad = new UITrackpad(callback == null ? (v) -> value.set(v.longValue()) : (v) ->
-        {
-            value.set(v.longValue());
-            callback.accept(v);
-        });
-
-        trackpad.limit(value.getMin(), value.getMax(), true).delayedInput();
-        trackpad.setValue(value.get());
-        trackpad.tooltip(L10n.lang(getValueCommentKey(value)));
-
-        return trackpad;
     }
 
     public static UITrackpad floatUI(ValueFloat value, Consumer<Double> callback)

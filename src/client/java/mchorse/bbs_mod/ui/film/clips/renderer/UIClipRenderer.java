@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.film.clips.renderer;
 
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.camera.clips.ClipFactoryData;
 import mchorse.bbs_mod.ui.film.UIClips;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
@@ -45,7 +46,8 @@ public class UIClipRenderer <T extends Clip> implements IUIClipRenderer<T>
             context.batcher.dropShadow(left + 2, y + 2, right - 2, y + h - 2, 8, Colors.A75 + color, color);
         }
 
-        int color = Colors.A100 | clips.getFactory().getData(clip).color;
+        ClipFactoryData data = clips.getFactory().getData(clip);
+        int color = Colors.A100 | data.color;
 
         if (clip.enabled.get())
         {
@@ -64,7 +66,12 @@ public class UIClipRenderer <T extends Clip> implements IUIClipRenderer<T>
         }
 
         FontRenderer font = context.batcher.getFont();
-        String label = font.limitToWidth(clip.title.get(), right - 5 - left);
+        String label = font.limitToWidth(clip.title.get(), right - 6 - left);
+
+        if (right - left >= 20)
+        {
+            context.batcher.icon(data.icon, Colors.mulA(Colors.mulRGB(Colors.WHITE, 0.75F), 0.5F), right - 2, y + h / 2, 1F, 0.5F);
+        }
 
         if (!label.isEmpty())
         {

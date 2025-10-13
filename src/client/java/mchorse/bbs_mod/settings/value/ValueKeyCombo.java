@@ -15,9 +15,9 @@ public class ValueKeyCombo extends BaseValueBasic<KeyCombo>
     @Override
     public void set(KeyCombo value, int flag)
     {
-        this.preNotifyParent(flag);
+        this.preNotify(flag);
         this.value.copy(value);
-        this.postNotifyParent(flag);
+        this.postNotify(flag);
     }
 
     @Override

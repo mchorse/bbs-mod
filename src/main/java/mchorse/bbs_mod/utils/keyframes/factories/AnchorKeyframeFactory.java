@@ -1,17 +1,17 @@
 package mchorse.bbs_mod.utils.keyframes.factories;
 
 import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.forms.properties.AnchorProperty;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.utils.interps.IInterp;
 
-public class AnchorKeyframeFactory implements IKeyframeFactory<AnchorProperty.Anchor>
+public class AnchorKeyframeFactory implements IKeyframeFactory<Anchor>
 {
-    private AnchorProperty.Anchor i = new AnchorProperty.Anchor();
+    private Anchor i = new Anchor();
 
     @Override
-    public AnchorProperty.Anchor fromData(BaseType data)
+    public Anchor fromData(BaseType data)
     {
-        AnchorProperty.Anchor anchor = new AnchorProperty.Anchor();
+        Anchor anchor = new Anchor();
 
         anchor.fromData(data.asMap());
 
@@ -19,21 +19,21 @@ public class AnchorKeyframeFactory implements IKeyframeFactory<AnchorProperty.An
     }
 
     @Override
-    public BaseType toData(AnchorProperty.Anchor value)
+    public BaseType toData(Anchor value)
     {
         return value.toData();
     }
 
     @Override
-    public AnchorProperty.Anchor createEmpty()
+    public Anchor createEmpty()
     {
-        return new AnchorProperty.Anchor();
+        return new Anchor();
     }
 
     @Override
-    public AnchorProperty.Anchor copy(AnchorProperty.Anchor value)
+    public Anchor copy(Anchor value)
     {
-        AnchorProperty.Anchor anchor = new AnchorProperty.Anchor();
+        Anchor anchor = new Anchor();
 
         anchor.actor = value.actor;
         anchor.attachment = value.attachment;
@@ -49,7 +49,7 @@ public class AnchorKeyframeFactory implements IKeyframeFactory<AnchorProperty.An
     }
 
     @Override
-    public AnchorProperty.Anchor interpolate(AnchorProperty.Anchor preA, AnchorProperty.Anchor a, AnchorProperty.Anchor b, AnchorProperty.Anchor postB, IInterp interpolation, float x)
+    public Anchor interpolate(Anchor preA, Anchor a, Anchor b, Anchor postB, IInterp interpolation, float x)
     {
         this.i.actor = b.actor;
         this.i.attachment = b.attachment;

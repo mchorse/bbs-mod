@@ -1,7 +1,8 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes;
 
-import mchorse.bbs_mod.forms.properties.IFormProperty;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
@@ -22,14 +23,14 @@ public class UIKeyframeSheet
 
     public final KeyframeChannel channel;
     public final KeyframeSelection selection;
-    public final IFormProperty property;
+    public final BaseValueBasic property;
 
-    public UIKeyframeSheet(int color, boolean separator, KeyframeChannel channel, IFormProperty property)
+    public UIKeyframeSheet(int color, boolean separator, KeyframeChannel channel, BaseValueBasic property)
     {
-        this(channel.getId(), IKey.constant(property != null ? property.getForm().getTrackName(channel.getId()) : channel.getId()), color, separator, channel, property);
+        this(channel.getId(), IKey.constant(property != null ? FormUtils.getForm(property).getTrackName(channel.getId()) : channel.getId()), color, separator, channel, property);
     }
 
-    public UIKeyframeSheet(String id, IKey title, int color, boolean separator, KeyframeChannel channel, IFormProperty property)
+    public UIKeyframeSheet(String id, IKey title, int color, boolean separator, KeyframeChannel channel, BaseValueBasic property)
     {
         this.id = id;
         this.title = title;

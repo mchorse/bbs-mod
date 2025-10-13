@@ -11,6 +11,7 @@ import mchorse.bbs_mod.cubic.animation.ActionsConfig;
 import mchorse.bbs_mod.cubic.animation.Animator;
 import mchorse.bbs_mod.cubic.animation.IAnimator;
 import mchorse.bbs_mod.cubic.animation.ProceduralAnimator;
+import mchorse.bbs_mod.cubic.data.model.ModelGroup;
 import mchorse.bbs_mod.cubic.model.ArmorSlot;
 import mchorse.bbs_mod.cubic.model.ArmorType;
 import mchorse.bbs_mod.cubic.model.bobj.BOBJModel;
@@ -23,9 +24,9 @@ import mchorse.bbs_mod.forms.entities.StubEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
 import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.resources.Link;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -37,6 +38,7 @@ import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.pose.PoseTransform;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
@@ -45,6 +47,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -85,7 +88,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
         for (String key : trigger.states.keys())
         {
-            IFormProperty property = FormUtils.getProperty(this.form, key);
+            BaseValueBasic property = FormUtils.getProperty(this.form, key);
 
             if (property != null)
             {
@@ -417,6 +420,71 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 RenderSystem.enableDepthTest();
             }
         }
+    }
+
+    @Override
+    public boolean renderArm(MatrixStack matrices, int light, AbstractClientPlayerEntity player, Hand hand)
+    {
+        ModelInstance model = this.getModel();
+
+        if (this.animator != null && model != null)
+        {
+            ArmorSlot slot = hand == Hand.MAIN_HAND ? model.fpMain : model.fpOffhand;
+
+            if (slot == null)
+            {
+                return false;
+            }
+
+            Link link = this.form.texture.get();
+            Link texture = link == null ? model.texture : link;
+            Color color = this.form.color.get().copy();
+
+            for (ModelGroup group : model.getModel().getAllGroups())
+            {
+                ModelGroup g = group;
+                boolean visible = false;
+
+                while (g != null)
+                {
+                    if (g.id.equals(slot.group))
+                    {
+                        visible = true;
+
+                        break;
+                    }
+
+                    g = g.parent;
+                }
+
+                group.visible = visible;
+            }
+
+            model.model.resetPose();
+
+            matrices.push();
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotation(MathUtils.PI));
+            MatrixStackUtils.applyTransform(matrices, slot.transform);
+
+            BBSModClient.getTextures().bindTexture(texture);
+
+            Supplier<ShaderProgram> mainShader = (BBSRendering.isIrisShadersEnabled() && BBSRendering.isRenderingWorld()) || !model.isVAORendered()
+                ? GameRenderer::getRenderTypeEntityTranslucentCullProgram
+                : BBSShaders::getModel;
+
+            this.renderModel(this.entity, mainShader, matrices, model, light, OverlayTexture.DEFAULT_UV, color, false, null, 0F);
+
+            for (ModelGroup group : model.getModel().getAllGroups())
+            {
+                group.visible = true;
+            }
+
+            matrices.pop();
+
+            return true;
+        }
+
+        return super.renderArm(matrices, light, player, hand);
     }
 
     @Override

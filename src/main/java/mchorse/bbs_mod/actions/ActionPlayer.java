@@ -8,6 +8,7 @@ import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.network.ServerNetwork;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.DataPath;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -17,6 +18,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,8 @@ public class ActionPlayer
 
     private Map<String, LivingEntity> actors = new HashMap<>();
 
+    private List<ItemStack> cache = new ArrayList<>();
+
     public ActionPlayer(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception)
     {
         this.world = world;
@@ -45,10 +49,18 @@ public class ActionPlayer
         this.countdown = countdown;
         this.exception = exception;
         this.serverPlayer = serverPlayer;
-
         this.duration = film.camera.calculateDuration();
 
         this.updateReplayEntities();
+
+        if (this.serverPlayer != null && film.getFirstPersonReplay() != null)
+        {
+            for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
+            {
+                this.cache.add(serverPlayer.getInventory().getStack(i).copy());
+                this.serverPlayer.getInventory().setStack(i, CollectionUtils.getSafe(this.film.inventory.getStacks(), i, ItemStack.EMPTY));
+            }
+        }
     }
 
     public void updateReplayEntities()
@@ -130,12 +142,27 @@ public class ActionPlayer
         actor.setBodyYaw(yawBody);
         actor.setSneaking(replay.keyframes.sneaking.interpolate(tick) > 0);
         actor.setOnGround(replay.keyframes.grounded.interpolate(tick) > 0);
-        actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
         actor.equipStack(EquipmentSlot.OFFHAND, replay.keyframes.offHand.interpolate(tick, ItemStack.EMPTY));
         actor.equipStack(EquipmentSlot.HEAD, replay.keyframes.armorHead.interpolate(tick, ItemStack.EMPTY));
         actor.equipStack(EquipmentSlot.CHEST, replay.keyframes.armorChest.interpolate(tick, ItemStack.EMPTY));
         actor.equipStack(EquipmentSlot.LEGS, replay.keyframes.armorLegs.interpolate(tick, ItemStack.EMPTY));
         actor.equipStack(EquipmentSlot.FEET, replay.keyframes.armorFeet.interpolate(tick, ItemStack.EMPTY));
+
+        if (actor instanceof ServerPlayerEntity player)
+        {
+            int selectedSlot = player.getInventory().selectedSlot;
+            int slot = replay.keyframes.selectedSlot.interpolate(this.tick);
+
+            if (selectedSlot != slot)
+            {
+                ServerNetwork.sendSelectedSlot(player, slot);
+                actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
+            }
+        }
+        else
+        {
+            actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
+        }
 
         actor.fallDistance = replay.keyframes.fall.interpolate(tick).floatValue();
     }
@@ -251,6 +278,14 @@ public class ActionPlayer
             if (!value.isPlayer())
             {
                 value.discard();
+            }
+        }
+
+        if (this.serverPlayer != null && this.film.getFirstPersonReplay() != null)
+        {
+            for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
+            {
+                this.serverPlayer.getInventory().setStack(i, this.cache.get(i));
             }
         }
     }

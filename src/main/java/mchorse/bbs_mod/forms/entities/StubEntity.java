@@ -108,6 +108,12 @@ public class StubEntity implements IEntity
     }
 
     @Override
+    public int getSelectedSlot()
+    {
+        return 0;
+    }
+
+    @Override
     public boolean isSneaking()
     {
         return this.sneaking;

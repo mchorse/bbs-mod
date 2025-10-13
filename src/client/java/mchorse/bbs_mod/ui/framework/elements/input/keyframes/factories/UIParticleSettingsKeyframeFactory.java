@@ -34,17 +34,17 @@ public class UIParticleSettingsKeyframeFactory extends UIKeyframeFactory<Particl
         @Override
         protected void setParticle(Identifier id)
         {
-            this.editor.keyframe.preNotifyParent();
+            this.editor.keyframe.preNotify();
             super.setParticle(id);
-            this.editor.keyframe.postNotifyParent();
+            this.editor.keyframe.postNotify();
         }
 
         @Override
         protected void setArguments(String args)
         {
-            this.editor.keyframe.preNotifyParent();
+            this.editor.keyframe.preNotify();
             super.setArguments(args);
-            this.editor.keyframe.postNotifyParent();
+            this.editor.keyframe.postNotify();
         }
     }
 }

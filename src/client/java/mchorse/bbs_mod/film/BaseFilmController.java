@@ -12,7 +12,7 @@ import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.MCEntity;
 import mchorse.bbs_mod.forms.entities.StubEntity;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.properties.AnchorProperty;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
@@ -84,51 +84,64 @@ public abstract class BaseFilmController
             Lerps.lerp(entity.getPrevZ(), entity.getZ(), transition)
         );
 
-        AnchorProperty.Anchor value = form.anchor.get();
-        Matrix4f target = null;
+        Anchor value = form.anchor.get();
         double cx = camera.getPos().x;
         double cy = camera.getPos().y;
         double cz = camera.getPos().z;
+
+        boolean relative = context.replay != null && context.relative;
+
+        if (relative)
+        {
+            cx = context.replay.keyframes.x.interpolate(0F) + context.replay.relativeOffset.get().x;
+            cy = context.replay.keyframes.y.interpolate(0F) + context.replay.relativeOffset.get().y;
+            cz = context.replay.keyframes.z.interpolate(0F) + context.replay.relativeOffset.get().z;
+        }
+
+        Matrix4f target = null;
         Matrix4f defaultMatrix = getMatrixForRenderWithRotation(entity, cx, cy, cz, transition);
         float opacity = 1F;
 
-        boolean same = value.previousActor == -2
-            || (value.actor == value.previousActor && Objects.equals(value.attachment, value.previousAttachment));
-
-        if (same)
+        if (!relative)
         {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
+            boolean same = value.previousActor == -2
+                || (value.actor == value.previousActor && Objects.equals(value.attachment, value.previousAttachment));
 
-            if (matrix != defaultMatrix)
+            if (same)
             {
-                target = matrix;
-                opacity = 0F;
+                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
+
+                if (matrix != defaultMatrix)
+                {
+                    target = matrix;
+                    opacity = 0F;
+                }
             }
-        }
-        else if (value.x <= 0F && value.previousActor >= -1)
-        {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
-
-            if (matrix != defaultMatrix)
+            else if (value.x <= 0F && value.previousActor >= -1)
             {
-                target = matrix;
-                opacity = 0F;
+                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
+
+                if (matrix != defaultMatrix)
+                {
+                    target = matrix;
+                    opacity = 0F;
+                }
             }
-        }
-        else
-        {
-            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
-            Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
-
-            if (matrix != lastMatrix)
+            else
             {
-                float factor = value.x;
+                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
+                Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
 
-                target = factor >= 1F ? matrix : Matrices.lerp(lastMatrix, matrix, factor);
+                if (matrix != lastMatrix)
+                {
+                    float factor = value.x;
 
-                if (value.actor == -1 && value.previousActor >= 0) opacity = factor;
-                else if (value.actor >= 0 && value.previousActor == -1) opacity = 1F - factor;
-                else opacity = 0F;
+                    target = factor >= 1F ? matrix : Matrices.lerp(lastMatrix, matrix, factor);
+
+                    if (value.actor == -1 && value.previousActor >= 0) opacity = factor;
+                    else if (value.actor >= 0 && value.previousActor == -1) opacity = 1F - factor;
+                    else opacity = 0F;
+                }
             }
         }
 
@@ -155,6 +168,13 @@ public abstract class BaseFilmController
             .color(context.color);
 
         stack.push();
+
+        if (relative)
+        {
+            stack.peek().getPositionMatrix().identity();
+            stack.peek().getNormalMatrix().identity();
+        }
+
         MatrixStackUtils.multiply(stack, target == null ? defaultMatrix : target);
         FormUtilsClient.render(form, formContext);
 
@@ -180,7 +200,7 @@ public abstract class BaseFilmController
 
         stack.pop();
 
-        if (context.map == null && opacity > 0F && context.shadowRadius > 0F)
+        if (!relative && context.map == null && opacity > 0F && context.shadowRadius > 0F)
         {
             stack.push();
             stack.translate(position.x - cx, position.y - cy, position.z - cz);
@@ -190,7 +210,7 @@ public abstract class BaseFilmController
             stack.pop();
         }
 
-        if (!context.nameTag.isEmpty() && context.map == null)
+        if (!relative && !context.nameTag.isEmpty() && context.map == null)
         {
             stack.push();
             stack.translate(position.x - cx, position.y - cy, position.z - cz);
@@ -610,9 +630,10 @@ public abstract class BaseFilmController
     protected FilmControllerContext getFilmControllerContext(WorldRenderContext context, Replay replay, IEntity entity)
     {
         return FilmControllerContext.instance
-            .setup(this.entities, entity, context)
+            .setup(this.entities, entity, replay, context)
             .shadow(replay.shadow.get(), replay.shadowSize.get())
-            .nameTag(replay.nameTag.get());
+            .nameTag(replay.nameTag.get())
+            .relative(replay.relative.get());
     }
 
     public void shutdown()

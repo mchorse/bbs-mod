@@ -2,7 +2,7 @@ package mchorse.bbs_mod.camera.values;
 
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.settings.values.IValueListener;
-import mchorse.bbs_mod.settings.values.ValueList;
+import mchorse.bbs_mod.settings.values.core.ValueList;
 
 import java.util.List;
 
@@ -17,12 +17,12 @@ public class ValuePositions extends ValueList<ValuePosition>
 
     public void add(Position position)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         this.add(new ValuePosition("", position));
         this.sync();
 
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void add(int index, Position position)
@@ -34,37 +34,37 @@ public class ValuePositions extends ValueList<ValuePosition>
             return;
         }
 
-        this.preNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.preNotify(IValueListener.FLAG_UNMERGEABLE);
 
         this.list.add(index, new ValuePosition("", position));
         this.sync();
 
-        this.postNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.postNotify(IValueListener.FLAG_UNMERGEABLE);
     }
 
     public void move(int index, int to)
     {
-        this.preNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.preNotify(IValueListener.FLAG_UNMERGEABLE);
 
         this.list.add(index, this.list.remove(to));
         this.sync();
 
-        this.postNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.postNotify(IValueListener.FLAG_UNMERGEABLE);
     }
 
     public void remove(int index)
     {
-        this.preNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.preNotify(IValueListener.FLAG_UNMERGEABLE);
 
         this.list.remove(index);
         this.sync();
 
-        this.postNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+        this.postNotify(IValueListener.FLAG_UNMERGEABLE);
     }
 
     public void set(List<Position> positions)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.list.clear();
 
         for (Position position : positions)
@@ -73,16 +73,16 @@ public class ValuePositions extends ValueList<ValuePosition>
         }
 
         this.sync();
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void reset()
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         this.list.clear();
 
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     /* Getters */

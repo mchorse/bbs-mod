@@ -12,14 +12,16 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class ActionRecorder
 {
     private Film film;
+    private ServerPlayerEntity entity;
     private Clips clips = new Clips("...", BBSMod.getFactoryActionClips());
     private int tick;
     private int countdown;
     private int initialTick;
 
-    public ActionRecorder(Film film, int tick, int countdown)
+    public ActionRecorder(Film film, ServerPlayerEntity entity, int tick, int countdown)
     {
         this.film = film;
+        this.entity = entity;
         this.tick = tick;
         this.countdown = countdown;
         this.initialTick = tick;

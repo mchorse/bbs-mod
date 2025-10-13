@@ -68,6 +68,9 @@ public class ModelInstance implements IModelInstance
     public Map<String, String> flippedParts = new HashMap<>();
     public Map<ArmorType, ArmorSlot> armorSlots = new HashMap<>();
 
+    public ArmorSlot fpMain;
+    public ArmorSlot fpOffhand;
+
     private Map<ModelGroup, ModelVAO> vaos = new HashMap<>();
 
     public ModelInstance(String id, IModel model, Animations animations, Link texture)
@@ -194,6 +197,16 @@ public class ModelInstance implements IModelInstance
                 catch (Exception e)
                 {}
             }
+        }
+        if (config.has("fp_main"))
+        {
+            this.fpMain = new ArmorSlot();
+            this.fpMain.fromData(config.get("fp_main"));
+        }
+        if (config.has("fp_offhand"))
+        {
+            this.fpOffhand = new ArmorSlot();
+            this.fpOffhand.fromData(config.get("fp_offhand"));
         }
     }
 

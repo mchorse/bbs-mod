@@ -85,10 +85,6 @@ public class UserFormSection extends FormSection
         return categoryList;
     }
 
-    @Override
-    public void accept(Path path, WatchDogEvent event)
-    {}
-
     public void writeUserCategories()
     {
         for (int i = 0; i < this.categories.size(); i++)

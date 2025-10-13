@@ -1,31 +1,31 @@
 package mchorse.bbs_mod.forms.forms;
 
-import mchorse.bbs_mod.forms.properties.BooleanProperty;
-import mchorse.bbs_mod.forms.properties.ColorProperty;
-import mchorse.bbs_mod.forms.properties.FloatProperty;
-import mchorse.bbs_mod.forms.properties.IntegerProperty;
-import mchorse.bbs_mod.forms.properties.StringProperty;
+import mchorse.bbs_mod.settings.values.core.ValueColor;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.colors.Color;
 
 public class LabelForm extends Form
 {
-    public final StringProperty text = new StringProperty(this, "text", "Hello, World!");
-    public final BooleanProperty billboard = new BooleanProperty(this, "billboard", false);
-    public final ColorProperty color = new ColorProperty(this, "color", Color.white());
+    public final ValueString text = new ValueString("text", "Hello, World!");
+    public final ValueBoolean billboard = new ValueBoolean("billboard", false);
+    public final ValueColor color = new ValueColor("color", Color.white());
 
-    public final IntegerProperty max = new IntegerProperty(this, "max", -1);
-    public final FloatProperty anchorX = new FloatProperty(this, "anchorX", 0.5F);
-    public final FloatProperty anchorY = new FloatProperty(this, "anchorY", 0.5F);
-    public final BooleanProperty anchorLines = new BooleanProperty(this, "anchorLines", false);
+    public final ValueInt max = new ValueInt("max", -1);
+    public final ValueFloat anchorX = new ValueFloat("anchorX", 0.5F);
+    public final ValueFloat anchorY = new ValueFloat("anchorY", 0.5F);
+    public final ValueBoolean anchorLines = new ValueBoolean("anchorLines", false);
 
     /* Shadow properties */
-    public final FloatProperty shadowX = new FloatProperty(this, "shadowX", 1F);
-    public final FloatProperty shadowY = new FloatProperty(this, "shadowY", 1F);
-    public final ColorProperty shadowColor = new ColorProperty(this, "shadowColor", new Color(0, 0, 0, 0));
+    public final ValueFloat shadowX = new ValueFloat("shadowX", 1F);
+    public final ValueFloat shadowY = new ValueFloat("shadowY", 1F);
+    public final ValueColor shadowColor = new ValueColor("shadowColor", new Color(0, 0, 0, 0));
 
     /* Background */
-    public final ColorProperty background = new ColorProperty(this, "background", new Color(0, 0, 0, 0));
-    public final FloatProperty offset = new FloatProperty(this, "offset", 3F);
+    public final ValueColor background = new ValueColor("background", new Color(0, 0, 0, 0));
+    public final ValueFloat offset = new ValueFloat("offset", 3F);
 
     public LabelForm()
     {

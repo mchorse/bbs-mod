@@ -109,9 +109,9 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
 
         UITexturePicker picker = new UITexturePicker(callback);
 
-        picker.fill(current);
         picker.full(parent);
         picker.resize();
+        picker.fill(current);
 
         parent.add(picker);
 
@@ -277,6 +277,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
             findAllTextures(this.getContext(), this.current, (s) ->
             {
                 this.selectCurrent(Link.create(s));
+                this.displayCurrent(Link.create(s), true);
             });
         });
 
@@ -473,7 +474,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
 
     public void fill(Link link)
     {
-        this.setMulti(link, false);
+        this.setMulti(link, false, true);
     }
 
     /**
@@ -510,6 +511,11 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
 
     private void setFilteredLink(FilteredLink location)
     {
+        this.setFilteredLink(location, false);
+    }
+
+    private void setFilteredLink(FilteredLink location, boolean scroll)
+    {
         this.currentFiltered = location;
         this.displayCurrent(location.path);
         this.editor.setLink(location);
@@ -526,11 +532,16 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         }
     }
 
+    protected void displayCurrent(Link link)
+    {
+        this.displayCurrent(link, false);
+    }
+
     /**
      * Display current resource location (it's just for visual, not 
      * logic)
      */
-    protected void displayCurrent(Link link)
+    protected void displayCurrent(Link link, boolean scroll)
     {
         this.current = link;
 
@@ -538,7 +549,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         this.text.textbox.moveCursorToStart();
 
         this.picker.setPath(link == null ? null : link.parent());
-        this.picker.setCurrent(link);
+        this.picker.setCurrent(link, scroll);
 
         this.updateOptions();
     }
@@ -615,6 +626,11 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
 
     protected void setMulti(Link skin, boolean notify)
     {
+        this.setMulti(skin, notify, false);
+    }
+
+    protected void setMulti(Link skin, boolean notify, boolean scroll)
+    {
         if (this.editor.isVisible())
         {
             this.toggleEditor();
@@ -625,7 +641,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         if (show)
         {
             this.multiLink = (MultiLink) ((MultiLink) skin).copy();
-            this.setFilteredLink(this.multiLink.children.get(0));
+            this.setFilteredLink(this.multiLink.children.get(0), scroll);
 
             this.multiList.setIndex(this.multiLink.children.isEmpty() ? -1 : 0);
             this.multiList.setList(this.multiLink.children);
@@ -642,7 +658,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
             this.multiLink = null;
 
             this.right.x(0).w(1F);
-            this.displayCurrent(skin);
+            this.displayCurrent(skin, scroll);
         }
 
         if (notify)

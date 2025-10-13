@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
 import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
@@ -21,7 +22,7 @@ public class UIShapeKeysKeyframeFactory extends UIKeyframeFactory<ShapeKeys>
         super(keyframe, editor);
 
         UIKeyframeSheet sheet = editor.getGraph().getSheet(keyframe);
-        ModelForm form = (ModelForm) sheet.property.getForm();
+        ModelForm form = (ModelForm) FormUtils.getForm(sheet.property);
         ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(form)).getModel();
         Set<String> shapeKeys = model.model.getShapeKeys();
 
@@ -52,9 +53,9 @@ public class UIShapeKeysKeyframeFactory extends UIKeyframeFactory<ShapeKeys>
         @Override
         protected void setValue(float v)
         {
-            this.editor.keyframe.preNotifyParent();
+            this.editor.keyframe.preNotify();
             super.setValue(v);
-            this.editor.keyframe.postNotifyParent();
+            this.editor.keyframe.postNotify();
         }
     }
 }

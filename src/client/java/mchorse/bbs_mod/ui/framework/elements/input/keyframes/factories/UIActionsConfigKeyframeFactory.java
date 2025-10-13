@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
 import mchorse.bbs_mod.cubic.animation.ActionsConfig;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
@@ -18,7 +19,7 @@ public class UIActionsConfigKeyframeFactory extends UIKeyframeFactory<ActionsCon
     {
         super(keyframe, editor);
 
-        ModelForm form = (ModelForm) editor.getGraph().getSheet(keyframe).property.getForm();
+        ModelForm form = (ModelForm) FormUtils.getForm(editor.getGraph().getSheet(keyframe).property);
         ModelFormRenderer renderer = (ModelFormRenderer) FormUtilsClient.getRenderer(form);
 
         this.actionsEditor = new UIActionsConfigEditor(() -> renderer.resetAnimator());

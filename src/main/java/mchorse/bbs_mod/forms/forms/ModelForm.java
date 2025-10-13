@@ -2,26 +2,26 @@ package mchorse.bbs_mod.forms.forms;
 
 import mchorse.bbs_mod.cubic.animation.ActionsConfig;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.forms.properties.ActionsConfigProperty;
-import mchorse.bbs_mod.forms.properties.ColorProperty;
-import mchorse.bbs_mod.forms.properties.LinkProperty;
-import mchorse.bbs_mod.forms.properties.PoseProperty;
-import mchorse.bbs_mod.forms.properties.ShapeKeysProperty;
-import mchorse.bbs_mod.forms.properties.StringProperty;
 import mchorse.bbs_mod.forms.triggers.StateTriggers;
+import mchorse.bbs_mod.forms.values.ValueActionsConfig;
+import mchorse.bbs_mod.settings.values.core.ValueColor;
+import mchorse.bbs_mod.settings.values.core.ValuePose;
+import mchorse.bbs_mod.forms.values.ValueShapeKeys;
 import mchorse.bbs_mod.obj.shapes.ShapeKeys;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.pose.Pose;
 
 public class ModelForm extends Form
 {
-    public final LinkProperty texture = new LinkProperty(this, "texture", null);
-    public final StringProperty model = new StringProperty(this, "model", "");
-    public final PoseProperty pose = new PoseProperty(this, "pose", new Pose());
-    public final PoseProperty poseOverlay = new PoseProperty(this, "pose_overlay", new Pose());
-    public final ActionsConfigProperty actions = new ActionsConfigProperty(this, "actions", new ActionsConfig());
-    public final ColorProperty color = new ColorProperty(this, "color", Color.white());
-    public final ShapeKeysProperty shapeKeys = new ShapeKeysProperty(this, "shape_keys", new ShapeKeys());
+    public final ValueLink texture = new ValueLink("texture", null);
+    public final ValueString model = new ValueString("model", "");
+    public final ValuePose pose = new ValuePose("pose", new Pose());
+    public final ValuePose poseOverlay = new ValuePose("pose_overlay", new Pose());
+    public final ValueActionsConfig actions = new ValueActionsConfig("actions", new ActionsConfig());
+    public final ValueColor color = new ValueColor("color", Color.white());
+    public final ValueShapeKeys shapeKeys = new ValueShapeKeys("shape_keys", new ShapeKeys());
     public final StateTriggers triggers = new StateTriggers();
 
     public ModelForm()

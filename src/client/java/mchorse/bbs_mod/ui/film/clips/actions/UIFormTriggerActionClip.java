@@ -31,7 +31,7 @@ public class UIFormTriggerActionClip extends UIActionClip<FormTriggerActionClip>
     {
         this.getContext().replaceContextMenu((menu) ->
         {
-            if (this.clip.getParent().getParent() instanceof Replay replay && replay.form.get() instanceof ModelForm modelForm)
+            if (this.clip.getParentValue().getParentValue() instanceof Replay replay && replay.form.get() instanceof ModelForm modelForm)
             {
                 for (StateTrigger stateTrigger : modelForm.triggers.triggers)
                 {

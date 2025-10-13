@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.MobForm;
 import mchorse.bbs_mod.forms.forms.ModelForm;
@@ -38,7 +39,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 
         UIKeyframeSheet sheet = editor.getGraph().getSheet(keyframe);
 
-        if (sheet.property.getForm() instanceof ModelForm modelForm)
+        if (FormUtils.getForm(sheet.property) instanceof ModelForm modelForm)
         {
             ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
 
@@ -48,7 +49,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 this.poseEditor.fillGroups(model.model, model.flippedParts, false);
             }
         }
-        else if (sheet.property.getForm() instanceof MobForm mobForm)
+        else if (FormUtils.getForm(sheet.property) instanceof MobForm mobForm)
         {
             List<String> bones = FormUtilsClient.getRenderer(mobForm).getBones();
 
@@ -100,9 +101,9 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 {
                     if (kf.getValue() instanceof Pose pose)
                     {
-                        kf.preNotifyParent();
+                        kf.preNotify();
                         consumer.accept(pose);
-                        kf.postNotifyParent();
+                        kf.postNotify();
                     }
                 }
             }

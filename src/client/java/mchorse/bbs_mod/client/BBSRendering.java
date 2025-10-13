@@ -344,7 +344,6 @@ public class BBSRendering
         }
 
         UIBaseMenu currentMenu = UIScreen.getCurrentMenu();
-        Texture texture = getTexture();
 
         if (currentMenu instanceof UIDashboard dashboard)
         {
@@ -354,12 +353,17 @@ public class BBSRendering
             }
         }
 
+        renderingWorld = false;
+    }
+
+    public static void onRenderBeforeScreen()
+    {
+        Texture texture = getTexture();
+
         texture.bind();
         texture.setSize(framebuffer.textureWidth, framebuffer.textureHeight);
         GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, framebuffer.textureWidth, framebuffer.textureHeight);
         texture.unbind();
-
-        renderingWorld = false;
 
         toggleFramebuffer(false);
     }
@@ -506,26 +510,22 @@ public class BBSRendering
         return IrisUtils.getShadersLanguageMap(language);
     }
 
-    /* Time of day */
+    /* Curves */
 
-    public static boolean canModifyTime()
+    public static Long getTimeOfDay()
     {
         if (BBSModClient.getCameraController().getCurrent() instanceof CameraWorkCameraController controller)
         {
-            return CurveClip.getValues(controller.getContext()).containsKey(ShaderCurves.SUN_ROTATION);
+            Map<String, Double> values = CurveClip.getValues(controller.getContext());
+            Double v = values != null ? values.get(ShaderCurves.SUN_ROTATION) : null;
+
+            if (v != null)
+            {
+                return v.longValue() * 1000L;
+            }
         }
 
-        return false;
-    }
-
-    public static long getTimeOfDay()
-    {
-        if (BBSModClient.getCameraController().getCurrent() instanceof CameraWorkCameraController controller)
-        {
-            return (long) (CurveClip.getValues(controller.getContext()).get(ShaderCurves.SUN_ROTATION) * 1000L);
-        }
-
-        return 0L;
+        return null;
     }
 
     public static Double getBrightness()
@@ -533,10 +533,27 @@ public class BBSRendering
         if (BBSModClient.getCameraController().getCurrent() instanceof CameraWorkCameraController controller)
         {
             Map<String, Double> values = CurveClip.getValues(controller.getContext());
+            Double v = values != null ? values.get(ShaderCurves.BRIGHTNESS) : null;
 
-            if (values.containsKey(ShaderCurves.BRIGHTNESS))
+            if (v != null)
             {
-                return values.get(ShaderCurves.BRIGHTNESS);
+                return v;
+            }
+        }
+
+        return null;
+    }
+
+    public static Double getWeather()
+    {
+        if (BBSModClient.getCameraController().getCurrent() instanceof CameraWorkCameraController controller)
+        {
+            Map<String, Double> values = CurveClip.getValues(controller.getContext());
+            Double v = values != null ? values.get(ShaderCurves.WEATHER) : null;
+
+            if (v != null)
+            {
+                return v;
             }
         }
 

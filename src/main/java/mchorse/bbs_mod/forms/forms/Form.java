@@ -7,13 +7,16 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormArchitect;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
-import mchorse.bbs_mod.forms.properties.AnchorProperty;
-import mchorse.bbs_mod.forms.properties.BooleanProperty;
-import mchorse.bbs_mod.forms.properties.FloatProperty;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
-import mchorse.bbs_mod.forms.properties.IntegerProperty;
-import mchorse.bbs_mod.forms.properties.StringProperty;
-import mchorse.bbs_mod.forms.properties.TransformProperty;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
+import mchorse.bbs_mod.forms.values.ValueAnchor;
+import mchorse.bbs_mod.settings.values.IValueNotifier;
+import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
+import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.entity.LivingEntity;
@@ -23,47 +26,47 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class Form implements IMapSerializable
+public abstract class Form implements IMapSerializable, IValueNotifier
 {
     private Form parent;
 
-    public final BooleanProperty visible = new BooleanProperty(this, "visible", true);
-    public final BooleanProperty animatable = new BooleanProperty(this, "animatable", true);
-    public final StringProperty trackName = new StringProperty(this, "track_name", "");
-    public final FloatProperty lighting = new FloatProperty(this, "lighting", 1F);
-    public final StringProperty name = new StringProperty(this, "name", "");
-    public final TransformProperty transform = new TransformProperty(this, "transform", new Transform());
-    public final TransformProperty transformOverlay = new TransformProperty(this, "transform_overlay", new Transform());
-    public final FloatProperty uiScale = new FloatProperty(this, "uiScale", 1F);
+    public final ValueBoolean visible = new ValueBoolean("visible", true);
+    public final ValueBoolean animatable = new ValueBoolean("animatable", true);
+    public final ValueString trackName = new ValueString("track_name", "");
+    public final ValueFloat lighting = new ValueFloat("lighting", 1F);
+    public final ValueString name = new ValueString("name", "");
+    public final ValueTransform transform = new ValueTransform("transform", new Transform());
+    public final ValueTransform transformOverlay = new ValueTransform("transform_overlay", new Transform());
+    public final ValueFloat uiScale = new ValueFloat("uiScale", 1F);
     public final BodyPartManager parts = new BodyPartManager(this);
-    public final AnchorProperty anchor = new AnchorProperty(this, "anchor");
-    public final BooleanProperty shaderShadow = new BooleanProperty(this, "shaderShadow", true);
+    public final ValueAnchor anchor = new ValueAnchor("anchor", new Anchor());
+    public final ValueBoolean shaderShadow = new ValueBoolean("shaderShadow", true);
 
     /* Hitbox properties */
-    public final BooleanProperty hitbox = new BooleanProperty(this, "hitbox", false);
-    public final FloatProperty hitboxWidth = new FloatProperty(this, "hitboxWidth", 0.5F);
-    public final FloatProperty hitboxHeight = new FloatProperty(this, "hitboxHeight", 1.8F);
-    public final FloatProperty hitboxSneakMultiplier = new FloatProperty(this, "hitboxSneakMultiplier", 0.9F);
-    public final FloatProperty hitboxEyeHeight = new FloatProperty(this, "hitboxEyeHeight", 0.9F);
+    public final ValueBoolean hitbox = new ValueBoolean("hitbox", false);
+    public final ValueFloat hitboxWidth = new ValueFloat("hitboxWidth", 0.5F);
+    public final ValueFloat hitboxHeight = new ValueFloat("hitboxHeight", 1.8F);
+    public final ValueFloat hitboxSneakMultiplier = new ValueFloat("hitboxSneakMultiplier", 0.9F);
+    public final ValueFloat hitboxEyeHeight = new ValueFloat("hitboxEyeHeight", 0.9F);
 
     /* Morphing properties */
-    public final FloatProperty hp = new FloatProperty(this, "hp", 20F);
-    public final FloatProperty speed = new FloatProperty(this, "movement_speed", 0.1F);
-    public final FloatProperty stepHeight = new FloatProperty(this, "step_height", 0.5F);
+    public final ValueFloat hp = new ValueFloat("hp", 20F);
+    public final ValueFloat speed = new ValueFloat("movement_speed", 0.1F);
+    public final ValueFloat stepHeight = new ValueFloat("step_height", 0.5F);
 
-    public final IntegerProperty hotkey = new IntegerProperty(this, "keybind", 0);
+    public final ValueInt hotkey = new ValueInt("keybind", 0);
 
     protected Object renderer;
     protected String cachedID;
-    protected final Map<String, IFormProperty> properties = new LinkedHashMap<>();
+    protected final Map<String, BaseValueBasic> properties = new LinkedHashMap<>();
 
     public Form()
     {
-        this.animatable.cantAnimate();
-        this.trackName.cantAnimate();
-        this.name.cantAnimate();
-        this.uiScale.cantAnimate();
-        this.shaderShadow.cantAnimate();
+        this.animatable.invisible();
+        this.trackName.invisible();
+        this.name.invisible();
+        this.uiScale.invisible();
+        this.shaderShadow.invisible();
 
         this.register(this.visible);
         this.register(this.animatable);
@@ -76,11 +79,11 @@ public abstract class Form implements IMapSerializable
         this.register(this.anchor);
         this.register(this.shaderShadow);
 
-        this.hitbox.cantAnimate();
-        this.hitboxWidth.cantAnimate();
-        this.hitboxHeight.cantAnimate();
-        this.hitboxSneakMultiplier.cantAnimate();
-        this.hitboxEyeHeight.cantAnimate();
+        this.hitbox.invisible();
+        this.hitboxWidth.invisible();
+        this.hitboxHeight.invisible();
+        this.hitboxSneakMultiplier.invisible();
+        this.hitboxEyeHeight.invisible();
 
         this.register(this.hitbox);
         this.register(this.hitboxWidth);
@@ -88,15 +91,15 @@ public abstract class Form implements IMapSerializable
         this.register(this.hitboxSneakMultiplier);
         this.register(this.hitboxEyeHeight);
 
-        this.hp.cantAnimate();
-        this.speed.cantAnimate();
-        this.stepHeight.cantAnimate();
+        this.hp.invisible();
+        this.speed.invisible();
+        this.stepHeight.invisible();
 
         this.register(this.hp);
         this.register(this.speed);
         this.register(this.stepHeight);
 
-        this.hotkey.cantAnimate();
+        this.hotkey.invisible();
 
         this.register(this.hotkey);
     }
@@ -111,19 +114,20 @@ public abstract class Form implements IMapSerializable
         this.renderer = renderer;
     }
 
-    protected void register(IFormProperty property)
+    protected void register(BaseValueBasic property)
     {
-        if (this.properties.containsKey(property.getKey()))
+        if (this.properties.containsKey(property.getId()))
         {
-            throw new IllegalStateException("Property " + property.getKey() + " was already registered for form by ID " + this.getId() + "!");
+            throw new IllegalStateException("Property " + property.getId() + " was already registered for form by ID " + this.getId() + "!");
         }
 
-        this.properties.put(property.getKey(), property);
+        this.properties.put(property.getId(), property);
+        property.setParent(this);
     }
 
-    public Map<String, IFormProperty> getProperties()
+    public Map<String, BaseValueBasic> getProperties()
     {
-        return Collections.unmodifiableMap(properties);
+        return Collections.unmodifiableMap(this.properties);
     }
 
     /**
@@ -226,11 +230,6 @@ public abstract class Form implements IMapSerializable
     {
         this.parts.update(entity);
 
-        for (IFormProperty property : this.properties.values())
-        {
-            property.update();
-        }
-
         if (this.renderer instanceof ITickable)
         {
             ((ITickable) this.renderer).tick(entity);
@@ -281,13 +280,21 @@ public abstract class Form implements IMapSerializable
     }
 
     @Override
+    public void preNotify(int flag)
+    {}
+
+    @Override
+    public void postNotify(int flag)
+    {}
+
+    @Override
     public void toData(MapType data)
     {
         data.put("bodyParts", this.parts.toData());
 
-        for (IFormProperty property : this.properties.values())
+        for (BaseValue property : this.properties.values())
         {
-            data.put(property.getKey(), property.toData());
+            data.put(property.getId(), property.toData());
         }
     }
 
@@ -296,9 +303,9 @@ public abstract class Form implements IMapSerializable
     {
         this.parts.fromData(data.getMap("bodyParts"));
 
-        for (IFormProperty property : this.properties.values())
+        for (BaseValue property : this.properties.values())
         {
-            BaseType type = data.get(property.getKey());
+            BaseType type = data.get(property.getId());
 
             if (type != null)
             {

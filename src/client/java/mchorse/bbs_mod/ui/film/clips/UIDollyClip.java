@@ -53,7 +53,7 @@ public class UIDollyClip extends UIClip<DollyClip>
         {
             this.getContext().replaceContextMenu(new UIInterpolationContextMenu(this.clip.interp));
         });
-        this.interp.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interp.wrap()));
+        this.interp.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interp));
     }
 
     @Override

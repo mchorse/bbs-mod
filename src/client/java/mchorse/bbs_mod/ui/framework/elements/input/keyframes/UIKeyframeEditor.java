@@ -12,9 +12,7 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -119,7 +117,7 @@ public class UIKeyframeEditor extends UIElement
 
         for (UIKeyframeSheet sheet : this.view.getGraph().getSheets())
         {
-            if (sheet.channel == keyframe.getParent())
+            if (sheet.channel == keyframe.getParentValue())
             {
                 return sheet;
             }

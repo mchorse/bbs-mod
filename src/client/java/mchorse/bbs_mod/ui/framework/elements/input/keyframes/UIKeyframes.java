@@ -144,14 +144,14 @@ public class UIKeyframes extends UIElement
                             continue;
                         }
 
-                        sheet.channel.preNotifyParent();
+                        sheet.channel.preNotify();
 
                         for (Keyframe kf : selected)
                         {
                             kf.setTick(Math.round(kf.getTick()), false);
                         }
 
-                        sheet.channel.postNotifyParent();
+                        sheet.channel.postNotify();
                     }
                 });
                 menu.action(Icons.REMOVE, UIKeys.KEYFRAMES_CONTEXT_REMOVE, () -> this.currentGraph.removeSelected());
@@ -228,7 +228,7 @@ public class UIKeyframes extends UIElement
                 continue;
             }
 
-            sheet.channel.preNotifyParent();
+            sheet.channel.preNotify();
 
             int index = last ? selected.size() - 1 : 0;
             int previous = last ? selected.size() - 2 : 1;
@@ -245,7 +245,7 @@ public class UIKeyframes extends UIElement
                 keyframe.setValue(factory.yToValue(factory.getY(keyframe.getValue()) + difference));
             }
 
-            sheet.channel.postNotifyParent();
+            sheet.channel.postNotify();
         }
     }
 
@@ -293,7 +293,7 @@ public class UIKeyframes extends UIElement
 
         if (keyframe != null)
         {
-            KeyframeChannel channel = (KeyframeChannel) keyframe.getParent();
+            KeyframeChannel channel = (KeyframeChannel) keyframe.getParentValue();
             int existingIndex = channel.getKeyframes().indexOf(keyframe);
             int index = MathUtils.cycler(existingIndex + direction, channel.getAll());
             Keyframe nextKeyframe = channel.get(index);
@@ -476,7 +476,7 @@ public class UIKeyframes extends UIElement
             int count = max - min;
             float distance = (maxKf.getTick() - minKf.getTick()) / count;
 
-            sheet.channel.preNotifyParent();
+            sheet.channel.preNotify();
 
             for (int i = 1; i < count; i++)
             {
@@ -486,7 +486,7 @@ public class UIKeyframes extends UIElement
                 kf.setTick(minKf.getTick() + i * distance);
             }
 
-            sheet.channel.postNotifyParent();
+            sheet.channel.postNotify();
 
             sheet.selection.clear();
 
@@ -550,7 +550,7 @@ public class UIKeyframes extends UIElement
             pair.b.channel.fromData(pair.a);
             pair.b.selection.clear();
             pair.b.selection.addAll(selection.get(pair.b).a);
-            pair.b.channel.preNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+            pair.b.channel.preNotify(IValueListener.FLAG_UNMERGEABLE);
         }
 
         for (Pair<BaseType, UIKeyframeSheet> pair : cache.data)
@@ -558,7 +558,7 @@ public class UIKeyframes extends UIElement
             pair.b.channel.fromData(pair.a);
             pair.b.selection.clear();
             pair.b.selection.addAll(selection.get(pair.b).b);
-            pair.b.channel.postNotifyParent(IValueListener.FLAG_UNMERGEABLE);
+            pair.b.channel.postNotify(IValueListener.FLAG_UNMERGEABLE);
         }
 
         this.cache = null;

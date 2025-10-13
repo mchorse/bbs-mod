@@ -13,9 +13,11 @@ public class ClientWorldPropertiesMixin
     @Inject(method = "getTimeOfDay", at = @At("HEAD"), cancellable = true)
     public void onGetTimeOfDay(CallbackInfoReturnable<Long> info)
     {
-        if (BBSRendering.canModifyTime())
+        Long timeOfDay = BBSRendering.getTimeOfDay();
+
+        if (timeOfDay != null)
         {
-            info.setReturnValue(BBSRendering.getTimeOfDay());
+            info.setReturnValue(timeOfDay);
         }
     }
 }

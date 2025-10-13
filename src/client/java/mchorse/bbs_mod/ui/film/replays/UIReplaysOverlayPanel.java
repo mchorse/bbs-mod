@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.film.replays;
 
 import mchorse.bbs_mod.film.replays.Replay;
+import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.forms.UINestedEdit;
@@ -31,6 +32,10 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     public UITrackpad looping;
     public UIToggle actor;
     public UIToggle fp;
+    public UIToggle relative;
+    public UITrackpad relativeOffsetX;
+    public UITrackpad relativeOffsetY;
+    public UITrackpad relativeOffsetZ;
 
     private Consumer<Replay> callback;
 
@@ -76,19 +81,25 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
 
             this.replays.getCurrentFirst().fp.set(b.getValue());
         });
+        this.relative = new UIToggle(UIKeys.CAMERA_PANELS_RELATIVE, (b) -> this.edit((replay) -> replay.relative.set(b.getValue())));
+        this.relative.tooltip(UIKeys.FILM_REPLAY_RELATIVE_TOOLTIP);
+        this.relativeOffsetX = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().x = v)));
+        this.relativeOffsetY = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().y = v)));
+        this.relativeOffsetZ = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().z = v)));
 
-        this.properties = UI.column(5, 6,
+        this.properties = UI.scrollView(5, 6,
             UI.label(UIKeys.FILM_REPLAY_REPLAY),
             this.pickEdit, this.enabled,
             this.label, this.nameTag,
             this.shadow, this.shadowSize,
             UI.label(UIKeys.FILM_REPLAY_LOOPING),
-            this.looping, this.actor, this.fp
+            this.looping, this.actor, this.fp,
+            this.relative, UI.row(this.relativeOffsetX, this.relativeOffsetY, this.relativeOffsetZ)
         );
-        this.properties.relative(this.content).y(1F).w(1F).anchorY(1F);
-        this.replays.relative(this.content).w(1F).hTo(this.properties.area, 0F, -5);
+        this.properties.relative(this.replays).x(1F).wTo(this.icons.area).h(1F);
+        this.replays.relative(this.content).w(0.5F).h(1F);
 
-        this.content.add(this.properties, this.replays);
+        this.content.add(this.replays, this.properties);
     }
 
     private void edit(Consumer<Replay> consumer)
@@ -119,6 +130,10 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.looping.setValue(replay.looping.get());
             this.actor.setValue(replay.actor.get());
             this.fp.setValue(replay.fp.get());
+            this.relative.setValue(replay.relative.get());
+            this.relativeOffsetX.setValue(replay.relativeOffset.get().x);
+            this.relativeOffsetY.setValue(replay.relativeOffset.get().y);
+            this.relativeOffsetZ.setValue(replay.relativeOffset.get().z);
         }
     }
 

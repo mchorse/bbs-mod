@@ -2,7 +2,7 @@ package mchorse.bbs_mod.utils.keyframes;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.ValueList;
+import mchorse.bbs_mod.settings.values.core.ValueList;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.interps.Interpolations;
@@ -165,9 +165,9 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
 
     public void removeAll()
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.list.clear();
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void remove(int index)
@@ -177,10 +177,10 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
             return;
         }
 
-        this.preNotifyParent();
+        this.preNotify();
         this.list.remove(index);
         this.sync();
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void insertSpace(int where, int ticks)
@@ -230,7 +230,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
      */
     public int insert(float tick, T value)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         Keyframe<T> prev;
 
@@ -243,7 +243,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
                 this.add(0, new Keyframe<>("", this.factory, tick, value));
                 this.sort();
 
-                this.postNotifyParent();
+                this.postNotify();
 
                 return 0;
             }
@@ -257,7 +257,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
             if (frame.getTick() == tick)
             {
                 frame.setValue(value);
-                this.postNotifyParent();
+                this.postNotify();
 
                 return index;
             }
@@ -273,7 +273,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
 
         this.add(index, new Keyframe<T>("", this.factory, tick, value));
         this.sort();
-        this.postNotifyParent();
+        this.postNotify();
 
         return index;
     }
@@ -292,7 +292,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
             return;
         }
 
-        this.preNotifyParent();
+        this.preNotify();
 
         for (int i = 1; i < this.list.size() - 1; i++)
         {
@@ -316,19 +316,19 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
         }
 
         this.sync();
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void moveX(float offset)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         for (Keyframe<T> keyframe : this.list)
         {
             keyframe.setTick(keyframe.getTick() + offset);
         }
 
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     @Override
@@ -388,7 +388,7 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
             return;
         }
 
-        this.preNotifyParent();
+        this.preNotify();
 
         double start = tick + ((Keyframe) channel.getKeyframes().get(0)).getTick();
 
@@ -405,6 +405,6 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
         }
 
         this.sync();
-        this.postNotifyParent();
+        this.postNotify();
     }
 }

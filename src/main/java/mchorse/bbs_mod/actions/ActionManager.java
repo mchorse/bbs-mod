@@ -127,7 +127,7 @@ public class ActionManager
 
         play.stopDamage = false;
 
-        this.recorders.put(entity, new ActionRecorder(film, tick, countdown));
+        this.recorders.put(entity, new ActionRecorder(film, entity, tick, countdown));
     }
 
     public void addAction(ServerPlayerEntity entity, Supplier<ActionClip> supplier)

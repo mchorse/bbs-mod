@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.utils.repos;
 
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.manager.FolderManager;
 
 import java.io.File;

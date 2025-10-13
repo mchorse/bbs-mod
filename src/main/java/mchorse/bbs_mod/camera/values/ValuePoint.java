@@ -14,9 +14,9 @@ public class ValuePoint extends BaseValueBasic<Point>
     @Override
     public void set(Point value, int flag)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.value.set(value);
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     @Override

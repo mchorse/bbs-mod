@@ -12,10 +12,10 @@ import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
 import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.network.ClientNetwork;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.ContentType;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.utils.Batcher2D;
@@ -157,7 +157,7 @@ public class Films
             {
                 if (!existed)
                 {
-                    IFormProperty property = FormUtils.getProperty(form, key);
+                    BaseValueBasic property = FormUtils.getProperty(form, key);
 
                     channel.insert(0, channel.getFactory().fromData(property.toData()));
                 }

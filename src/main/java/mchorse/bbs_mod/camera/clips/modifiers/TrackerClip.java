@@ -3,10 +3,10 @@ package mchorse.bbs_mod.camera.clips.modifiers;
 import mchorse.bbs_mod.camera.data.Point;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.camera.values.ValuePoint;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueFloat;
-import mchorse.bbs_mod.settings.values.ValueInt;
-import mchorse.bbs_mod.settings.values.ValueString;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
 

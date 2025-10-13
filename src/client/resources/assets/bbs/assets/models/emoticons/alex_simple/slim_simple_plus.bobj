@@ -1,4 +1,4 @@
-# Blender v2.79 (sub 0) Blockbuster OBJ File: 'slim_simple_plus.blend'
+# Blender v2.79 (sub 0) Blockbuster OBJ File: 'slim_simple_plus (1).blend'
 # www.blender.org
 # Armature data
 arm_name Armature
@@ -15,13 +15,7 @@ arm_bone low_right_arm.end low_right_arm -0.375000 0.750000 0.000000 1.0 0.0 1.5
 arm_bone right_leg body -0.125000 0.375000 0.000000 -1.0 0.0 8.742277657347586e-08 -0.125 0.0 -1.0 0.0 0.75 8.742277657347586e-08 0.0 1.0 0.0 0.0 0.0 0.0 1.0 
 arm_bone low_leg_right right_leg -0.125000 0.000000 0.000000 -1.0 0.0 0.0 -0.125 0.0 -1.0 0.0 0.375 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 
 arm_bone left_leg body 0.125000 0.375000 0.000000 -1.0 0.0 8.742277657347586e-08 0.125 0.0 -1.0 0.0 0.75 8.742277657347586e-08 0.0 1.0 0.0 0.0 0.0 0.0 1.0 
-arm_bone low_left_leg left_leg 0.125000 0.000000 0.000000 -1.0 0.0 0.0 0.125 0.0 -1.0 0.0 0.375 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0
-arm_bone misc_bone_1 anchor 0.000000 0.375000 0.250000 -1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 0.25 0.0 0.0 0.0 1.0
-arm_bone misc_bone_2 anchor -0.125000 0.375000 0.250000 -1.0 0.0 0.0 -0.125 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 0.25 0.0 0.0 0.0 1.0
-arm_bone misc_bone_3 anchor 0.125000 0.375000 0.250000 -1.0 0.0 0.0 0.125 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 0.25 0.0 0.0 0.0 1.0
-arm_bone misc_gbone_1  0.000000 0.375000 -0.250000 -1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 -0.25 0.0 0.0 0.0 1.0
-arm_bone misc_gbone_2  -0.125000 0.375000 -0.250000 -1.0 0.0 0.0 -0.125 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 -0.25 0.0 0.0 0.0 1.0
-arm_bone misc_gbone_3  0.125000 0.375000 -0.250000 -1.0 0.0 0.0 0.125 0.0 1.0 0.0 0.0 0.0 0.0 -1.0 -0.25 0.0 0.0 0.0 1.0
+arm_bone low_left_leg left_leg 0.125000 0.000000 0.000000 -1.0 0.0 0.0 0.125 0.0 -1.0 0.0 0.375 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 
 # Mesh data
 o body
 o_arm Armature
@@ -233,8 +227,7 @@ v -0.268407 1.125000 -0.142031
 vw body 0.281830
 vw low_body 0.718170
 v -0.250000 0.749900 -0.125000
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.000252
+vw low_right_arm 1.000000
 v -0.437500 1.500000 0.125000
 vw right_arm 1.000000
 v -0.250000 1.500000 0.125000
@@ -242,19 +235,15 @@ vw right_arm 1.000000
 v -0.250000 1.500000 -0.125000
 vw right_arm 1.000000
 v -0.437500 0.749900 0.125000
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.000000
+vw low_right_arm 1.000000
 v -0.250000 0.749900 0.125000
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.003012
+vw low_right_arm 1.000000
 v -0.437500 0.749900 -0.125000
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.002524
+vw low_right_arm 1.000000
 v -0.437500 1.500000 -0.125000
 vw right_arm 1.000000
 v 0.437500 0.749900 -0.125000
-vw low_left_arm 0.000011
-vw low_left_arm.end 1.000000
+vw low_left_arm 1.000000
 v 0.250000 1.500000 0.125000
 vw left_arm 1.000000
 v 0.437500 1.500000 0.125000
@@ -262,13 +251,11 @@ vw left_arm 1.000000
 v 0.437500 1.500000 -0.125000
 vw left_arm 1.000000
 v 0.250000 0.749900 0.125000
-vw low_left_arm.end 1.000000
-vw low_left_arm 0.017266
+vw low_left_arm 1.000000
 v 0.437500 0.749900 0.125000
-vw low_left_arm.end 1.000000
-vw low_left_arm 0.000003
+vw low_left_arm 1.000000
 v 0.250000 0.749900 -0.125000
-vw low_left_arm.end 1.000000
+vw low_left_arm 1.000000
 v 0.250000 1.500000 -0.125000
 vw left_arm 1.000000
 v -0.250000 1.124950 0.125000
@@ -296,8 +283,7 @@ v -0.437500 1.124950 -0.125000
 vw right_arm 0.865326
 vw low_right_arm 0.134674
 v -0.234437 0.734250 -0.140625
-vw low_right_arm 0.000000
-vw low_right_arm.end 1.000000
+vw low_right_arm 1.000000
 v -0.453063 1.515750 0.140625
 vw right_arm 1.000000
 v -0.234437 1.515750 0.140625
@@ -305,19 +291,15 @@ vw right_arm 1.000000
 v -0.234437 1.515750 -0.140625
 vw right_arm 1.000000
 v -0.453063 0.734250 0.140625
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.000304
+vw low_right_arm 1.000000
 v -0.234437 0.734250 0.140625
-vw low_right_arm.end 1.000000
-vw low_right_arm 0.000000
+vw low_right_arm 1.000000
 v -0.453063 0.734250 -0.140625
-vw low_right_arm 0.000000
-vw low_right_arm.end 1.000000
+vw low_right_arm 1.000000
 v -0.453063 1.515750 -0.140625
 vw right_arm 1.000000
 v 0.453063 0.734250 -0.140625
-vw low_left_arm 0.000000
-vw low_left_arm.end 1.000000
+vw low_left_arm 1.000000
 v 0.234437 1.515750 0.140625
 vw left_arm 1.000000
 v 0.453063 1.515750 0.140625
@@ -325,38 +307,36 @@ vw left_arm 1.000000
 v 0.453063 1.515750 -0.140625
 vw left_arm 1.000000
 v 0.234437 0.734250 0.140625
-vw low_left_arm.end 1.000000
-vw low_left_arm 0.003126
+vw low_left_arm 1.000000
 v 0.453063 0.734250 0.140625
-vw low_left_arm.end 1.000000
-vw low_left_arm 0.000000
+vw low_left_arm 1.000000
 v 0.234437 0.734250 -0.140625
-vw low_left_arm.end 1.000000
+vw low_left_arm 1.000000
 v 0.234437 1.515750 -0.140625
 vw left_arm 1.000000
 v 0.453063 1.125000 0.140625
-vw left_arm 0.499754
-vw low_left_arm 0.484298
+vw left_arm 0.507854
+vw low_left_arm 0.492146
 v 0.234437 1.125000 0.140625
-vw left_arm 0.499639
-vw low_left_arm 0.478080
+vw left_arm 0.511025
+vw low_left_arm 0.488975
 v -0.234437 1.125000 0.140625
-vw right_arm 0.499700
+vw right_arm 0.521843
 vw low_right_arm 0.478157
 v -0.453063 1.125000 0.140625
-vw right_arm 0.499696
+vw right_arm 0.515781
 vw low_right_arm 0.484219
 v 0.453063 1.125000 -0.140625
-vw left_arm 0.857169
-vw low_left_arm 0.133572
+vw left_arm 0.865180
+vw low_left_arm 0.134820
 v 0.234437 1.125000 -0.140625
-vw left_arm 0.823212
-vw low_left_arm 0.162557
+vw left_arm 0.835096
+vw low_left_arm 0.164904
 v -0.234437 1.125000 -0.140625
-vw right_arm 0.823209
+vw right_arm 0.837531
 vw low_right_arm 0.162469
 v -0.453063 1.125000 -0.140625
-vw right_arm 0.857167
+vw right_arm 0.866360
 vw low_right_arm 0.133640
 vt 0.6250 0.7500
 vt 0.5000 0.8750

@@ -1,6 +1,6 @@
 package mchorse.bbs_mod.settings.ui;
 
-import mchorse.bbs_mod.settings.values.ValueVideoSettings;
+import mchorse.bbs_mod.settings.values.ui.ValueVideoSettings;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;

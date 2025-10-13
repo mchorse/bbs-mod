@@ -3,7 +3,7 @@ package mchorse.bbs_mod.utils.clips;
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.factory.IFactory;
 
@@ -164,27 +164,27 @@ public class Clips extends ValueGroup
 
     public void addClip(Clip clip)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         this.clips.add(clip);
         this.sync();
 
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void remove(Clip clip)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         this.clips.remove(clip);
         this.sync();
 
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public void copyOver(Clips clips, int tick)
     {
-        this.preNotifyParent();
+        this.preNotify();
 
         this.clips.removeIf((next) -> next.tick.get() >= tick);
 
@@ -198,7 +198,7 @@ public class Clips extends ValueGroup
 
         this.sortLayers();
         this.sync();
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     /* New value methods */

@@ -32,7 +32,7 @@ public class CubicVAORenderer extends CubicCubeRenderer
     {
         ModelVAO modelVAO = this.model.getVaos().get(group);
 
-        if (modelVAO != null)
+        if (modelVAO != null && group.visible)
         {
             float r = this.r * group.color.r;
             float g = this.g * group.color.g;

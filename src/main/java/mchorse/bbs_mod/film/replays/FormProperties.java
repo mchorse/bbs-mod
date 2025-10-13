@@ -4,8 +4,8 @@ import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.settings.values.base.BaseKeyframeFactoryValue;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -37,7 +37,7 @@ public class FormProperties extends ValueGroup
     public KeyframeChannel getOrCreate(Form form, String key)
     {
         BaseValue value = this.get(key);
-        IFormProperty property = FormUtils.getProperty(form, key);
+        BaseValue property = FormUtils.getProperty(form, key);
 
         if (value instanceof KeyframeChannel channel)
         {
@@ -47,12 +47,12 @@ public class FormProperties extends ValueGroup
         return property != null ? this.create(property) : null;
     }
 
-    public KeyframeChannel create(IFormProperty property)
+    public KeyframeChannel create(BaseValue property)
     {
-        if (property.canCreateChannel())
+        if (property.isVisible() && property instanceof BaseKeyframeFactoryValue<?> keyframeFactoryValue)
         {
             String key = FormUtils.getPropertyPath(property);
-            KeyframeChannel channel = property.createChannel(key);
+            KeyframeChannel channel = new KeyframeChannel(key, keyframeFactoryValue.getFactory());
 
             this.properties.put(key, channel);
             this.add(channel);

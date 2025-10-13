@@ -2,7 +2,7 @@ package mchorse.bbs_mod.ui.film;
 
 import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.film.Film;
-import mchorse.bbs_mod.settings.values.ValueInt;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.utils.clips.Clip;

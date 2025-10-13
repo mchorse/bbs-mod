@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.film;
 
 import io.netty.util.collection.IntObjectMap;
+import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -15,6 +16,7 @@ public class FilmControllerContext
 
     public IntObjectMap<IEntity> entities;
     public IEntity entity;
+    public Replay replay;
     public Camera camera;
     public MatrixStack stack;
     public VertexConsumerProvider consumers;
@@ -28,6 +30,7 @@ public class FilmControllerContext
     public boolean local;
 
     public String nameTag = "";
+    public boolean relative;
 
     private FilmControllerContext()
     {}
@@ -40,14 +43,16 @@ public class FilmControllerContext
         this.bone = null;
         this.local = false;
         this.nameTag = "";
+        this.relative = false;
     }
 
-    public FilmControllerContext setup(IntObjectMap<IEntity> entities, IEntity entity, WorldRenderContext context)
+    public FilmControllerContext setup(IntObjectMap<IEntity> entities, IEntity entity, Replay replay, WorldRenderContext context)
     {
         this.reset();
 
         this.entities = entities;
         this.entity = entity;
+        this.replay = replay;
         this.camera = context.camera();
         this.stack = context.matrixStack();
         this.consumers = context.consumers();
@@ -56,12 +61,13 @@ public class FilmControllerContext
         return this;
     }
 
-    public FilmControllerContext setup(IntObjectMap<IEntity> entities, IEntity entity, Camera camera, MatrixStack stack, VertexConsumerProvider consumers, float transition)
+    public FilmControllerContext setup(IntObjectMap<IEntity> entities, IEntity entity, Replay replay, Camera camera, MatrixStack stack, VertexConsumerProvider consumers, float transition)
     {
         this.reset();
 
         this.entities = entities;
         this.entity = entity;
+        this.replay = replay;
         this.camera = camera;
         this.stack = stack;
         this.consumers = consumers;
@@ -116,6 +122,13 @@ public class FilmControllerContext
     public FilmControllerContext nameTag(String nameTag)
     {
         this.nameTag = nameTag;
+
+        return this;
+    }
+
+    public FilmControllerContext relative(boolean relative)
+    {
+        this.relative = relative;
 
         return this;
     }

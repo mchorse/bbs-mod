@@ -27,6 +27,8 @@ public interface IEntity
 
     public void setEquipmentStack(EquipmentSlot slot, ItemStack stack);
 
+    public int getSelectedSlot();
+
     public boolean isSneaking();
 
     public void setSneaking(boolean sneaking);

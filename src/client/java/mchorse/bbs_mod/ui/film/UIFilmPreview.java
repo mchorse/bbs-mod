@@ -192,7 +192,7 @@ public class UIFilmPreview extends UIElement
 
     public void openReplays()
     {
-        UIOverlay.addOverlayLeft(this.getContext(), this.panel.replayEditor.replays, 200);
+        UIOverlay.addOverlayLeft(this.getContext(), this.panel.replayEditor.replays, 360);
     }
 
     public void openOnionSkin()

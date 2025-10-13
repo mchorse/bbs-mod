@@ -2,7 +2,7 @@ package mchorse.bbs_mod.camera.values;
 
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 
 public class ValuePosition extends ValueGroup
 {
@@ -44,9 +44,9 @@ public class ValuePosition extends ValueGroup
 
     public void set(Position position)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.position.set(position);
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     @Override

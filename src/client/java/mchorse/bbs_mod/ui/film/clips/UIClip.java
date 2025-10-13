@@ -25,7 +25,6 @@ import mchorse.bbs_mod.camera.clips.modifiers.OrbitClip;
 import mchorse.bbs_mod.camera.clips.modifiers.RemapperClip;
 import mchorse.bbs_mod.camera.clips.modifiers.ShakeClip;
 import mchorse.bbs_mod.camera.clips.modifiers.TranslateClip;
-import mchorse.bbs_mod.camera.clips.overwrite.CircularClip;
 import mchorse.bbs_mod.camera.clips.overwrite.DollyClip;
 import mchorse.bbs_mod.camera.clips.overwrite.IdleClip;
 import mchorse.bbs_mod.camera.clips.overwrite.KeyframeClip;
@@ -34,7 +33,7 @@ import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.l10n.keys.IKey;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.IUIClipsDelegate;
 import mchorse.bbs_mod.ui.film.clips.actions.UIAttackActionClip;
@@ -88,7 +87,6 @@ public abstract class UIClip <T extends Clip> extends UIElement
     {
         register(IdleClip.class, UIIdleClip::new);
         register(DollyClip.class, UIDollyClip::new);
-        register(CircularClip.class, UICircularClip::new);
         register(PathClip.class, UIPathClip::new);
         register(KeyframeClip.class, UIKeyframeClip::new);
         register(TranslateClip.class, UITranslateClip::new);

@@ -112,6 +112,11 @@ public class UIFileLinkList extends UIList<UIFileLinkList.FileLink>
 
     public void setCurrent(Link link)
     {
+        this.setCurrent(link, false);
+    }
+
+    public void setCurrent(Link link, boolean scroll)
+    {
         this.deselect();
 
         if (link == null)
@@ -119,13 +124,12 @@ public class UIFileLinkList extends UIList<UIFileLinkList.FileLink>
             return;
         }
 
-        for (int i = 0, c = this.list.size(); i < c; i++)
+        for (FileLink entry : this.list)
         {
-            FileLink entry = this.list.get(i);
-
             if (entry.link.equals(link))
             {
-                this.setIndex(i);
+                if (scroll) this.setCurrentScroll(entry);
+                else this.setCurrent(entry);
 
                 return;
             }

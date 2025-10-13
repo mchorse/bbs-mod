@@ -1,19 +1,17 @@
 package mchorse.bbs_mod.forms.forms;
 
-import mchorse.bbs_mod.forms.properties.ColorProperty;
-import mchorse.bbs_mod.forms.properties.ItemStackProperty;
-import mchorse.bbs_mod.forms.properties.ModelTransformationModeProperty;
+import mchorse.bbs_mod.settings.values.core.ValueColor;
+import mchorse.bbs_mod.forms.values.ValueModelTransformationMode;
+import mchorse.bbs_mod.settings.values.mc.ValueItemStack;
 import mchorse.bbs_mod.utils.colors.Color;
-import mchorse.bbs_mod.utils.colors.Colors;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 
 public class ItemForm extends Form
 {
-    public final ItemStackProperty stack = new ItemStackProperty(this, "item_stack", ItemStack.EMPTY);
-    public final ModelTransformationModeProperty modelTransform = new ModelTransformationModeProperty(this, "modelTransform", ModelTransformationMode.NONE);
-    public final ColorProperty color = new ColorProperty(this, "color", Color.white());
+    public final ValueItemStack stack = new ValueItemStack("item_stack");
+    public final ValueModelTransformationMode modelTransform = new ValueModelTransformationMode("modelTransform", ModelTransformationMode.NONE);
+    public final ValueColor color = new ValueColor("color", Color.white());
 
     public ItemForm()
     {

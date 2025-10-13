@@ -39,7 +39,7 @@ public class KeyframeSegment <T>
         this.a = a;
         this.b = b;
 
-        KeyframeChannel<T> channel = (KeyframeChannel<T>) a.getParent();
+        KeyframeChannel<T> channel = (KeyframeChannel<T>) a.getParentValue();
         int index = channel.getKeyframes().indexOf(a);
 
         if (index >= 0)
@@ -75,7 +75,7 @@ public class KeyframeSegment <T>
             return factory.copy(this.a.getValue());
         }
 
-        return factory.copy(factory.interpolate(this.preA, this.a, this.b, this.postB, this.a.getInterpolation().wrap(), this.x));
+        return factory.copy(factory.interpolate(this.preA, this.a, this.b, this.postB, this.a.getInterpolation(), this.x));
     }
 
     public boolean isSame()

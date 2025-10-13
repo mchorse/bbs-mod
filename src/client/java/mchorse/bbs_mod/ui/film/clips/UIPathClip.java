@@ -44,12 +44,12 @@ public class UIPathClip extends UIClip<PathClip>
         {
             this.getContext().replaceContextMenu(new UIInterpolationContextMenu(this.clip.interpolationPoint));
         });
-        this.interpPoint.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interpolationPoint.wrap()));
+        this.interpPoint.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interpolationPoint));
         this.interpAngle = new UIButton(UIKeys.CAMERA_PANELS_ANGLE, (b) ->
         {
             this.getContext().replaceContextMenu(new UIInterpolationContextMenu(this.clip.interpolationAngle));
         });
-        this.interpAngle.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interpolationAngle.wrap()));
+        this.interpAngle.tooltip(new InterpolationTooltip(1F, 0.5F, () -> this.clip.interpolationAngle));
 
         this.points = new UIPointsModule(this.editor, this::pickPoint);
         this.points.h(20);

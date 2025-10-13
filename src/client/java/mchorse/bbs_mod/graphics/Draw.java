@@ -89,33 +89,6 @@ public class Draw
         builder.vertex(matrix4f, x3, y3, z3).texture(u1, v1).color(r, g, b, a).normal(nx, ny, nz).next();
     }
 
-    /**
-     * Fill a quad for {@link net.minecraft.client.render.VertexFormats#POSITION_TEXTURE_COLOR}. Points should
-     * be supplied in this order:
-     *
-     *     3 -------> 4
-     *     ^
-     *     |
-     *     |
-     *     2 <------- 1
-     *
-     * I.e. bottom left, bottom right, top left, top right, where left is -X and right is +X,
-     * in case of a quad on fixed on Z axis.
-     */
-    public static void fillTexturedQuad(BufferBuilder builder, MatrixStack stack, float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, float u1, float v1, float u2, float v2, float r, float g, float b, float a)
-    {
-        Matrix4f matrix4f = stack.peek().getPositionMatrix();
-
-        /* 1 - BL, 2 - BR, 3 - TR, 4 - TL */
-        builder.vertex(matrix4f, x2, y2, z2).texture(u1, v2).color(r, g, b, a).next();
-        builder.vertex(matrix4f, x1, y1, z1).texture(u2, v2).color(r, g, b, a).next();
-        builder.vertex(matrix4f, x4, y4, z4).texture(u2, v1).color(r, g, b, a).next();
-
-        builder.vertex(matrix4f, x2, y2, z2).texture(u1, v2).color(r, g, b, a);
-        builder.vertex(matrix4f, x4, y4, z4).texture(u2, v1).color(r, g, b, a);
-        builder.vertex(matrix4f, x3, y3, z3).texture(u1, v1).color(r, g, b, a);
-    }
-
     public static void fillQuad(BufferBuilder builder, MatrixStack stack, float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, float r, float g, float b, float a)
     {
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
@@ -185,14 +158,6 @@ public class Draw
         fillBox(builder, stack, thickness, -thickness, -thickness, length, thickness, thickness, 1, 0, 0, 1);
         fillBox(builder, stack, -thickness, -thickness, -thickness, thickness, length, thickness, 0, 1, 0, 1);
         fillBox(builder, stack, -thickness, -thickness, thickness, thickness, thickness, length, 0, 0, 1, 1);
-    }
-
-    public static void coolerAxes(MatrixStack stack, float axisSize, float axisOffset)
-    {
-        final float outlineSize = axisSize + 0.005F;
-        final float outlineOffset = axisOffset + 0.005F;
-
-        coolerAxes(stack, axisSize, axisOffset, outlineSize, outlineOffset);
     }
 
     public static void coolerAxes(MatrixStack stack, float axisSize, float axisOffset, float outlineSize, float outlineOffset)

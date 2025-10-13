@@ -190,4 +190,10 @@ public class ActorEntity extends LivingEntity implements IEntityFormProvider
 
         nbt.putBoolean("despawn", true);
     }
+
+    @Override
+    protected int getPermissionLevel()
+    {
+        return 4;
+    }
 }

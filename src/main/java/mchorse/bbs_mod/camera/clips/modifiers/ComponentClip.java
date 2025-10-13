@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.camera.clips.modifiers;
 
 import mchorse.bbs_mod.camera.clips.CameraClip;
-import mchorse.bbs_mod.settings.values.ValueInt;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 
 public abstract class ComponentClip extends CameraClip
 {

@@ -3,15 +3,14 @@ package mchorse.bbs_mod.settings.ui;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.value.ValueKeyCombo;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueDouble;
-import mchorse.bbs_mod.settings.values.ValueFloat;
-import mchorse.bbs_mod.settings.values.ValueInt;
-import mchorse.bbs_mod.settings.values.ValueLanguage;
-import mchorse.bbs_mod.settings.values.ValueLink;
-import mchorse.bbs_mod.settings.values.ValueLong;
-import mchorse.bbs_mod.settings.values.ValueString;
-import mchorse.bbs_mod.settings.values.ValueVideoSettings;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueDouble;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.ui.ValueLanguage;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.ui.ValueVideoSettings;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
@@ -130,15 +129,6 @@ public class UIValueMap
             pick.w(90);
 
             return Arrays.asList(UIValueFactory.column(pick, value));
-        });
-
-        register(ValueLong.class, (value, ui) ->
-        {
-            UITrackpad trackpad = UIValueFactory.longUI(value, null);
-
-            trackpad.w(90);
-
-            return Arrays.asList(UIValueFactory.column(trackpad, value));
         });
 
         register(ValueString.class, (value, ui) ->

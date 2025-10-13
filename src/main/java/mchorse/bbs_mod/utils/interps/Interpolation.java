@@ -9,14 +9,12 @@ import mchorse.bbs_mod.utils.interps.easings.EasingArgs;
 
 import java.util.Map;
 
-public class Interpolation extends BaseValue
+public class Interpolation extends BaseValue implements IInterp
 {
     private final Map<String, IInterp> map;
 
     private IInterp interp;
     private EasingArgs args = new EasingArgs();
-
-    private InterpolationWrapper wrapped;
 
     public Interpolation(String id, Map<String, IInterp> map)
     {
@@ -31,9 +29,28 @@ public class Interpolation extends BaseValue
         this.map = map;
     }
 
+    @Override
+    public boolean has(IInterp interp)
+    {
+        return this.interp.has(interp);
+    }
+
+    @Override
     public double interpolate(InterpContext context)
     {
         return this.interp.interpolate(context.extra(this.args));
+    }
+
+    @Override
+    public String getKey()
+    {
+        return this.interp.getKey();
+    }
+
+    @Override
+    public int getKeyCode()
+    {
+        return this.interp.getKeyCode();
     }
 
     public Map<String, IInterp> getMap()
@@ -48,9 +65,9 @@ public class Interpolation extends BaseValue
 
     public void setInterp(IInterp interp)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.interp = interp;
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public double getV1()
@@ -60,9 +77,9 @@ public class Interpolation extends BaseValue
 
     public void setV1(double v1)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.args.v1 = v1;
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public double getV2()
@@ -72,9 +89,9 @@ public class Interpolation extends BaseValue
 
     public void setV2(double v2)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.args.v2 = v2;
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public double getV3()
@@ -84,9 +101,9 @@ public class Interpolation extends BaseValue
 
     public void setV3(double v3)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.args.v3 = v3;
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     public double getV4()
@@ -96,9 +113,9 @@ public class Interpolation extends BaseValue
 
     public void setV4(double v4)
     {
-        this.preNotifyParent();
+        this.preNotify();
         this.args.v4 = v4;
-        this.postNotifyParent();
+        this.postNotify();
     }
 
     @Override
@@ -146,15 +163,5 @@ public class Interpolation extends BaseValue
             this.interp = this.map.getOrDefault(data.asString(), Interpolations.LINEAR);
             this.args.v1 = this.args.v2 = this.args.v3 = this.args.v4 = 0;
         }
-    }
-
-    public IInterp wrap()
-    {
-        if (this.wrapped == null)
-        {
-            this.wrapped = new InterpolationWrapper(this);
-        }
-
-        return this.wrapped;
     }
 }

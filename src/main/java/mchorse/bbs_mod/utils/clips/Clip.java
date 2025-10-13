@@ -1,9 +1,9 @@
 package mchorse.bbs_mod.utils.clips;
 
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueGroup;
-import mchorse.bbs_mod.settings.values.ValueInt;
-import mchorse.bbs_mod.settings.values.ValueString;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 
 public abstract class Clip extends ValueGroup
 {

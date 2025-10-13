@@ -233,7 +233,7 @@ public class UIInterpolationContextMenu extends UIContextMenu
 
         fg.a = 0.5F;
 
-        InterpolationRenderer.renderInterpolationGraph(this.interpolation.wrap(), context, fg, Colors.WHITE, this.area.x + PADDING, this.area.y + PADDING, this.area.w - PADDING * 2, GRAPH_HEIGHT, 20, 15);
+        InterpolationRenderer.renderInterpolationGraph(this.interpolation, context, fg, Colors.WHITE, this.area.x + PADDING, this.area.y + PADDING, this.area.w - PADDING * 2, GRAPH_HEIGHT, 20, 15);
 
         if (icon != null)
         {

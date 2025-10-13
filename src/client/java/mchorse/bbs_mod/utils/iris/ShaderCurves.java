@@ -23,6 +23,7 @@ public class ShaderCurves
 
     public static final String BRIGHTNESS = "brightness";
     public static final String SUN_ROTATION = "sun_rotation";
+    public static final String WEATHER = "weather";
 
     public static final String UNIFORM_IDENTIFIER = "bbs_";
 

@@ -5,7 +5,7 @@ import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.settings.values.IValueListener;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.utils.undo.ValueChangeUndo;
@@ -183,7 +183,7 @@ public class UIFilmUndoHandler
 
         /* Specifically for overwriting full replay like what's done when recording
          * data in the world! */
-        if (value.getParent() != null && value.getParent().getId().equals("replays"))
+        if (value.getParentValue() != null && value.getParentValue().getId().equals("replays"))
         {
             return true;
         }
@@ -195,7 +195,7 @@ public class UIFilmUndoHandler
                 return true;
             }
 
-            value = value.getParent();
+            value = value.getParentValue();
         }
 
         return false;
@@ -219,7 +219,7 @@ public class UIFilmUndoHandler
 
         while (it.hasNext())
         {
-            BaseValue value = it.next().getParent();
+            BaseValue value = it.next().getParentValue();
             boolean remove = false;
 
             while (value != null)
@@ -231,7 +231,7 @@ public class UIFilmUndoHandler
                     break;
                 }
 
-                value = value.getParent();
+                value = value.getParentValue();
             }
 
             if (remove)

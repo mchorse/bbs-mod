@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.actions.types.blocks;
 
 import mchorse.bbs_mod.actions.types.ActionClip;
-import mchorse.bbs_mod.settings.values.ValueInt;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 
 public abstract class BlockActionClip extends ActionClip
 {

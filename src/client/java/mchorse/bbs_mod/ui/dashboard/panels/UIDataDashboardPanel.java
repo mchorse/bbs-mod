@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.ui.dashboard.panels;
 
 import mchorse.bbs_mod.BBSSettings;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.ui.ContentType;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
@@ -14,7 +14,6 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.utils.UIDataUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Timer;
-import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 
 import java.util.Collection;
@@ -191,7 +190,7 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
 
         if (seconds > 0)
         {
-            if (this.savingTimer.check())
+            if (this.savingTimer.check() && this.canSave(context))
             {
                 this.savingTimer.mark(seconds * 1000L);
 
@@ -199,5 +198,10 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
                 context.notifySuccess(UIKeys.PANELS_SAVED_NOTIFICATION.format(this.data.getId()));
             }
         }
+    }
+
+    protected boolean canSave(UIContext context)
+    {
+        return true;
     }
 }

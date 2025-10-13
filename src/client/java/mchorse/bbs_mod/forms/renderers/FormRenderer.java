@@ -5,7 +5,6 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.keys.KeyCodes;
@@ -17,8 +16,10 @@ import mchorse.bbs_mod.utils.interps.Lerps;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Hand;
 import org.joml.Matrix4f;
 
 import java.util.Collections;
@@ -43,11 +44,6 @@ public abstract class FormRenderer <T extends Form>
     public List<String> getBones()
     {
         return Collections.emptyList();
-    }
-
-    protected Texture getTexture()
-    {
-        return null;
     }
 
     public final void renderUI(UIContext context, int x1, int y1, int x2, int y2)
@@ -80,6 +76,11 @@ public abstract class FormRenderer <T extends Form>
     }
 
     protected abstract void renderInUI(UIContext context, int x1, int y1, int x2, int y2);
+
+    public boolean renderArm(MatrixStack matrices, int light, AbstractClientPlayerEntity player, Hand hand)
+    {
+        return false;
+    }
 
     public final void render(FormRenderingContext context)
     {

@@ -292,7 +292,7 @@ public class BBSModClient implements ClientModInitializer
         selectors.read();
         films = new Films();
 
-        BBSResources.init(parentFile);
+        BBSResources.init();
 
         URLRepository repository = new URLRepository(new File(parentFile, "url_cache"));
 
@@ -373,7 +373,6 @@ public class BBSModClient implements ClientModInitializer
             films = new Films();
 
             ClientNetwork.resetHandshake();
-            BBSResources.reset();
             films.reset();
             cameraController.reset();
         });
@@ -391,6 +390,8 @@ public class BBSModClient implements ClientModInitializer
             {
                 films.updateEndWorld();
             }
+
+            BBSResources.tick();
         });
 
         ClientTickEvents.END_CLIENT_TICK.register((client) ->
@@ -411,8 +412,6 @@ public class BBSModClient implements ClientModInitializer
                 gunItemRenderer.update();
                 textures.update();
             }
-
-            BBSResources.update();
 
             while (keyDashboard.wasPressed()) UIScreen.open(getDashboard());
             while (keyItemEditor.wasPressed()) this.keyOpenModelBlockEditor(mc);

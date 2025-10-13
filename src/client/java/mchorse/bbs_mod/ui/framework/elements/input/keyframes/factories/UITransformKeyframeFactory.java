@@ -49,9 +49,9 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
                 {
                     if (kf.getValue() instanceof Transform transform)
                     {
-                        kf.preNotifyParent();
+                        kf.preNotify();
                         consumer.accept(transform);
-                        kf.postNotifyParent();
+                        kf.postNotify();
                     }
                 }
             }

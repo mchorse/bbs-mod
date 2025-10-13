@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.forms.categories;
 
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.forms.UIFormList;
 import mchorse.bbs_mod.ui.forms.categories.UIFormCategory;

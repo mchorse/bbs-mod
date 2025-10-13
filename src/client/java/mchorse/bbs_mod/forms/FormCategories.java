@@ -2,7 +2,7 @@ package mchorse.bbs_mod.forms;
 
 import mchorse.bbs_mod.forms.categories.FormCategory;
 import mchorse.bbs_mod.forms.sections.ExtraFormSection;
-import mchorse.bbs_mod.forms.sections.IFormSection;
+import mchorse.bbs_mod.forms.sections.FormSection;
 import mchorse.bbs_mod.forms.sections.ModelFormSection;
 import mchorse.bbs_mod.forms.sections.ParticleFormSection;
 import mchorse.bbs_mod.forms.sections.RecentFormSection;
@@ -18,7 +18,7 @@ public class FormCategories implements IWatchDogListener
 {
     public final VisibilityManager visibility = new VisibilityManager();
 
-    private List<IFormSection> sections = new ArrayList<>();
+    private List<FormSection> sections = new ArrayList<>();
     private RecentFormSection recentForms = new RecentFormSection(this);
     private UserFormSection userForms = new UserFormSection(this);
 
@@ -35,7 +35,7 @@ public class FormCategories implements IWatchDogListener
         this.sections.add(new ParticleFormSection(this));
         this.sections.add(new ExtraFormSection(this));
 
-        for (IFormSection section : this.sections)
+        for (FormSection section : this.sections)
         {
             section.initiate();
         }
@@ -68,7 +68,7 @@ public class FormCategories implements IWatchDogListener
     {
         List<FormCategory> formCategories = new ArrayList<>();
 
-        for (IFormSection section : this.sections)
+        for (FormSection section : this.sections)
         {
             formCategories.addAll(section.getCategories());
         }
@@ -79,7 +79,7 @@ public class FormCategories implements IWatchDogListener
     @Override
     public void accept(Path path, WatchDogEvent event)
     {
-        for (IFormSection section : this.sections)
+        for (FormSection section : this.sections)
         {
             section.accept(path, event);
         }

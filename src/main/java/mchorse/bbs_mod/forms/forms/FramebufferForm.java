@@ -1,18 +1,18 @@
 package mchorse.bbs_mod.forms.forms;
 
-import mchorse.bbs_mod.forms.properties.FloatProperty;
-import mchorse.bbs_mod.forms.properties.IntegerProperty;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 
 public class FramebufferForm extends Form
 {
-    public final IntegerProperty width = new IntegerProperty(this, "width", 512);
-    public final IntegerProperty height = new IntegerProperty(this, "height", 512);
-    public final FloatProperty scale = new FloatProperty(this, "scale", 0.5F);
+    public final ValueInt width = new ValueInt("width", 512);
+    public final ValueInt height = new ValueInt("height", 512);
+    public final ValueFloat scale = new ValueFloat("scale", 0.5F);
 
     public FramebufferForm()
     {
-        this.width.cantAnimate();
-        this.height.cantAnimate();
+        this.width.invisible();
+        this.height.invisible();
 
         this.register(this.width);
         this.register(this.height);

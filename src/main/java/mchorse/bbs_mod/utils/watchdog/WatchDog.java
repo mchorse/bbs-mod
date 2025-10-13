@@ -13,9 +13,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -24,7 +22,7 @@ public class WatchDog implements Runnable
 {
     private Path folder;
     private Consumer<Runnable> spawner;
-    private List<IWatchDogListener> listeners = new ArrayList<>();
+    private WatchDogProxy proxy = new WatchDogProxy();
 
     private WatchService service;
     private Map<WatchKey, Path> keys = new HashMap<>();
@@ -40,9 +38,9 @@ public class WatchDog implements Runnable
         this.onlyTop = onlyTop;
     }
 
-    public void register(IWatchDogListener listener)
+    public WatchDogProxy getProxy()
     {
-        this.listeners.add(listener);
+        return this.proxy;
     }
 
     public void registerFolder(Path path)
@@ -184,10 +182,7 @@ public class WatchDog implements Runnable
 
             this.spawner.accept(() ->
             {
-                for (IWatchDogListener listener : this.listeners)
-                {
-                    listener.accept(file, finalType);
-                }
+                this.proxy.accept(file, finalType);
             });
         }
 

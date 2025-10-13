@@ -1,25 +1,25 @@
 package mchorse.bbs_mod.forms.forms;
 
-import mchorse.bbs_mod.forms.properties.BooleanProperty;
-import mchorse.bbs_mod.forms.properties.LinkProperty;
-import mchorse.bbs_mod.forms.properties.PoseProperty;
-import mchorse.bbs_mod.forms.properties.StringProperty;
+import mchorse.bbs_mod.settings.values.core.ValuePose;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.pose.Pose;
 
 public class MobForm extends Form
 {
-    public final StringProperty mobID = new StringProperty(this, "mobId", "minecraft:chicken");
-    public final StringProperty mobNBT = new StringProperty(this, "mobNbt", "");
+    public final ValueString mobID = new ValueString("mobId", "minecraft:chicken");
+    public final ValueString mobNBT = new ValueString("mobNbt", "");
 
-    public final LinkProperty texture = new LinkProperty(this, "texture", null);
-    public final BooleanProperty slim = new BooleanProperty(this, "slim", false);
+    public final ValueLink texture = new ValueLink("texture", null);
+    public final ValueBoolean slim = new ValueBoolean("slim", false);
 
-    public final PoseProperty pose = new PoseProperty(this, "pose", new Pose());
-    public final PoseProperty poseOverlay = new PoseProperty(this, "pose_overlay", new Pose());
+    public final ValuePose pose = new ValuePose("pose", new Pose());
+    public final ValuePose poseOverlay = new ValuePose("pose_overlay", new Pose());
 
     public MobForm()
     {
-        this.slim.cantAnimate();
+        this.slim.invisible();
 
         this.register(this.mobID);
         this.register(this.mobNBT);

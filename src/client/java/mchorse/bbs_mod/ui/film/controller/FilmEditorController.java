@@ -7,8 +7,8 @@ import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.MCEntity;
 import mchorse.bbs_mod.forms.entities.StubEntity;
-import mchorse.bbs_mod.settings.values.ValueOnionSkin;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -206,7 +206,7 @@ public class FilmEditorController extends BaseFilmController
             replay.applyProperties((int) keyframe.getTick(), entity.getForm());
 
             BaseFilmController.renderEntity(FilmControllerContext.instance
-                .setup(this.getEntities(), entity, context)
+                .setup(this.getEntities(), entity, replay, context)
                 .color(Colors.setA(color, alpha))
                 .transition(0F));
 

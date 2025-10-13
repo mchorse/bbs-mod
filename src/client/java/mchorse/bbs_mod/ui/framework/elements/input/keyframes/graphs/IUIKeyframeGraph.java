@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs;
 
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.utils.Area;
@@ -75,7 +75,7 @@ public interface IUIKeyframeGraph
 
     public default UIKeyframeSheet getSheet(Keyframe keyframe)
     {
-        KeyframeChannel channel = (KeyframeChannel) keyframe.getParent();
+        KeyframeChannel channel = (KeyframeChannel) keyframe.getParentValue();
 
         for (UIKeyframeSheet sheet : this.getSheets())
         {
@@ -96,7 +96,7 @@ public interface IUIKeyframeGraph
     {
         KeyframeSegment segment = sheet.channel.find(tick);
         Interpolation interpolation = null;
-        IFormProperty property = sheet.property;
+        BaseValueBasic property = sheet.property;
 
         if (value == null)
         {

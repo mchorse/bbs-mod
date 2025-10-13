@@ -14,7 +14,7 @@ import mchorse.bbs_mod.particles.components.motion.ParticleComponentInitialSpeed
 import mchorse.bbs_mod.particles.emitter.Particle;
 import mchorse.bbs_mod.particles.emitter.ParticleEmitter;
 import mchorse.bbs_mod.resources.Link;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;

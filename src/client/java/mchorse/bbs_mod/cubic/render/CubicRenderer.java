@@ -43,15 +43,15 @@ public class CubicRenderer
 
                 return true;
             }
+        }
 
-            for (ModelGroup childGroup : group.children)
+        for (ModelGroup childGroup : group.children)
+        {
+            if (processRenderRecursively(renderProcessor, builder, stack, model, childGroup))
             {
-                if (processRenderRecursively(renderProcessor, builder, stack, model, childGroup))
-                {
-                    stack.pop();
+                stack.pop();
 
-                    return true;
-                }
+                return true;
             }
         }
 

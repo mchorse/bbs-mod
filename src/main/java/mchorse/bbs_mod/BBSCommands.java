@@ -16,7 +16,7 @@ import mchorse.bbs_mod.mixin.LevelPropertiesAccessor;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.network.ServerNetwork;
 import mchorse.bbs_mod.settings.Settings;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import net.minecraft.block.Blocks;
 import net.minecraft.command.CommandRegistryAccess;
@@ -60,7 +60,6 @@ public class BBSCommands
         registerDCCommand(bbs, environment, hasPermissions);
         registerOnHeadCommand(bbs, environment, hasPermissions);
         registerConfigCommand(bbs, environment, hasPermissions);
-        registerServerCommand(bbs, environment, hasPermissions);
         registerCheatsCommand(bbs, environment);
         registerBoomCommand(bbs, environment, hasPermissions);
         registerStructureSaveCommand(bbs, environment, hasPermissions);
@@ -245,34 +244,6 @@ public class BBSCommands
         );
 
         bbs.then(config.requires(hasPermissions));
-    }
-
-    private static void registerServerCommand(LiteralArgumentBuilder<ServerCommandSource> bbs, CommandManager.RegistrationEnvironment environment, Predicate<ServerCommandSource> hasPermissions)
-    {
-        LiteralArgumentBuilder<ServerCommandSource> server = CommandManager.literal("server");
-
-        server.then(
-            CommandManager.literal("assets").executes((ctx) ->
-            {
-                for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList())
-                {
-                    ServerNetwork.sendHandshake(ctx.getSource().getServer(), player);
-                }
-
-                return 1;
-            })
-        ).then(
-            CommandManager.literal("asset_manager").then(CommandManager.argument("manager", EntityArgumentType.player()).executes((ctx) ->
-            {
-                ServerPlayerEntity player = EntityArgumentType.getPlayer(ctx, "manager");
-
-                BBSSettings.serverAssetManager.set(player.getUuidAsString());
-
-                return 1;
-            }))
-        );
-
-        bbs.then(server.requires(hasPermissions));
     }
 
     private static void registerCheatsCommand(LiteralArgumentBuilder<ServerCommandSource> bbs, CommandManager.RegistrationEnvironment environment)

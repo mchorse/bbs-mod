@@ -1,7 +1,7 @@
 package mchorse.bbs_mod.ui.film.utils.undo;
 
 import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.undo.IUndo;

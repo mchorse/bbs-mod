@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LimbAnimator;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
@@ -80,6 +81,17 @@ public class MCEntity implements IEntity
         {
             living.equipStack(slot, stack == null ? ItemStack.EMPTY : stack);
         }
+    }
+
+    @Override
+    public int getSelectedSlot()
+    {
+        if (this.mcEntity instanceof PlayerEntity player)
+        {
+            return player.getInventory().selectedSlot;
+        }
+
+        return 0;
     }
 
     @Override

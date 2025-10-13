@@ -3,7 +3,7 @@ package mchorse.bbs_mod.settings;
 import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.IOUtils;
@@ -29,7 +29,7 @@ public class Settings extends BaseValue
     }
 
     @Override
-    public void postNotifyParent(BaseValue value, int flag)
+    public void postNotify(BaseValue value, int flag)
     {
         this.saveLater();
     }

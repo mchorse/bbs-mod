@@ -1,8 +1,8 @@
 package mchorse.bbs_mod.actions.types.item;
 
 import mchorse.bbs_mod.actions.types.ActionClip;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueItemStack;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.mc.ValueItemStack;
 
 public abstract class ItemActionClip extends ActionClip
 {

@@ -1,17 +1,17 @@
 package mchorse.bbs_mod;
 
 import mchorse.bbs_mod.settings.SettingsBuilder;
-import mchorse.bbs_mod.settings.values.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ValueColors;
-import mchorse.bbs_mod.settings.values.ValueEditorLayout;
-import mchorse.bbs_mod.settings.values.ValueFloat;
-import mchorse.bbs_mod.settings.values.ValueInt;
-import mchorse.bbs_mod.settings.values.ValueLanguage;
-import mchorse.bbs_mod.settings.values.ValueLink;
-import mchorse.bbs_mod.settings.values.ValueOnionSkin;
-import mchorse.bbs_mod.settings.values.ValueString;
-import mchorse.bbs_mod.settings.values.ValueStringKeys;
-import mchorse.bbs_mod.settings.values.ValueVideoSettings;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.ui.ValueColors;
+import mchorse.bbs_mod.settings.values.ui.ValueEditorLayout;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.ui.ValueLanguage;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
+import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.ui.ValueStringKeys;
+import mchorse.bbs_mod.settings.values.ui.ValueVideoSettings;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 
@@ -19,9 +19,6 @@ import java.util.HashSet;
 
 public class BBSSettings
 {
-    public static ValueString serverId;
-    public static ValueString serverAssetManager;
-
     public static ValueColors favoriteColors;
     public static ValueStringKeys disabledSheets;
     public static ValueLanguage language;
@@ -46,6 +43,10 @@ public class BBSSettings
 
     public static ValueLink backgroundImage;
     public static ValueInt backgroundColor;
+
+    public static ValueBoolean chromaSkyEnabled;
+    public static ValueInt chromaSkyColor;
+    public static ValueBoolean chromaSkyTerrain;
 
     public static ValueInt scrollbarShadow;
     public static ValueInt scrollbarWidth;
@@ -120,10 +121,6 @@ public class BBSSettings
 
     public static void register(SettingsBuilder builder)
     {
-        serverId = builder.category("tweaks").getString("server_id", "");
-        serverAssetManager = builder.getString("asset_manager", "");
-
-        builder.getCategory().invisible();
         builder.category("appearance");
 
         builder.register(language = new ValueLanguage("language"));
@@ -172,8 +169,12 @@ public class BBSSettings
         keystrokeOffset = builder.getInt("keystrokes_offset", 10, 0, 20);
         keystrokeMode = builder.getInt("keystrokes_position", 1);
 
-        backgroundImage = builder.category("background").getRL("image",  null);
-        backgroundColor = builder.getInt("color",  Colors.A75).colorAlpha();
+        backgroundImage = builder.category("background").getRL("image", null);
+        backgroundColor = builder.getInt("color", Colors.A75).colorAlpha();
+
+        chromaSkyEnabled = builder.category("chroma_sky").getBoolean("enabled", false);
+        chromaSkyColor = builder.getInt("color", Colors.A75).color();
+        chromaSkyTerrain = builder.getBoolean("terrain", true);
 
         scrollbarShadow = builder.category("scrollbars").getInt("shadow", Colors.A50).colorAlpha();
         scrollbarWidth = builder.getInt("width", 4, 2, 10);

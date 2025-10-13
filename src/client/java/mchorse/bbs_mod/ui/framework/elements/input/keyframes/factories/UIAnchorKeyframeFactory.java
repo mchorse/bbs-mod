@@ -6,8 +6,7 @@ import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.properties.AnchorProperty;
-import mchorse.bbs_mod.forms.properties.IFormProperty;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
@@ -17,7 +16,6 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
-import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import net.minecraft.client.util.math.MatrixStack;
@@ -29,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.Anchor>
+public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
 {
     private UIButton actor;
     private UIButton attachment;
@@ -50,6 +48,12 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.An
             {
                 final int actor = i;
                 IEntity entity = entities.get(i);
+
+                if (entity == null)
+                {
+                    continue;
+                }
+
                 Replay replay = replays == null ? null : replays.get(i);
                 Form form = entity.getForm();
                 String stringLabel = i + (replay != null ? " - " + replay.getName() : (form == null ? "" : " - " + form.getIdOrName()));
@@ -110,7 +114,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<AnchorProperty.An
         });
     }
 
-    public UIAnchorKeyframeFactory(Keyframe<AnchorProperty.Anchor> keyframe, UIKeyframes editor)
+    public UIAnchorKeyframeFactory(Keyframe<Anchor> keyframe, UIKeyframes editor)
     {
         super(keyframe, editor);
 
