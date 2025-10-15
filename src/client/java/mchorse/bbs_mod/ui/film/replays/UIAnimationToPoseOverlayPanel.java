@@ -22,14 +22,14 @@ public class UIAnimationToPoseOverlayPanel extends UIOverlayPanel
     public UITrackpad step;
     public UIButton generate;
 
-    private final UIReplaysEditor editor;
+    private final IUIAnimationPoseCallback callback;
     private final ModelForm modelForm;
 
-    public UIAnimationToPoseOverlayPanel(UIReplaysEditor editor, ModelForm modelForm, UIKeyframeSheet sheet)
+    public UIAnimationToPoseOverlayPanel(IUIAnimationPoseCallback callback, ModelForm modelForm, UIKeyframeSheet sheet)
     {
         super(UIKeys.FILM_REPLAY_ANIMATION_TO_POSE_TITLE);
 
-        this.editor = editor;
+        this.callback = callback;
         this.modelForm = modelForm;
 
         ModelInstance model = ModelFormRenderer.getModel(modelForm);
@@ -52,7 +52,7 @@ public class UIAnimationToPoseOverlayPanel extends UIOverlayPanel
         this.step.tooltip(UIKeys.FILM_REPLAY_ANIMATION_TO_POSE_STEP);
         this.generate = new UIButton(UIKeys.FILM_REPLAY_ANIMATION_TO_POSE_GENERATE, (b) ->
         {
-            this.editor.animationToPoseKeyframes(
+            this.callback.animationToPoseKeyframes(
                 this.modelForm, sheet,
                 this.list.getCurrentFirst(),
                 this.onlyKeyframes.getValue(),
@@ -75,5 +75,10 @@ public class UIAnimationToPoseOverlayPanel extends UIOverlayPanel
         Animation animation = model.animations.get(s);
 
         this.length.setValue(animation.getLengthInTicks());
+    }
+
+    public static interface IUIAnimationPoseCallback
+    {
+        public void animationToPoseKeyframes(ModelForm modelForm, UIKeyframeSheet sheet, String animationKey, boolean onlyKeyframes, int length, int step);
     }
 }

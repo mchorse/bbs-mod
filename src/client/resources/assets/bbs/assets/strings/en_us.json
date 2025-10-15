@@ -47,6 +47,8 @@
     "bbs.config.background.image-comment": "Background image to be used in every menu",
     "bbs.config.background.title": "Background",
     "bbs.config.background.tooltip": "Background options like color and texture to be used",
+    "bbs.config.chroma_sky.billboard": "Billboard distance",
+    "bbs.config.chroma_sky.billboard-comment": "Whenever terrain is disabled, and the value is greater than 0, then a billboard will be rendered X blocks away from the camera. Majority of shader packs drawing their own sky, so this is a workaround for that",
     "bbs.config.chroma_sky.color": "Color",
     "bbs.config.chroma_sky.color-comment": "Color of the chroma sky",
     "bbs.config.chroma_sky.enabled": "Enabled",

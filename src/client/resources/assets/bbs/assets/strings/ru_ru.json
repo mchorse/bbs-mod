@@ -47,6 +47,8 @@
     "bbs.config.background.image-comment": "Изображение заднего фона которые используется во всех меню",
     "bbs.config.background.title": "Задний фон",
     "bbs.config.background.tooltip": "Параметры фона, такие как цвет и текстура, которые будут использоваться",
+    "bbs.config.chroma_sky.billboard": "Дистанция плашки",
+    "bbs.config.chroma_sky.billboard-comment": "Когда ландшафт отключён и значение больше 0, плашка будет отрисован на расстоянии Н блоков от камеры. Большинство шейдеров отрисовывают своё небо, поэтому можно воспользоваться этим костылём",
     "bbs.config.chroma_sky.color": "Цвет",
     "bbs.config.chroma_sky.color-comment": "Цвет хрома небо",
     "bbs.config.chroma_sky.enabled": "Включён",

@@ -472,6 +472,9 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 ? GameRenderer::getRenderTypeEntityTranslucentCullProgram
                 : BBSShaders::getModel;
 
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableBlend();
+
             this.renderModel(this.entity, mainShader, matrices, model, light, OverlayTexture.DEFAULT_UV, color, false, null, 0F);
 
             for (ModelGroup group : model.getModel().getAllGroups())

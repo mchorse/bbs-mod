@@ -2,8 +2,8 @@ package mchorse.bbs_mod.utils.keyframes;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.core.ValueList;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.core.ValueList;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
@@ -113,13 +113,13 @@ public class KeyframeChannel <T> extends ValueList<Keyframe<T>>
 
         /* Check whether given ticks are outside keyframe channel's range */
         Keyframe<T> prev = this.list.get(0);
+        int size = this.list.size();
 
-        if (ticks < prev.getTick())
+        if (size == 1 || ticks < prev.getTick())
         {
             return new KeyframeSegment<>(prev, prev);
         }
 
-        int size = this.list.size();
         Keyframe<T> last = this.list.get(size - 1);
 
         if (ticks >= last.getTick())

@@ -1,5 +1,6 @@
 package mchorse.bbs_mod;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.actions.types.FormTriggerClientActionClip;
 import mchorse.bbs_mod.audio.SoundManager;
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
@@ -24,6 +25,7 @@ import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.forms.triggers.StateTrigger;
+import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.FramebufferManager;
 import mchorse.bbs_mod.graphics.texture.TextureManager;
 import mchorse.bbs_mod.items.GunProperties;
@@ -52,6 +54,7 @@ import mchorse.bbs_mod.ui.utils.keys.KeybindSettings;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.ScreenshotRecorder;
 import mchorse.bbs_mod.utils.VideoRecorder;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.resources.MinecraftSourcePack;
 import net.fabricmc.api.ClientModInitializer;
@@ -66,8 +69,15 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.impl.client.rendering.BlockEntityRendererRegistryImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
@@ -356,6 +366,48 @@ public class BBSModClient implements ClientModInitializer
             if (!BBSRendering.isIrisShadersEnabled())
             {
                 BBSRendering.renderCoolStuff(context);
+            }
+
+            if (BBSSettings.chromaSkyEnabled.get())
+            {
+                float d = BBSSettings.chromaSkyBillboard.get();
+
+                if (d > 0)
+                {
+                    MatrixStack stack = context.matrixStack();
+                    Color color = Colors.COLOR.set(BBSSettings.chromaSkyColor.get());
+
+                    stack.push();
+
+                    MatrixStack.Entry peek = stack.peek();
+
+                    peek.getPositionMatrix().identity();
+                    peek.getNormalMatrix().identity();
+                    stack.translate(0F, 0F, -d);
+
+                    RenderSystem.enableDepthTest();
+                    BufferBuilder builder = Tessellator.getInstance().getBuffer();
+
+                    builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+                    float fov = MinecraftClient.getInstance().options.getFov().getValue();
+                    float dd = d * (float) Math.pow(fov / 40F, 2F);
+
+                    Draw.fillQuad(builder, stack,
+                        -dd, -dd, 0,
+                        dd, -dd, 0,
+                        dd, dd, 0,
+                        -dd, dd, 0,
+                        color.r, color.g, color.b, 1F
+                    );
+
+                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+                    BufferRenderer.drawWithGlobalProgram(builder.end());
+                    RenderSystem.disableDepthTest();
+
+                    stack.pop();
+                }
             }
         });
 

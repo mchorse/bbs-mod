@@ -1,15 +1,15 @@
 package mchorse.bbs_mod;
 
 import mchorse.bbs_mod.settings.SettingsBuilder;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
-import mchorse.bbs_mod.settings.values.ui.ValueColors;
-import mchorse.bbs_mod.settings.values.ui.ValueEditorLayout;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.ui.ValueColors;
+import mchorse.bbs_mod.settings.values.ui.ValueEditorLayout;
 import mchorse.bbs_mod.settings.values.ui.ValueLanguage;
-import mchorse.bbs_mod.settings.values.core.ValueLink;
 import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
-import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.ui.ValueStringKeys;
 import mchorse.bbs_mod.settings.values.ui.ValueVideoSettings;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -47,6 +47,7 @@ public class BBSSettings
     public static ValueBoolean chromaSkyEnabled;
     public static ValueInt chromaSkyColor;
     public static ValueBoolean chromaSkyTerrain;
+    public static ValueFloat chromaSkyBillboard;
 
     public static ValueInt scrollbarShadow;
     public static ValueInt scrollbarWidth;
@@ -175,6 +176,7 @@ public class BBSSettings
         chromaSkyEnabled = builder.category("chroma_sky").getBoolean("enabled", false);
         chromaSkyColor = builder.getInt("color", Colors.A75).color();
         chromaSkyTerrain = builder.getBoolean("terrain", true);
+        chromaSkyBillboard = builder.getFloat("billboard", 0F, 0F, 256F);
 
         scrollbarShadow = builder.category("scrollbars").getInt("shadow", Colors.A50).colorAlpha();
         scrollbarWidth = builder.getInt("width", 4, 2, 10);
