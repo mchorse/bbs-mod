@@ -30,6 +30,8 @@ public class ActionPlayer
     public boolean playing = true;
     public int countdown;
     public int exception;
+    public boolean recording;
+
     public boolean syncing;
     public boolean stopDamage = true;
 
@@ -41,19 +43,21 @@ public class ActionPlayer
 
     private List<ItemStack> cache = new ArrayList<>();
 
-    public ActionPlayer(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception)
+    public ActionPlayer(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception, boolean recording)
     {
         this.world = world;
         this.film = film;
         this.tick = tick;
         this.countdown = countdown;
         this.exception = exception;
+        this.recording = recording;
+
         this.serverPlayer = serverPlayer;
         this.duration = film.camera.calculateDuration();
 
         this.updateReplayEntities();
 
-        if (this.serverPlayer != null && film.getFirstPersonReplay() != null)
+        if (!this.recording && this.serverPlayer != null && film.getFirstPersonReplay() != null)
         {
             for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
             {
@@ -156,8 +160,9 @@ public class ActionPlayer
             if (selectedSlot != slot)
             {
                 ServerNetwork.sendSelectedSlot(player, slot);
-                actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
             }
+
+            actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
         }
         else
         {
@@ -198,7 +203,7 @@ public class ActionPlayer
 
         this.tick += 1;
 
-        return !this.syncing ? this.tick >= this.duration : false;
+        return !this.syncing && this.tick >= this.duration;
     }
 
     private void applyAction()
@@ -281,7 +286,7 @@ public class ActionPlayer
             }
         }
 
-        if (this.serverPlayer != null && this.film.getFirstPersonReplay() != null)
+        if (!this.recording && this.serverPlayer != null && this.film.getFirstPersonReplay() != null)
         {
             for (int i = 0; i < this.serverPlayer.getInventory().size(); i++)
             {

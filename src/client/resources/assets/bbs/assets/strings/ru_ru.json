@@ -435,6 +435,7 @@
     "bbs.ui.film.render_audio": "Отрендерить аудио (из аудио клипов)",
     "bbs.ui.film.render_audio.error": "Аудио клипы не смогли быть отрисованы! Откройте latest.log чтобы узнать больше...",
     "bbs.ui.film.render_audio.success": "Аудио клипы были успешно отрендерены!",
+    "bbs.ui.film.replace_inventory": "Заменить инвенторий",
     "bbs.ui.film.replay.actor": "Актёр",
     "bbs.ui.film.replay.actor-tooltip": "Когда включено, эта запись будет отображаться как сущность (в итоге её можно бить, она может подбирать предметы, задействовать нажимные плиты, и т.д.)",
     "bbs.ui.film.replay.animation_to_pose.generate": "Сгенерировать",

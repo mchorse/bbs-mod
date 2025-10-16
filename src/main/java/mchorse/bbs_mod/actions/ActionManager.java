@@ -84,14 +84,19 @@ public class ActionManager
 
     public ActionPlayer play(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick)
     {
-        return this.play(serverPlayer, world, film, tick, 0, -1);
+        return this.play(serverPlayer, world, film, tick, 0, -1, false);
     }
 
-    public ActionPlayer play(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception)
+    public ActionPlayer play(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, boolean recording)
+    {
+        return this.play(serverPlayer, world, film, tick, 0, -1, recording);
+    }
+
+    public ActionPlayer play(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception, boolean recording)
     {
         if (film != null)
         {
-            ActionPlayer player = new ActionPlayer(serverPlayer, world, film, tick, countdown, exception);
+            ActionPlayer player = new ActionPlayer(serverPlayer, world, film, tick, countdown, exception, recording);
 
             this.players.add(player);
             this.trackDamage(world);
@@ -123,7 +128,7 @@ public class ActionManager
 
     public void startRecording(Film film, ServerPlayerEntity entity, int tick, int countdown, int replayId)
     {
-        ActionPlayer play = this.play(entity, entity.getServerWorld(), film, tick, countdown, replayId);
+        ActionPlayer play = this.play(entity, entity.getServerWorld(), film, tick, countdown, replayId, true);
 
         play.stopDamage = false;
 

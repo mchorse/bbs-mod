@@ -8,6 +8,7 @@ import mchorse.bbs_mod.forms.FormArchitect;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.utils.Anchor;
+import mchorse.bbs_mod.forms.states.AnimationStates;
 import mchorse.bbs_mod.forms.values.ValueAnchor;
 import mchorse.bbs_mod.settings.values.IValueNotifier;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
@@ -38,7 +39,6 @@ public abstract class Form implements IMapSerializable, IValueNotifier
     public final ValueTransform transform = new ValueTransform("transform", new Transform());
     public final ValueTransform transformOverlay = new ValueTransform("transform_overlay", new Transform());
     public final ValueFloat uiScale = new ValueFloat("uiScale", 1F);
-    public final BodyPartManager parts = new BodyPartManager(this);
     public final ValueAnchor anchor = new ValueAnchor("anchor", new Anchor());
     public final ValueBoolean shaderShadow = new ValueBoolean("shaderShadow", true);
 
@@ -55,6 +55,9 @@ public abstract class Form implements IMapSerializable, IValueNotifier
     public final ValueFloat stepHeight = new ValueFloat("step_height", 0.5F);
 
     public final ValueInt hotkey = new ValueInt("keybind", 0);
+
+    public final BodyPartManager parts = new BodyPartManager(this);
+    public final AnimationStates states = new AnimationStates("states");
 
     protected Object renderer;
     protected String cachedID;
@@ -291,6 +294,7 @@ public abstract class Form implements IMapSerializable, IValueNotifier
     public void toData(MapType data)
     {
         data.put("bodyParts", this.parts.toData());
+        data.put("states", this.states.toData());
 
         for (BaseValue property : this.properties.values())
         {
@@ -302,6 +306,7 @@ public abstract class Form implements IMapSerializable, IValueNotifier
     public void fromData(MapType data)
     {
         this.parts.fromData(data.getMap("bodyParts"));
+        this.states.fromData(data.getMap("states"));
 
         for (BaseValue property : this.properties.values())
         {

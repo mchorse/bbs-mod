@@ -436,6 +436,7 @@
     "bbs.ui.film.render_audio": "Render audio (from audio clips)",
     "bbs.ui.film.render_audio.error": "Audio clips couldn't be rendered! See the latest.log for more information...",
     "bbs.ui.film.render_audio.success": "The audio clips were successfully rendered!",
+    "bbs.ui.film.replace_inventory": "Replace inventory",
     "bbs.ui.film.replay.actor": "Actor",
     "bbs.ui.film.replay.actor-tooltip": "When enabled, this replay will be displayed as an entity (meaning you can hit it, it can pick up items, trigger pressure plates, etc.)",
     "bbs.ui.film.replay.animation_to_pose.generate": "Generate",

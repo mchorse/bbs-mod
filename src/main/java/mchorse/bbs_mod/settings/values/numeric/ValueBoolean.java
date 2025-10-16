@@ -1,10 +1,9 @@
 package mchorse.bbs_mod.settings.values.numeric;
 
-import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.data.types.ByteType;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
+import mchorse.bbs_mod.settings.values.base.BaseKeyframeFactoryValue;
+import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
-public class ValueBoolean extends BaseValueBasic<Boolean>
+public class ValueBoolean extends BaseKeyframeFactoryValue<Boolean>
 {
     public ValueBoolean(String id)
     {
@@ -13,27 +12,12 @@ public class ValueBoolean extends BaseValueBasic<Boolean>
 
     public ValueBoolean(String id, boolean defaultValue)
     {
-        super(id, defaultValue);
+        super(id, KeyframeFactories.BOOLEAN, defaultValue);
     }
 
     public void toggle()
     {
         this.set(!this.get());
-    }
-
-    @Override
-    public BaseType toData()
-    {
-        return new ByteType(this.value);
-    }
-
-    @Override
-    public void fromData(BaseType data)
-    {
-        if (data.isNumeric())
-        {
-            this.value = data.asNumeric().boolValue();
-        }
     }
 
     @Override

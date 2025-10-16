@@ -27,6 +27,8 @@ public class Inventory extends BaseValue
 
     public void fromPlayer(PlayerEntity player)
     {
+        this.stacks.clear();
+
         for (int i = 0; i < player.getInventory().size(); i++)
         {
             this.stacks.add(player.getInventory().getStack(i).copy());
