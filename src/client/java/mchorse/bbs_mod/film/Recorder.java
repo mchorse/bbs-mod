@@ -37,6 +37,10 @@ public class Recorder extends WorldFilmController
     public ReplayKeyframes keyframes = new ReplayKeyframes("keyframes");
     public FormProperties properties = new FormProperties("properties");
     public Inventory inventory = new Inventory("inventory");
+    public float hp;
+    public float hunger;
+    public int xpLevel;
+    public float xpProgress;
 
     private static Matrix4f perspective = new Matrix4f();
 
@@ -136,6 +140,11 @@ public class Recorder extends WorldFilmController
             this.lastPosition = new Vector3d(player.getX(), player.getY(), player.getZ());
             this.lastRotation = new Vector4f(player.getYaw(), player.getPitch(), player.getHeadYaw(), player.getBodyYaw());
             this.inventory.fromPlayer(player);
+
+            this.hp = player.getHealth();
+            this.hunger = player.getHungerManager().getSaturationLevel();
+            this.xpLevel = player.experienceLevel;
+            this.xpProgress = player.experienceProgress;
         }
 
         if (this.tick >= 0)

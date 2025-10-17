@@ -70,7 +70,11 @@ public class UIParticleSchemeRenderer extends UIModelRenderer
         stack.loadIdentity();
         stack.multiplyPositionMatrix(new Matrix4f(RenderSystem.getInverseViewRotationMatrix()).invert());
 
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
         this.emitter.render(VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, GameRenderer::getParticleProgram, stack, OverlayTexture.DEFAULT_UV, context.getTransition());
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableBlend();
 
         stack.pop();
 

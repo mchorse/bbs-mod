@@ -225,7 +225,7 @@ public class ParticleParser
                 if (component != null)
                 {
                     component.fromData(entry.getValue(), scheme.parser);
-                    scheme.components.add(component);
+                    scheme.addComponent(component);
                 }
                 else
                 {

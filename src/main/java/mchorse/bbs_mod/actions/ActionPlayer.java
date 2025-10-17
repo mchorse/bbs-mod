@@ -47,6 +47,11 @@ public class ActionPlayer
     private List<ItemStack> cachedInventory = new ArrayList<>();
     private Form cachedForm;
 
+    private float cacheHp;
+    private float cacheHunger;
+    private int cacheXpLevel;
+    private float cacheXpProgress;
+
     public ActionPlayer(ServerPlayerEntity serverPlayer, ServerWorld world, Film film, int tick, int countdown, int exception, PlayerType type)
     {
         this.world = world;
@@ -79,6 +84,16 @@ public class ActionPlayer
             }
 
             ServerNetwork.sendMorphToTracked(this.serverPlayer, fpReplay.form.get());
+
+            this.cacheHp = this.serverPlayer.getHealth();
+            this.cacheHunger = this.serverPlayer.getHungerManager().getSaturationLevel();
+            this.cacheXpLevel = this.serverPlayer.experienceLevel;
+            this.cacheXpProgress = this.serverPlayer.experienceProgress;
+
+            this.serverPlayer.setHealth(this.film.hp.get());
+            this.serverPlayer.getHungerManager().setSaturationLevel(this.film.hunger.get());
+            this.serverPlayer.experienceProgress = this.film.xpProgress.get();
+            this.serverPlayer.setExperienceLevel(this.film.xpLevel.get());
         }
     }
 
@@ -307,6 +322,11 @@ public class ActionPlayer
             }
 
             ServerNetwork.sendMorphToTracked(this.serverPlayer, this.cachedForm);
+
+            this.serverPlayer.setHealth(this.cacheHp);
+            this.serverPlayer.getHungerManager().setSaturationLevel(this.cacheHunger);
+            this.serverPlayer.experienceProgress = this.cacheXpProgress;
+            this.serverPlayer.setExperienceLevel(this.cacheXpLevel);
         }
     }
 

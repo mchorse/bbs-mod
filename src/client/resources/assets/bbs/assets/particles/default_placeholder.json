@@ -25,7 +25,7 @@
                 "facing_camera_mode": "rotate_xyz"
             },
             "minecraft:emitter_shape_sphere": {
-                "offset": [0.0, 0.0, "(variable.particle_random_1 + 0.5) / 5.0"],
+                "offset": [0.0, 0.0, 0.0],
                 "radius": 1.0
             },
             "minecraft:emitter_rate_steady": {

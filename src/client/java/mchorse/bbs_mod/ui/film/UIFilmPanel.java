@@ -624,6 +624,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             BaseValue.edit(film, (f) ->
             {
                 film.inventory.fromData(recorder.inventory.toData());
+                film.hp.set(recorder.hp);
+                film.hunger.set(recorder.hunger);
+                film.xpLevel.set(recorder.xpLevel);
+                film.xpProgress.set(recorder.xpProgress);
             });
         }
     }
