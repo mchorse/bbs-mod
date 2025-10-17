@@ -193,6 +193,7 @@
     "bbs.ui.camera.clips.bbs:circular": "Circular",
     "bbs.ui.camera.clips.bbs:command": "Command",
     "bbs.ui.camera.clips.bbs:curve": "Curve",
+    "bbs.ui.camera.clips.bbs:damage": "Damage",
     "bbs.ui.camera.clips.bbs:dolly": "Dolly",
     "bbs.ui.camera.clips.bbs:dolly_zoom": "Dolly zoom",
     "bbs.ui.camera.clips.bbs:drag": "Drag",

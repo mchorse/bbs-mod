@@ -162,7 +162,7 @@ public class CubicModelLoader implements IModelLoader
             }
         }
 
-        if (materials.isEmpty())
+        if (materials.isEmpty() || materials.get(0).useTexture)
         {
             return;
         }

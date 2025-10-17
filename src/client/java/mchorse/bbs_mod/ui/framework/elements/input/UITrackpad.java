@@ -330,6 +330,17 @@ public class UITrackpad extends UIBaseTextbox
     @Override
     public boolean subMouseClicked(UIContext context)
     {
+        if (context.mouseButton == 1 && this.isDragging())
+        {
+            this.setValueAndNotify(this.lastValue);
+
+            this.wasInside = false;
+            this.dragging = false;
+            this.shiftX = 0;
+
+            return true;
+        }
+
         if (context.mouseButton == 2 && this.area.isInside(context))
         {
             this.setValueAndNotify(-this.value);
@@ -380,6 +391,17 @@ public class UITrackpad extends UIBaseTextbox
     @Override
     public boolean subMouseReleased(UIContext context)
     {
+        if (context.mouseButton == 1 && this.isDragging())
+        {
+            this.setValueAndNotify(this.lastValue);
+
+            this.wasInside = false;
+            this.dragging = false;
+            this.shiftX = 0;
+
+            return true;
+        }
+
         this.textbox.mouseReleased(context.mouseX, context.mouseY, context.mouseButton);
 
         if (context.mouseButton == 0 && !this.isDraggingTime() && !this.textbox.isFocused())

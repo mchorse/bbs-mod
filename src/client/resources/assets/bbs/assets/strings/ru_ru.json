@@ -193,6 +193,7 @@
     "bbs.ui.camera.clips.bbs:circular": "Круг",
     "bbs.ui.camera.clips.bbs:command": "Команда",
     "bbs.ui.camera.clips.bbs:curve": "Кривая",
+    "bbs.ui.camera.clips.bbs:damage": "Урон",
     "bbs.ui.camera.clips.bbs:dolly": "Рельс",
     "bbs.ui.camera.clips.bbs:dolly_zoom": "Приближение рельс",
     "bbs.ui.camera.clips.bbs:drag": "Сглаживание",

@@ -17,6 +17,7 @@ import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.mixin.client.ClientPlayerEntityAccessor;
+import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -563,6 +564,13 @@ public abstract class BaseFilmController
                     }
                     else if (anEntity instanceof PlayerEntity player)
                     {
+                        Morph morph = Morph.getMorph(player);
+
+                        if (morph != null)
+                        {
+                            replay.applyProperties(tick + delta, morph.getForm());
+                        }
+
                         float yawHead = replay.keyframes.headYaw.interpolate(tick + delta).floatValue();
                         float yawBody = replay.keyframes.bodyYaw.interpolate(tick + delta).floatValue();
                         float pitch = replay.keyframes.pitch.interpolate(tick + delta).floatValue();
