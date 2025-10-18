@@ -278,8 +278,9 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
         double pz = Lerps.lerp(particle.prevPosition.z, particle.position.z, transition);
         float angle = Lerps.lerp(particle.prevRotation, particle.rotation, transition);
         float scale = 1F;
+        boolean staticSpace = particle.relativePosition && particle.relativeRotation;
 
-        if (particle.relativePosition && particle.relativeRotation)
+        if (staticSpace)
         {
             this.vector.set((float) px, (float) py, (float) pz);
             emitter.rotation.transform(this.vector);
@@ -295,7 +296,7 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
 
         if (particle.textureScale)
         {
-            scale = particle.matrix.getRow(0, Vectors.TEMP_3F).length();
+            scale = (staticSpace ? emitter.rotation : particle.matrix).getRow(0, Vectors.TEMP_3F).length();
         }
 
         /* Calculate yaw and pitch based on the facing mode */

@@ -398,7 +398,7 @@ public class ParticleEmitter
             component.apply(this, particle);
         }
 
-        if (particle.relativePosition && !particle.relativeRotation)
+        if (!particle.relativeRotation)
         {
             Vector3f vec = new Vector3f().set(particle.position);
 

@@ -149,7 +149,7 @@ public class UIFormEditor extends UIElement implements IUIFormList
             });
 
         this.formsArea = new UIElement();
-        this.formsArea.relative(this).x(20).minW(140).h(1F);
+        this.formsArea.relative(this).x(20).w(treeWidth).minW(140).h(1F);
 
         this.forms = new UIForms((l) -> this.pickForm(l.get(0)));
         this.forms.relative(this.formsArea).w(1F).h(0.5F);

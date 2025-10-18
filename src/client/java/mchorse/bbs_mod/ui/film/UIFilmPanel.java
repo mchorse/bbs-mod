@@ -601,17 +601,17 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         if (rp != null)
         {
-            BaseValue.edit(rp, (replay) ->
+            BaseValue.edit(film, (f) ->
             {
-                replay.keyframes.copyOver(recorder.keyframes, 0);
+                rp.keyframes.copyOver(recorder.keyframes, 0);
 
-                Form form = replay.form.get();
+                Form form = rp.form.get();
 
                 if (form != null)
                 {
                     for (Map.Entry<String, KeyframeChannel> entry : recorder.properties.properties.entrySet())
                     {
-                        KeyframeChannel channel = replay.properties.getOrCreate(form, entry.getKey());
+                        KeyframeChannel channel = rp.properties.getOrCreate(form, entry.getKey());
 
                         if (channel != null && entry.getValue() != null)
                         {
@@ -619,15 +619,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
                         }
                     }
                 }
-            });
 
-            BaseValue.edit(film, (f) ->
-            {
-                film.inventory.fromData(recorder.inventory.toData());
-                film.hp.set(recorder.hp);
-                film.hunger.set(recorder.hunger);
-                film.xpLevel.set(recorder.xpLevel);
-                film.xpProgress.set(recorder.xpProgress);
+                f.inventory.fromData(recorder.inventory.toData());
+                f.hp.set(recorder.hp);
+                f.hunger.set(recorder.hunger);
+                f.xpLevel.set(recorder.xpLevel);
+                f.xpProgress.set(recorder.xpProgress);
             });
         }
     }
