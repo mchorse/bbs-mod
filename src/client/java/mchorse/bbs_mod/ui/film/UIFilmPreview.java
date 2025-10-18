@@ -143,7 +143,7 @@ public class UIFilmPreview extends UIElement
                 return;
             }
 
-            if (!FFMpegUtils.checkFFMpeg())
+            if (!FFMpegUtils.checkFFMPEG())
             {
                 UIMessageOverlayPanel panel = new UIMessageOverlayPanel(UIKeys.GENERAL_WARNING, UIKeys.GENERAL_FFMPEG_ERROR_DESCRIPTION);
                 UIIcon guide = new UIIcon(Icons.HELP, (bb) -> UIUtils.openWebLink(UIKeys.GENERAL_FFMPEG_ERROR_GUIDE_LINK.get()));

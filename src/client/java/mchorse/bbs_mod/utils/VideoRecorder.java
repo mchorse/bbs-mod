@@ -57,48 +57,6 @@ public class VideoRecorder
     private int pboIndex;
 
     /**
-     * People usually are not bright enough, even though everything is stated
-     * in the tutorial, they still manage to specify either wrong path to ffmpeg, or
-     * they specify the path to the folder...
-     *
-     * This little method should simplify their lives!
-     */
-    private static File findFFMPEG(String path)
-    {
-        File file = new File(path);
-        boolean isWin = OS.CURRENT == OS.WINDOWS;
-
-        if (file.isDirectory())
-        {
-            String subpath = isWin ? "ffmpeg.exe" : "ffmpeg";
-            File bin = new File(file, subpath);
-
-            if (bin.isFile())
-            {
-                return bin;
-            }
-
-            bin = new File(file, "bin" + File.pathSeparator + subpath);
-
-            if (bin.isFile())
-            {
-                return bin;
-            }
-        }
-        else if (isWin && !file.exists())
-        {
-            File exe = new File(path + ".exe");
-
-            if (exe.exists())
-            {
-                return exe;
-            }
-        }
-
-        return file;
-    }
-
-    /**
      * Start recording the video using ffmpeg
      */
     public void startRecording(int textureId, int width, int height)
@@ -123,12 +81,8 @@ public class VideoRecorder
         try
         {
             File movies = BBSRendering.getVideoFolder();
-            File exportPath = findFFMPEG(BBSSettings.videoSettings.path.get());
 
-            if (exportPath.isDirectory())
-            {
-                movies = exportPath;
-            }
+            movies.mkdirs();
 
             Path path = Paths.get(movies.toString());
             String movieName = StringUtils.createTimestampFilename();
@@ -151,7 +105,9 @@ public class VideoRecorder
 
             List<String> args = new ArrayList<String>();
 
-            args.add(BBSSettings.videoEncoderPath.get());
+            File encoder = FFMpegUtils.getFFMPEG();
+
+            args.add(encoder.getAbsolutePath());
             args.addAll(Arrays.asList(params.split(" ")));
 
             System.out.println("Recording video with following arguments: " + args);

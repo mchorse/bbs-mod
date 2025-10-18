@@ -9,7 +9,62 @@ import java.util.List;
 
 public class FFMpegUtils
 {
-    public static boolean checkFFMpeg()
+    /**
+     * People usually are not bright enough, even though everything is stated
+     * in the tutorial, they still manage to specify either wrong path to ffmpeg, or
+     * they specify the path to the folder...
+     *
+     * This little method should simplify their lives!
+     */
+    private static File findFFMPEG(String path)
+    {
+        File file = new File(path);
+        boolean isWin = OS.CURRENT == OS.WINDOWS;
+
+        if (file.isDirectory())
+        {
+            String subpath = isWin ? "ffmpeg.exe" : "ffmpeg";
+            File bin = new File(file, subpath);
+
+            if (bin.isFile())
+            {
+                return bin;
+            }
+
+            bin = new File(file, "bin" + File.pathSeparator + subpath);
+
+            if (bin.isFile())
+            {
+                return bin;
+            }
+        }
+        else if (isWin && !file.exists())
+        {
+            File exe = new File(path + ".exe");
+
+            if (exe.exists())
+            {
+                return exe;
+            }
+        }
+
+        return file;
+    }
+
+    public static File getFFMPEG()
+    {
+        File encoder = new File(BBSSettings.videoEncoderPath.get());
+        File encoderPath = findFFMPEG(BBSSettings.videoEncoderPath.get());
+
+        if (encoderPath.isFile())
+        {
+            encoder = encoderPath;
+        }
+
+        return encoder;
+    }
+
+    public static boolean checkFFMPEG()
     {
         return execute(BBSMod.getGameFolder(), "-version");
     }
@@ -18,7 +73,7 @@ public class FFMpegUtils
     {
         List<String> args = new ArrayList<String>();
 
-        args.add(BBSSettings.videoEncoderPath.get());
+        args.add(getFFMPEG().getAbsolutePath());
 
         for (String arg : arguments)
         {

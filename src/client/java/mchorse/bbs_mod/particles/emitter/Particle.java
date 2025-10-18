@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.particles.emitter;
 
+import mchorse.bbs_mod.utils.joml.Vectors;
 import org.joml.Matrix3f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -158,10 +159,7 @@ public class Particle
                 vec.y *= this.accelerationFactor.y;
                 vec.z *= this.accelerationFactor.z;
 
-                if (this.relativePosition || this.relativeRotation)
-                {
-                    this.matrix.transform(vec);
-                }
+                this.matrix.transform(vec);
             }
 
             if (this.age == 0)
@@ -203,6 +201,11 @@ public class Particle
         else if (this.relativeVelocity && !this.matrixSet)
         {
             this.matrix.set(emitter.rotation);
+            this.matrixSet = true;
+        }
+        else if (this.textureScale && !this.matrixSet)
+        {
+            this.matrix.identity().scale(emitter.rotation.getRow(0, Vectors.TEMP_3F).length());
             this.matrixSet = true;
         }
     }

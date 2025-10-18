@@ -209,7 +209,7 @@ public class UIScreen extends Screen implements IFileDropListener
     {
         if (this.menu != null)
         {
-            if (!FFMpegUtils.checkFFMpeg())
+            if (!FFMpegUtils.checkFFMPEG())
             {
                 this.menu.context.notifyError(UIKeys.IMPORTER_FFMPEG_NOTIFICATION);
 

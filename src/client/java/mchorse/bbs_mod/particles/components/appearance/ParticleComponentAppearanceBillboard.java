@@ -295,7 +295,7 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
 
         if (particle.textureScale)
         {
-            scale = emitter.rotation.getRow(0, Vectors.TEMP_3F).length();
+            scale = particle.matrix.getRow(0, Vectors.TEMP_3F).length();
         }
 
         /* Calculate yaw and pitch based on the facing mode */
