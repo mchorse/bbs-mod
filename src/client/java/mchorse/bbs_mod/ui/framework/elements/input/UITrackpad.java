@@ -62,6 +62,7 @@ public class UITrackpad extends UIBaseTextbox
     public boolean onlyNumbers;
 
     public boolean relative;
+    public boolean allowCanceling = true;
     public IKey forcedLabel;
 
     /* Value dragging fields */
@@ -210,6 +211,13 @@ public class UITrackpad extends UIBaseTextbox
         return this;
     }
 
+    public UITrackpad disableCanceling()
+    {
+        this.allowCanceling = false;
+
+        return this;
+    }
+
     /* Values presets */
 
     public UITrackpad degrees()
@@ -330,7 +338,7 @@ public class UITrackpad extends UIBaseTextbox
     @Override
     public boolean subMouseClicked(UIContext context)
     {
-        if (context.mouseButton == 1 && this.isDragging())
+        if (this.allowCanceling && context.mouseButton == 1 && this.isDragging())
         {
             this.setValueAndNotify(this.lastValue);
 

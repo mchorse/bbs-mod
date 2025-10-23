@@ -65,21 +65,21 @@ public abstract class UITransform extends UIElement
         {
             this.internalSetS(value, Axis.X);
             this.syncScale(value);
-        });
+        }).disableCanceling();
         this.sx.onlyNumbers().tooltip(raw.format(UIKeys.TRANSFORMS_SCALE, UIKeys.GENERAL_X));
         this.sx.textbox.setColor(Colors.RED);
         this.sy = new UITrackpad((value) ->
         {
             this.internalSetS(value, Axis.Y);
             this.syncScale(value);
-        });
+        }).disableCanceling();
         this.sy.onlyNumbers().tooltip(raw.format(UIKeys.TRANSFORMS_SCALE, UIKeys.GENERAL_Y));
         this.sy.textbox.setColor(Colors.GREEN);
         this.sz = new UITrackpad((value) ->
         {
             this.internalSetS(value, Axis.Z);
             this.syncScale(value);
-        });
+        }).disableCanceling();
         this.sz.onlyNumbers().tooltip(raw.format(UIKeys.TRANSFORMS_SCALE, UIKeys.GENERAL_Z));
         this.sz.textbox.setColor(Colors.BLUE);
 

@@ -11,6 +11,7 @@ public class ExtrudedForm extends Form
     public final ValueLink texture = new ValueLink("texture", null);
     public final ValueColor color = new ValueColor("color", Color.white());
     public final ValueBoolean billboard = new ValueBoolean("billboard", false);
+    public final ValueBoolean shading = new ValueBoolean("shading", true);
 
     public ExtrudedForm()
     {
@@ -19,6 +20,7 @@ public class ExtrudedForm extends Form
         this.register(this.texture);
         this.register(this.color);
         this.register(this.billboard);
+        this.register(this.shading);
     }
 
     @Override

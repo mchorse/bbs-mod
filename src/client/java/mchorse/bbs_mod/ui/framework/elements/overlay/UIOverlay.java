@@ -90,6 +90,11 @@ public class UIOverlay extends UIElement
 
     public static void setupPanel(UIContext context, UIOverlay overlay, UIOverlayPanel panel)
     {
+        if (panel.hasParent())
+        {
+            return;
+        }
+
         Flex flex = panel.getFlex();
         Vector2i offset = offsets.get(panel.getClass().getSimpleName());
 

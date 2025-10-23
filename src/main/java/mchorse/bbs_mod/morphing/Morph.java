@@ -76,7 +76,7 @@ public class Morph
 
     public void setForm(Form form)
     {
-        if (this.form != null && this.entity.getMcEntity() instanceof PlayerEntity player)
+        if (form == null && this.form != null && this.entity.getMcEntity() instanceof PlayerEntity player)
         {
             this.form.onDemorph(player);
         }

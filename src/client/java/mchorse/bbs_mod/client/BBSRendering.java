@@ -521,7 +521,7 @@ public class BBSRendering
 
             if (v != null)
             {
-                return v.longValue() * 1000L;
+                return (long) (v * 1000L);
             }
         }
 

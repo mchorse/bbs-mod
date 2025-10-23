@@ -54,7 +54,6 @@ public class BoxPacker
                 {
                     area.y += box.h;
                     area.h -= box.h;
-
                 }
                 else
                 {

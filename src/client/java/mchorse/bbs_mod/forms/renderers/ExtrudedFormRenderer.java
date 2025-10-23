@@ -18,6 +18,8 @@ import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -65,8 +67,18 @@ public class ExtrudedFormRenderer extends FormRenderer<ExtrudedForm>
     @Override
     protected void render3D(FormRenderingContext context)
     {
-        Supplier<ShaderProgram> main = BBSRendering.isIrisShadersEnabled() && BBSRendering.isRenderingWorld() ? GameRenderer::getRenderTypeEntityTranslucentCullProgram : BBSShaders::getModel;
-        Supplier<ShaderProgram> shader = this.getShader(context, main, BBSShaders::getPickerBillboardProgram);
+        boolean shading = this.form.shading.get();
+
+        if (BBSRendering.isIrisShadersEnabled())
+        {
+            shading = true;
+        }
+
+        VertexFormat format = shading ? VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL : VertexFormats.POSITION_TEXTURE_LIGHT_COLOR;
+        Supplier<ShaderProgram> shader = this.getShader(context,
+            shading ? GameRenderer::getRenderTypeEntityTranslucentProgram : GameRenderer::getPositionTexLightmapColorProgram,
+            shading ? BBSShaders::getPickerBillboardProgram : BBSShaders::getPickerBillboardNoShadingProgram
+        );
 
         this.renderModel(shader, context.stack, context.overlay, context.light, context.color, context.getTransition());
     }
