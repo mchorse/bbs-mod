@@ -40,6 +40,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
@@ -384,7 +385,12 @@ public class UIReplaysEditor extends UIElement
             BaseValue value = this.replay.keyframes.get(key);
             KeyframeChannel channel = (KeyframeChannel) value;
 
-            sheets.add(new UIKeyframeSheet(getColor(key), false, channel, null).icon(ICONS.get(key)));
+            String customTitle = this.replay.getCustomSheetTitle(key);
+            UIKeyframeSheet sheet = customTitle != null && !customTitle.isEmpty()
+                ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, channel, null)
+                : new UIKeyframeSheet(getColor(key), false, channel, null);
+
+            sheets.add(sheet.icon(ICONS.get(key)));
         }
 
         /* Form properties */
@@ -395,7 +401,10 @@ public class UIReplaysEditor extends UIElement
             if (property != null)
             {
                 BaseValueBasic formProperty = FormUtils.getProperty(this.replay.form.get(), key);
-                UIKeyframeSheet sheet = new UIKeyframeSheet(getColor(key), false, property, formProperty);
+                String customTitle = this.replay.getCustomSheetTitle(key);
+                UIKeyframeSheet sheet = customTitle != null && !customTitle.isEmpty()
+                    ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, property, formProperty)
+                    : new UIKeyframeSheet(getColor(key), false, property, formProperty);
 
                 sheets.add(sheet.icon(getIcon(key)));
             }
@@ -483,6 +492,27 @@ public class UIReplaysEditor extends UIElement
                     {
                         menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () -> this.animationToPoses(modelForm, sheet));
                     }
+                }
+
+                int mouseY2 = this.getContext().mouseY;
+                UIKeyframeSheet clickedSheet = this.keyframeEditor.view.getGraph().getSheet(mouseY2);
+                if (clickedSheet != null)
+                {
+                    menu.action(Icons.EDIT, UIKeys.FILM_REPLAY_RENAME_SHEET, () ->
+                    {
+                        UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
+                            UIKeys.FILM_REPLAY_RENAME_SHEET_TITLE,
+                            UIKeys.FILM_REPLAY_RENAME_SHEET_MESSAGE,
+                            (str) ->
+                            {
+                                this.replay.setCustomSheetTitle(clickedSheet.id, str);
+                                this.updateChannelsList();
+                            }
+                        );
+
+                        panel.text.setText(clickedSheet.title.get());
+                        UIOverlay.addOverlay(this.getContext(), panel, 300, 0.25F);
+                    });
                 }
 
                 if (this.keyframeEditor.view.getGraph() instanceof UIKeyframeDopeSheet)
