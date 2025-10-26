@@ -46,7 +46,10 @@ public class CurveClip extends CameraClip
 
         for (KeyframeChannel<Double> channel : this.channels.getChannels())
         {
-            values.put(channel.getId(), channel.interpolate(context.relativeTick + context.transition));
+            if (!channel.isEmpty())
+            {
+                values.put(channel.getId(), channel.interpolate(context.relativeTick + context.transition));
+            }
         }
     }
 

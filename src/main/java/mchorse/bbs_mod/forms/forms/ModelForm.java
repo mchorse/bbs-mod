@@ -1,17 +1,21 @@
 package mchorse.bbs_mod.forms.forms;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.cubic.animation.ActionsConfig;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.triggers.StateTriggers;
 import mchorse.bbs_mod.forms.values.ValueActionsConfig;
-import mchorse.bbs_mod.settings.values.core.ValueColor;
-import mchorse.bbs_mod.settings.values.core.ValuePose;
 import mchorse.bbs_mod.forms.values.ValueShapeKeys;
 import mchorse.bbs_mod.obj.shapes.ShapeKeys;
+import mchorse.bbs_mod.settings.values.core.ValueColor;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.settings.values.core.ValuePose;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.pose.Pose;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ModelForm extends Form
 {
@@ -24,6 +28,8 @@ public class ModelForm extends Form
     public final ValueShapeKeys shapeKeys = new ValueShapeKeys("shape_keys", new ShapeKeys());
     public final StateTriggers triggers = new StateTriggers();
 
+    public final List<ValuePose> additionalOverlays = new ArrayList<>();
+
     public ModelForm()
     {
         super();
@@ -32,6 +38,15 @@ public class ModelForm extends Form
         this.register(this.model);
         this.register(this.pose);
         this.register(this.poseOverlay);
+
+        for (int i = 0; i < BBSSettings.recordingPoseTransformOverlays.get(); i++)
+        {
+            ValuePose valuePose = new ValuePose("pose_overlay" + i, new Pose());
+
+            this.additionalOverlays.add(valuePose);
+            this.register(valuePose);
+        }
+
         this.register(this.actions);
         this.register(this.color);
         this.register(this.shapeKeys);

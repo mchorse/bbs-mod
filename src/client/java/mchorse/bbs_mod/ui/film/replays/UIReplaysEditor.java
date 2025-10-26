@@ -191,6 +191,9 @@ public class UIReplaysEditor extends UIElement
     {
         String topLevel = StringUtils.fileName(key);
 
+        if (key.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
+        if (key.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
+
         return COLORS.getOrDefault(topLevel, Colors.ACTIVE);
     }
 
@@ -602,9 +605,15 @@ public class UIReplaysEditor extends UIElement
         Keyframe selected = this.keyframeEditor.view.getGraph().getSelected();
         String type = "pose";
 
-        if (selected != null && selected.getParentValue().getId().endsWith("pose_overlay"))
+        if (selected != null)
         {
-            type = "pose_overlay";
+            String id = selected.getParentValue().getId();
+            int index = id.indexOf("pose_overlay");
+
+            if (index >= 0)
+            {
+                type = id.substring(index);
+            }
         }
 
         this.pickProperty(bone, StringUtils.combinePaths(path, type), false);

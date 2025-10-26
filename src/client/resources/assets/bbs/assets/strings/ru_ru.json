@@ -113,6 +113,8 @@
     "bbs.config.recording.countdown-comment": "Отсчёт начала записи (в секундах)",
     "bbs.config.recording.overlays": "Оверлеи",
     "bbs.config.recording.overlays-comment": "Будут ли отображаться оверлеи записи (отсчёт, данный тик записи и предпросмотр положения камеры)",
+    "bbs.config.recording.pose_transform_overlays": "Доп. оверлеи",
+    "bbs.config.recording.pose_transform_overlays-comment": "Сколько доп. дорожек pose и transform формы будут иметь (перезайдите в мир чтобы новое число оверлеев отобразилось)",
     "bbs.config.recording.swipe_damage": "Урон взмаха",
     "bbs.config.recording.swipe_damage-comment": "Когда клип взмахнуть был записан, автоматически также вставлять клип аттаки",
     "bbs.config.recording.title": "Запись",

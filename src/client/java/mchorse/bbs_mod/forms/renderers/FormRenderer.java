@@ -5,6 +5,7 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.keys.KeyCodes;
@@ -136,15 +137,24 @@ public abstract class FormRenderer <T extends Form>
     protected Transform createTransform()
     {
         Transform transform = new Transform();
-        Transform overlay = this.form.transformOverlay.get();
 
         transform.copy(this.form.transform.get());
+        this.applyTransform(transform, this.form.transformOverlay.get());
+
+        for (ValueTransform t : this.form.additionalTransforms)
+        {
+            this.applyTransform(transform, t.get());
+        }
+
+        return transform;
+    }
+
+    private void applyTransform(Transform transform, Transform overlay)
+    {
         transform.translate.add(overlay.translate);
         transform.scale.add(overlay.scale).sub(1, 1, 1);
         transform.rotate.add(overlay.rotate);
         transform.rotate2.add(overlay.rotate2);
-
-        return transform;
     }
 
     protected Supplier<ShaderProgram> getShader(FormRenderingContext context, Supplier<ShaderProgram> normal, Supplier<ShaderProgram> picking)

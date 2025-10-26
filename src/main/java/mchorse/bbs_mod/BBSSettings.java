@@ -83,6 +83,7 @@ public class BBSSettings
     public static ValueFloat recordingCountdown;
     public static ValueBoolean recordingSwipeDamage;
     public static ValueBoolean recordingOverlays;
+    public static ValueInt recordingPoseTransformOverlays;
 
     public static ValueBoolean renderAllModelBlocks;
     public static ValueBoolean clickModelBlocks;
@@ -191,8 +192,8 @@ public class BBSSettings
         builder.register(videoSettings = new ValueVideoSettings("settings"));
 
         /* Camera editor */
-        editorCameraSpeed = builder.category("editor").getFloat("speed", 1F, 0F, 100F);
-        editorCameraAngleSpeed = builder.getFloat("angle_speed", 1F, 0F, 100F);
+        editorCameraSpeed = builder.category("editor").getFloat("speed", 1F, 0.1F, 100F);
+        editorCameraAngleSpeed = builder.getFloat("angle_speed", 1F, 0.1F, 100F);
         duration = builder.getInt("duration", 30, 1, 1000);
         editorJump = builder.getInt("jump", 5, 1, 1000);
         editorLoop = builder.getBoolean("loop", false);
@@ -213,6 +214,7 @@ public class BBSSettings
         recordingCountdown = builder.category("recording").getFloat("countdown", 1.5F, 0F, 30F);
         recordingSwipeDamage = builder.getBoolean("swipe_damage", false);
         recordingOverlays = builder.getBoolean("overlays", true);
+        recordingPoseTransformOverlays = builder.getInt("pose_transform_overlays", 0, 0, 42);
 
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);

@@ -1,29 +1,13 @@
 package mchorse.bbs_mod.settings.values.core;
 
-import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.data.types.StringType;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
+import mchorse.bbs_mod.settings.values.base.BaseKeyframeFactoryValue;
+import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
-public class ValueString extends BaseValueBasic<String>
+public class ValueString extends BaseKeyframeFactoryValue<String>
 {
     public ValueString(String id, String defaultValue)
     {
-        super(id, defaultValue);
-    }
-
-    @Override
-    public BaseType toData()
-    {
-        return new StringType(this.value);
-    }
-
-    @Override
-    public void fromData(BaseType data)
-    {
-        if (BaseType.isString(data))
-        {
-            this.value = data.asString();
-        }
+        super(id, KeyframeFactories.STRING, defaultValue);
     }
 
     @Override

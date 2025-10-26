@@ -27,6 +27,7 @@ import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
+import mchorse.bbs_mod.settings.values.core.ValuePose;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -167,11 +168,23 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     public Pose getPose()
     {
         Pose pose = this.form.pose.get().copy();
-        Pose overlay = this.form.poseOverlay.get().copy();
+        Pose overlay = this.form.poseOverlay.get();
 
-        for (Map.Entry<String, PoseTransform> entry : overlay.transforms.entrySet())
+        this.applyPose(pose, overlay);
+
+        for (ValuePose newPose : this.form.additionalOverlays)
         {
-            PoseTransform poseTransform = pose.get(entry.getKey());
+            this.applyPose(pose, newPose.get());
+        }
+
+        return pose;
+    }
+
+    private void applyPose(Pose targetPose, Pose pose)
+    {
+        for (Map.Entry<String, PoseTransform> entry : pose.transforms.entrySet())
+        {
+            PoseTransform poseTransform = targetPose.get(entry.getKey());
             PoseTransform value = entry.getValue();
 
             if (value.fix != 0)
@@ -189,8 +202,6 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 poseTransform.rotate2.add(value.rotate2);
             }
         }
-
-        return pose;
     }
 
     public void resetAnimator()

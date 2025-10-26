@@ -92,7 +92,7 @@ public class UIScrollView extends UIElement implements IViewport
 
         if (this.scroll.mouseClicked(context))
         {
-            return null;
+            return this;
         }
 
         this.apply(context);

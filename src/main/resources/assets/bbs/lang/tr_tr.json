@@ -14,12 +14,15 @@
     "key.bbs.item_editor": "Eşya düzenleyicisi",
     "key.bbs.dashboard": "Gösterge paneli",
     "key.bbs.demorph": "Normale dönüş",
-    "key.bbs.open_replays": "Aktörleri göster",
+    "key.bbs.open_replays": "Kayıt listesini göster",
     "key.bbs.open_morphing": "Dönüşme menüsünü aç",
     "key.bbs.play_film": "Filmi oynat",
+    "key.bbs.pause_film": "Filmi duraklat",
     "key.bbs.record_replay": "Seçili aktörü kaydet",
     "key.bbs.record_video": "Video kaydet",
     "key.bbs.teleport": "Seçili aktöre ışınlan",
     "key.bbs.zoom": "Yakınlaştır (BBS silahı)",
-    "category.bbs.main": "BBS mod"
+    "category.bbs.main": "BBS mod",
+
+    "gamerule.bbsEditing": "BBS modun düzenleme izni"
 }

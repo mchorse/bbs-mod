@@ -1,6 +1,5 @@
 package mchorse.bbs_mod.camera.clips.misc;
 
-import mchorse.bbs_mod.camera.clips.overwrite.KeyframeClip;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
@@ -55,6 +54,11 @@ public class CurveClientClip extends CurveClip
 
         for (KeyframeChannel<Double> channel : this.channels.getChannels())
         {
+            if (channel.isEmpty())
+            {
+                continue;
+            }
+
             String id = channel.getId();
 
             if (id.startsWith(SHADER_CURVES_PREFIX))

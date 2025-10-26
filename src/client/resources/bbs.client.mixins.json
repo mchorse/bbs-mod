@@ -38,7 +38,9 @@
         "iris.StringElementWidgetInvoker",
         "SimpleOptionMixin",
         "BlockEntityRenderDispatcherMixin",
-        "WorldMixin"
+        "WorldMixin",
+        "LivingEntityRendererInvoker",
+        "EntityRenderDispatcherMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -2,13 +2,15 @@ package mchorse.bbs_mod.camera.values;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ValueChannels extends ValueGroup
 {
@@ -67,10 +69,19 @@ public class ValueChannels extends ValueGroup
         if (data.isMap())
         {
             MapType map = data.asMap();
+            Set<String> keys = new HashSet<>(map.keys());
 
-            for (String key : map.keys())
+            for (String key : keys)
             {
-                this.add(new KeyframeChannel<>(key, KeyframeFactories.DOUBLE));
+                String newKey = key.replaceAll("/", ".");
+
+                if (!newKey.equals(key))
+                {
+                    map.put(newKey, map.get(key));
+                    map.remove(key);
+                }
+
+                this.add(new KeyframeChannel<>(newKey, KeyframeFactories.DOUBLE));
             }
         }
 
