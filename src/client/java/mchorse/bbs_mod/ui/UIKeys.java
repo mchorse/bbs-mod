@@ -516,6 +516,7 @@ public class UIKeys
     public static final IKey ITEM_STACK_CONTEXT_HOTBAR = L10n.lang("bbs.ui.item_stack.context.hotbar");
     public static final IKey ITEM_STACK_CONTEXT_PASTE = L10n.lang("bbs.ui.item_stack.context.paste");
     public static final IKey ITEM_STACK_CONTEXT_RESET = L10n.lang("bbs.ui.item_stack.context.reset");
+    public static final IKey ITEM_STACK_CONTEXT_INVENTORY = L10n.lang("bbs.ui.item_stack.context.inventory");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES = L10n.lang("bbs.ui.keyframes.context.adjust_values");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_LEFT = L10n.lang("bbs.ui.keyframes.context.adjust_values_left");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_RIGHT = L10n.lang("bbs.ui.keyframes.context.adjust_values_right");
