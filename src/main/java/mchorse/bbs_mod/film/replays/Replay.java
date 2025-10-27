@@ -39,6 +39,7 @@ public class Replay extends ValueGroup
     public final ValueBoolean enabled = new ValueBoolean("enabled", true);
     public final ValueString label = new ValueString("label", "");
     public final ValueString nameTag = new ValueString("name_tag", "");
+    public final ValueString group = new ValueString("group", "");
     public final ValueBoolean shadow = new ValueBoolean("shadow", true);
     public final ValueFloat shadowSize = new ValueFloat("shadow_size", 0.5F);
     public final ValueInt looping = new ValueInt("looping", 0);
@@ -62,6 +63,7 @@ public class Replay extends ValueGroup
         this.add(this.enabled);
         this.add(this.label);
         this.add(this.nameTag);
+        this.add(this.group);
         this.add(this.shadow);
         this.add(this.shadowSize);
         this.add(this.looping);

@@ -34,6 +34,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UINumberOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -114,6 +115,132 @@ public class UIReplayList extends UIList<Replay>
                 menu.action(Icons.ALL_DIRECTIONS, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS, this::processReplays);
                 menu.action(Icons.TIME, UIKeys.SCENE_REPLAYS_CONTEXT_OFFSET_TIME, this::offsetTimeReplays);
 
+                // Submenú de opciones de grupo entre desfase y duplicar
+                menu.action(Icons.FOLDER, UIKeys.SCENE_REPLAYS_GROUP_OPTIONS, () ->
+                {
+                    this.getContext().replaceContextMenu((submenu) ->
+                    {
+                        // 1. Asignar grupo a las reproducciones seleccionadas
+                        submenu.action(Icons.ADD, UIKeys.SCENE_REPLAYS_GROUP_ASSIGN, () ->
+                        {
+                            UIPromptOverlayPanel prompt = new UIPromptOverlayPanel(
+                                UIKeys.SCENE_REPLAYS_GROUP_ASSIGN_TITLE,
+                                UIKeys.SCENE_REPLAYS_GROUP_ASSIGN_DESCRIPTION,
+                                (text) ->
+                                {
+                                    String g = text == null ? "" : text.trim();
+                                    for (Replay replay : this.getCurrent())
+                                    {
+                                        replay.group.set(g);
+                                    }
+                                    this.update();
+                                }
+                            );
+
+                            UIOverlay.addOverlay(this.getContext(), prompt);
+                        });
+
+                        // 2. Cambiar nombre de grupo…
+                        submenu.action(Icons.EDIT, UIKeys.SCENE_REPLAYS_GROUP_RENAME, () ->
+                        {
+                            String current = this.getCurrentFirst() != null ? this.getCurrentFirst().group.get() : "";
+                            java.util.function.Consumer<String> doRename = (oldName) ->
+                            {
+                                UIPromptOverlayPanel renamePrompt = new UIPromptOverlayPanel(
+                                    UIKeys.SCENE_REPLAYS_GROUP_RENAME_TITLE,
+                                    UIKeys.SCENE_REPLAYS_GROUP_RENAME_DESCRIPTION,
+                                    (newName) ->
+                                    {
+                                        String nn = newName == null ? "" : newName.trim();
+                                        this.renameGroup(oldName, nn);
+                                    }
+                                );
+                                UIOverlay.addOverlay(this.getContext(), renamePrompt);
+                            };
+
+                            if (current != null && !current.isEmpty())
+                            {
+                                doRename.accept(current);
+                            }
+                            else
+                            {
+                                this.openGroupPickerPanel(UIKeys.SCENE_REPLAYS_GROUP_PICK_TITLE, doRename);
+                            }
+                        });
+
+                        // 3. Buscar grupo (antes "Seleccionar grupo")
+                        submenu.action(Icons.SEARCH, UIKeys.SCENE_REPLAYS_GROUP_SEARCH, () ->
+                        {
+                            this.openGroupPickerPanel(UIKeys.SCENE_REPLAYS_GROUP_PICK_TITLE, (g) -> this.filter(g + "/"));
+                        });
+                        // 3.1 Quitar filtro de grupo
+                        submenu.action(Icons.CLOSE, UIKeys.SCENE_REPLAYS_GROUP_CLEAR_FILTER, () -> this.filter(""));
+
+                        // 4. Desvincular reproducciones seleccionadas del grupo
+                        submenu.action(Icons.X, UIKeys.SCENE_REPLAYS_GROUP_UNLINK, () ->
+                        {
+                            for (Replay r : this.getCurrent())
+                            {
+                                r.group.set("");
+                            }
+                            this.update();
+                        });
+
+                        // 5. Borrar grupo (mantener reproducciones)
+                        submenu.action(Icons.CLOSE, UIKeys.SCENE_REPLAYS_GROUP_DELETE_KEEP, () ->
+                        {
+                            String current = this.getCurrentFirst() != null ? this.getCurrentFirst().group.get() : "";
+                            java.util.function.Consumer<String> deleteOnly = (g) ->
+                            {
+                                UIConfirmOverlayPanel confirmPanel = new UIConfirmOverlayPanel(
+                                    UIKeys.SCENE_REPLAYS_GROUP_DELETE_KEEP_TITLE,
+                                    UIKeys.SCENE_REPLAYS_GROUP_DELETE_KEEP_DESCRIPTION.format(g),
+                                    (confirm) ->
+                                    {
+                                        if (confirm) { this.deleteGroupOnly(g); }
+                                    }
+                                );
+                                UIOverlay.addOverlay(this.getContext(), confirmPanel);
+                            };
+
+                            if (current != null && !current.isEmpty())
+                            {
+                                deleteOnly.accept(current);
+                            }
+                            else
+                            {
+                                this.openGroupPickerPanel(UIKeys.SCENE_REPLAYS_GROUP_PICK_TITLE, deleteOnly);
+                            }
+                        });
+
+                        // 6. Eliminar grupo de reproducción (borrar grupo y sus reproducciones)
+                        submenu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_GROUP_DELETE_ALL, () ->
+                        {
+                            String current = this.getCurrentFirst() != null ? this.getCurrentFirst().group.get() : "";
+                            java.util.function.Consumer<String> deleteWithReplays = (g) ->
+                            {
+                                UIConfirmOverlayPanel confirmPanel = new UIConfirmOverlayPanel(
+                                    UIKeys.SCENE_REPLAYS_GROUP_DELETE_ALL_TITLE,
+                                    UIKeys.SCENE_REPLAYS_GROUP_DELETE_ALL_DESCRIPTION.format(g),
+                                    (confirm) ->
+                                    {
+                                        if (confirm) { this.deleteGroupWithReplays(g); }
+                                    }
+                                );
+                                UIOverlay.addOverlay(this.getContext(), confirmPanel);
+                            };
+
+                            if (current != null && !current.isEmpty())
+                            {
+                                deleteWithReplays.accept(current);
+                            }
+                            else
+                            {
+                                this.openGroupPickerPanel(UIKeys.SCENE_REPLAYS_GROUP_PICK_TITLE, deleteWithReplays);
+                            }
+                        });
+                    });
+                });
                 if (data != null)
                 {
                     menu.action(Icons.PASTE, UIKeys.SCENE_REPLAYS_CONTEXT_PASTE_KEYFRAMES, () -> this.pasteToReplays(data));
@@ -647,7 +774,10 @@ public class UIReplayList extends UIList<Replay>
     @Override
     protected String elementToString(UIContext context, int i, Replay element)
     {
-        return context.batcher.getFont().limitToWidth(element.getName(), this.area.w - 20);
+        String g = element.group.get();
+        String name = element.getName();
+        String label = (g != null && !g.isEmpty()) ? (g + "/" + name) : name;
+        return context.batcher.getFont().limitToWidth(label, this.area.w - 20);
     }
 
     @Override
@@ -681,5 +811,94 @@ public class UIReplayList extends UIList<Replay>
                 context.batcher.outlinedIcon(Icons.ARROW_UP, x, y + 20, 0.5F, 0.5F);
             }
         }
+    }
+
+    /* =====================
+     * Helpers de grupos
+     * ===================== */
+    private List<String> collectGroups()
+    {
+        List<String> groups = new ArrayList<>();
+        List<Replay> list = this.panel.getData().replays.getList();
+        for (Replay r : list)
+        {
+            String g = r.group.get();
+            if (g != null && !g.isEmpty() && !groups.contains(g))
+            {
+                groups.add(g);
+            }
+        }
+        groups.sort(String::compareToIgnoreCase);
+        return groups;
+    }
+
+    private void openGroupPickerPanel(mchorse.bbs_mod.l10n.keys.IKey title, java.util.function.Consumer<String> callback)
+    {
+        List<String> groups = this.collectGroups();
+        UISearchList<String> search = new UISearchList<>(new UIStringList(null));
+        UIList<String> list = search.list;
+        UIConfirmOverlayPanel panel = new UIConfirmOverlayPanel(title, UIKeys.SCENE_REPLAYS_GROUP_PICK_DESCRIPTION, (b) ->
+        {
+            if (b)
+            {
+                int index = list.getIndex();
+                String g = CollectionUtils.getSafe(groups, index);
+                if (g != null)
+                {
+                    callback.accept(g);
+                }
+            }
+        });
+
+        for (String g : groups) { list.add(g); }
+        list.background();
+        search.relative(panel.confirm).y(-5).w(1F).h(16 * 9 + 20).anchor(0F, 1F);
+        panel.confirm.w(1F, -10);
+        panel.content.add(search);
+        UIOverlay.addOverlay(this.getContext(), panel, 240, 300);
+    }
+
+    private void renameGroup(String oldName, String newName)
+    {
+        if (oldName == null || oldName.isEmpty()) { return; }
+        List<Replay> list = this.panel.getData().replays.getList();
+        for (Replay r : list)
+        {
+            if (oldName.equals(r.group.get()))
+            {
+                r.group.set(newName == null ? "" : newName);
+            }
+        }
+        this.update();
+    }
+
+    private void deleteGroupOnly(String group)
+    {
+        if (group == null || group.isEmpty()) { return; }
+        List<Replay> list = this.panel.getData().replays.getList();
+        for (Replay r : list)
+        {
+            if (group.equals(r.group.get()))
+            {
+                r.group.set("");
+            }
+        }
+        this.update();
+    }
+
+    private void deleteGroupWithReplays(String group)
+    {
+        if (group == null || group.isEmpty()) { return; }
+        Film film = this.panel.getData();
+        List<Replay> list = new ArrayList<>(film.replays.getList());
+        for (Replay r : list)
+        {
+            if (group.equals(r.group.get()))
+            {
+                film.replays.remove(r);
+            }
+        }
+        this.update();
+        this.panel.replayEditor.updateChannelsList();
     }
 }
