@@ -17,11 +17,13 @@ public class UIStringOverlayPanel extends UIOverlayPanel
     private Consumer<String> callback;
     private boolean none;
 
+    // Create a panel with links
     public static UIStringOverlayPanel links(IKey title, Collection<Link> links, Consumer<Link> callback)
     {
         return links(title, true, links, callback);
     }
 
+    // Create a panel with links and none option
     public static UIStringOverlayPanel links(IKey title, boolean none, Collection<Link> links, Consumer<Link> callback)
     {
         Collection<String> strings = links.stream().map((a) -> a.toString()).collect(Collectors.toList());
@@ -36,11 +38,13 @@ public class UIStringOverlayPanel extends UIOverlayPanel
         return panel;
     }
 
+    // Constructor with title, strings and callback
     public UIStringOverlayPanel(IKey title, Collection<String> strings, Consumer<String> callback)
     {
         this(title, true, strings, callback);
     }
 
+    // Constructor with title, none option, strings and callback
     public UIStringOverlayPanel(IKey title, boolean none, Collection<String> strings, Consumer<String> callback)
     {
         super(title);
@@ -64,6 +68,7 @@ public class UIStringOverlayPanel extends UIOverlayPanel
         this.content.add(this.strings);
     }
 
+    // Set current string
     public UIStringOverlayPanel set(String string)
     {
         this.strings.filter("", true);
@@ -77,11 +82,13 @@ public class UIStringOverlayPanel extends UIOverlayPanel
         return this;
     }
 
+    // Set current link
     public UIStringOverlayPanel set(Link link)
     {
         return this.set(link == null ? "" : link.toString());
     }
 
+    // Set callback
     public UIStringOverlayPanel callback(Consumer<String> callback)
     {
         this.callback = callback;
@@ -89,6 +96,7 @@ public class UIStringOverlayPanel extends UIOverlayPanel
         return this;
     }
 
+    // Accept selected string
     protected void accept(String string)
     {
         if (this.callback != null)
@@ -97,11 +105,13 @@ public class UIStringOverlayPanel extends UIOverlayPanel
         }
     }
 
+    // Get current value
     protected String getValue()
     {
         return this.getValue(this.strings.list.getCurrentFirst());
     }
 
+    // Get value from string
     protected String getValue(String string)
     {
         if (!this.none)
