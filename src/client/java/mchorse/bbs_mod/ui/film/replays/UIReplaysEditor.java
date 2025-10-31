@@ -192,8 +192,8 @@ public class UIReplaysEditor extends UIElement
     {
         String topLevel = StringUtils.fileName(key);
 
-        if (key.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
-        if (key.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
+        if (topLevel.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
+        if (topLevel.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
 
         return COLORS.getOrDefault(topLevel, Colors.ACTIVE);
     }
