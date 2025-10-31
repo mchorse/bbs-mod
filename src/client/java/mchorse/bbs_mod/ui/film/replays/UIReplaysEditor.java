@@ -498,7 +498,7 @@ public class UIReplaysEditor extends UIElement
                 UIKeyframeSheet clickedSheet = this.keyframeEditor.view.getGraph().getSheet(mouseY2);
                 if (clickedSheet != null)
                 {
-                    menu.action(Icons.EDIT, UIKeys.FILM_REPLAY_RENAME_SHEET, () ->
+                    menu.action(Icons.FONT, UIKeys.FILM_REPLAY_RENAME_SHEET, () ->
                     {
                         UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
                             UIKeys.FILM_REPLAY_RENAME_SHEET_TITLE,
