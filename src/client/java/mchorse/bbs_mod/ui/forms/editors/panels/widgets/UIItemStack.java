@@ -8,6 +8,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.context.ItemStackContextAction;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -32,6 +33,27 @@ public class UIItemStack extends UIElement
 
         this.context((menu) ->
         {
+            /* Abrir panel de inventario desde el menú contextual */
+            menu.action(Icons.SPHERE, UIKeys.ITEM_STACK_CONTEXT_INVENTORY, () ->
+            {
+                this.opened = true;
+
+                UIPlayerInventoryPanel panel = new UIPlayerInventoryPanel((i) ->
+                {
+                    if (this.callback != null)
+                    {
+                        this.callback.accept(i);
+                    }
+
+                    this.setStack(i);
+                });
+
+                panel.onClose((a) -> this.opened = false);
+                /* Revertir altura y reducir ancho del panel de inventario */
+                UIOverlay.addOverlay(this.getContext(), panel, 0.23F, 0.5F);
+                UIUtils.playClick();
+            });
+
             menu.action(Icons.PASTE, UIKeys.ITEM_STACK_CONTEXT_PASTE, () ->
             {
                 ItemStack stack = MinecraftClient.getInstance().player.getMainHandStack().copy();
@@ -93,6 +115,7 @@ public class UIItemStack extends UIElement
         {
             this.opened = true;
 
+            /* Restaurado: clic izquierdo abre el buscador de items */
             UIItemStackOverlayPanel panel = new UIItemStackOverlayPanel((i) ->
             {
                 if (this.callback != null)
@@ -104,14 +127,13 @@ public class UIItemStack extends UIElement
             }, this.stack);
 
             panel.onClose((a) -> this.opened = false);
-
             UIOverlay.addOverlay(this.getContext(), panel, 0.9F, 0.5F);
             UIUtils.playClick();
 
             return true;
-        } else {
-            return super.subMouseClicked(context);
         }
+
+        return super.subMouseClicked(context);
     }
 
     public void render(UIContext context)

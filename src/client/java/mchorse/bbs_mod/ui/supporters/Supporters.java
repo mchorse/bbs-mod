@@ -342,7 +342,7 @@ public class Supporters
         this.add("Hermiticlock", "https://www.youtube.com/channel/UCbeyfcexbuO7NalTJn9akTw").withDate(4, 20);
         this.add("Positive Vibes Only").withDate(4, 21);
         this.add("Little.Froggy").withDate(4, 21);
-        this.add("AND_010").withDate(4, 21);
+
         this.add("jDeV7").withDate(4, 21);
         this.add("BBPC").withDate(4, 21);
         this.add("NEXT ENTERTAINMENT STUDIOS").withDate(4, 21);
@@ -477,7 +477,6 @@ public class Supporters
         this.add(". 루").withDate(5, 22);
         this.add("Dima T.").withDate(5, 22);
         this.add("Kadukos").withDate(5, 22);
-        this.add("Mattux").withDate(5, 22);
         this.add("Coriníon M.-L.").withDate(5, 23);
         this.add("Bobicraft").withDate(5, 23);
         this.add("Fogarty Fox").withDate(5, 24);
@@ -805,6 +804,26 @@ public class Supporters
         total = afdian + patreon;
 
         this.add("And " + total + " others...");
+
+        /* CML Animators */
+        this.add("CML", "https://discord.gg/bV2MY3SXJG", "textures/banners/CML.png").withDate(12, 1);
+        this.add("ElGatoPro300", "https://www.youtube.com/@ElGatoPro300", "textures/banners/ElGatoPro300.png").withDate(12, 1);
+        this.add("seb024xd", "https://www.youtube.com/@seb024yt", "textures/banners/seb024xd.png").withDate(12, 1);
+        this.add("TobbyMC", "https://www.youtube.com/@TobbyMC", "textures/banners/TobbyMC.png").withDate(12, 1);
+        this.add("JaviCubito", "https://www.youtube.com/@JaviCubito", "textures/banners/JaviCubito.png").withDate(12, 1);
+        this.add("SEKZA_MC", "https://www.youtube.com/@secxavier49_official", "textures/banners/SEKZA_MC.png").withDate(12, 1);
+        this.add("Jesuluto", "https://www.tiktok.com/@jesulutoxd", "textures/banners/Jesuluto.png").withDate(12, 1);
+        this.add("Kazu_MC", "https://www.tiktok.com/@k4zuyuky", "textures/banners/Kazu_MC.png").withDate(12, 1);
+        this.add("SoyTon", "https://www.tiktok.com/@_soyton_", "textures/banners/SoyTon.png").withDate(12, 1);
+        this.add("TheRocket", "https://www.youtube.com/@The_Rockett", "textures/banners/TheRocket.png").withDate(12, 1);
+        this.add("AND_010", "https://www.youtube.com/@AND010", "textures/banners/AND_010.png").withDate(12, 1);
+        this.add("Mattux", "https://www.youtube.com/@Mattux", "textures/banners/Mattux.png").withDate(12, 1);
+        this.add("SR400X", "https://x.com/SR400X_", "textures/banners/SR400X.png").withDate(12, 1);
+        this.add("MrJack", "https://x.com/MrJackDnZ", "textures/banners/MrJack.png").withDate(12, 1);
+        this.add("Yeyo Sin Contexto", "https://www.youtube.com/@YeyoSinContexto", "textures/banners/Yeyo Sin Contexto.png").withDate(12, 1);
+        this.add("Redbirdpro", "https://www.youtube.com/@RedbirdproMC", "textures/banners/Redbirdpro.png").withDate(12, 1);
+        this.add("MiniSunn_", "https://www.youtube.com/channel/UCoHzxz8f08OSs6LCD2QBr7Q", "textures/banners/MiniSunn_.png").withDate(12, 1);
+        this.add("lolinmalo", "https://www.youtube.com/@lolinmalo", "textures/banners/lolinmalo.png").withDate(12, 1);
     }
 
     private Supporter add(String name)
@@ -843,6 +862,11 @@ public class Supporters
 
     public List<Supporter> getCCSupporters()
     {
-        return this.supporters.stream().filter(Supporter::hasBanner).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
+        return this.supporters.stream().filter(Supporter::hasBanner).filter(s -> !s.name.equals("CML") && !s.name.equals("ElGatoPro300") && !s.name.equals("seb024xd") && !s.name.equals("TobbyMC") && !s.name.equals("JaviCubito") && !s.name.equals("SEKZA_MC") && !s.name.equals("Jesuluto") && !s.name.equals("Kazu_MC") && !s.name.equals("SoyTon") && !s.name.equals("TheRocket") && !s.name.equals("AND_010") && !s.name.equals("Mattux") && !s.name.equals("SR400X") && !s.name.equals("MrJack") && !s.name.equals("Yeyo Sin Contexto") && !s.name.equals("Redbirdpro") && !s.name.equals("MiniSunn_") && !s.name.equals("lolinmalo")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
+    }
+
+    public List<Supporter> getCMLSupporters()
+    {
+        return this.supporters.stream().filter(s -> s.name.equals("CML") || s.name.equals("ElGatoPro300") || s.name.equals("seb024xd") || s.name.equals("TobbyMC") || s.name.equals("JaviCubito") || s.name.equals("SEKZA_MC") || s.name.equals("Jesuluto") || s.name.equals("Kazu_MC") || s.name.equals("SoyTon") || s.name.equals("TheRocket") || s.name.equals("AND_010") || s.name.equals("Mattux") || s.name.equals("SR400X") || s.name.equals("MrJack") || s.name.equals("Yeyo Sin Contexto") || s.name.equals("Redbirdpro") || s.name.equals("MiniSunn_") || s.name.equals("lolinmalo")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
     }
 }
