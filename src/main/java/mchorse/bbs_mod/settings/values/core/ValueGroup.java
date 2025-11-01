@@ -111,10 +111,18 @@ public class ValueGroup extends BaseValueGroup
 
         for (BaseValue value : this.children.values())
         {
-            data.put(value.getId(), value.toData());
+            if (this.canPersist(value))
+            {
+                data.put(value.getId(), value.toData());
+            }
         }
 
         return data;
+    }
+
+    protected boolean canPersist(BaseValue value)
+    {
+        return true;
     }
 
     @Override

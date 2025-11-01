@@ -24,8 +24,10 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -60,7 +62,38 @@ public class UIAnimationStateEditor extends UIElement
         this.editArea = new UIElement();
         this.editArea.relative(this).x(0.7F).wTo(this.area, 1F).h(1F);
 
-        this.add(this.editArea);
+        UIDraggable draggable = new UIDraggable((context) ->
+        {
+            float fx = (context.mouseX - this.area.x) / (float) this.area.w;
+            float x = MathUtils.clamp(fx, 0.1F, 0.9F);
+
+            float fy = -(context.mouseY - this.getParent().area.ey()) / (float) this.getParent().area.h;
+            float h = MathUtils.clamp(fy, 0.1F, 0.9F);
+
+            this.h(h);
+            this.editArea.x(x);
+            this.getParent().resize();
+        });
+
+        draggable.rendering((context) ->
+        {
+            int size = 5;
+            int x = this.editArea.area.x + 3;
+            int y = this.editArea.area.y + 3;
+
+            context.batcher.box(x, y, x + 1, y + size, Colors.WHITE);
+            context.batcher.box(x, y - 1, x + size, y, Colors.WHITE);
+
+            x = this.editArea.area.x - 3;
+            y = this.editArea.area.y + 3;
+
+            context.batcher.box(x - 1, y, x, y + size, Colors.WHITE);
+            context.batcher.box(x - size, y - 1, x, y, Colors.WHITE);
+        });
+
+        draggable.hoverOnly().relative(this.editArea).w(40).h(6).anchorX(0.5F);
+
+        this.add(this.editArea, draggable);
     }
 
     public AnimationState getState()
@@ -199,7 +232,7 @@ public class UIAnimationStateEditor extends UIElement
                 this.keyframeEditor.view.addSheet(sheet);
             }
 
-            this.add(this.keyframeEditor);
+            this.addAfter(this.editArea, this.keyframeEditor);
         }
 
         this.resize();

@@ -362,7 +362,7 @@ public abstract class BaseFilmController
                 IEntity entity = new StubEntity(world);
 
                 entity.setForm(FormUtils.copy(replay.form.get()));
-                replay.applyFrame(0, entity);
+                replay.keyframes.apply(0, entity);
                 entity.setPrevX(entity.getX());
                 entity.setPrevY(entity.getY());
                 entity.setPrevZ(entity.getZ());
@@ -525,7 +525,7 @@ public abstract class BaseFilmController
 
     protected void applyReplay(Replay replay, int ticks, IEntity entity)
     {
-        replay.applyFrame(ticks, entity, null);
+        replay.keyframes.apply(ticks, entity);
         replay.applyClientActions(ticks, entity, this.film);
     }
 
@@ -546,7 +546,8 @@ public abstract class BaseFilmController
             int tick = replay.getTick(this.getTick());
 
             /* Apply property */
-            replay.applyProperties(tick + delta, entity.getForm());
+            Form form1 = entity.getForm();
+            replay.properties.applyProperties(tick + delta, form1);
 
             Map<String, Integer> actors = this.getActors();
 
@@ -560,7 +561,8 @@ public abstract class BaseFilmController
 
                     if (anEntity instanceof ActorEntity actor)
                     {
-                        replay.applyProperties(tick + delta, actor.getForm());
+                        Form form = actor.getForm();
+                        replay.properties.applyProperties(tick + delta, form);
                     }
                     else if (anEntity instanceof PlayerEntity player)
                     {
@@ -568,7 +570,8 @@ public abstract class BaseFilmController
 
                         if (morph != null)
                         {
-                            replay.applyProperties(tick + delta, morph.getForm());
+                            Form form = morph.getForm();
+                            replay.properties.applyProperties(tick + delta, form);
                         }
 
                         float yawHead = replay.keyframes.headYaw.interpolate(tick + delta).floatValue();

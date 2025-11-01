@@ -90,6 +90,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
     public UIElement statesEditor;
     public UIAnimationStateEditor statesKeyframes;
     public UIIcon openStates;
+    public UIIcon plause;
 
     /* Forms sidebar */
     public UIElement forms;
@@ -108,7 +109,9 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
     private UICopyPasteController copyPasteController;
     private UIFormUndoHandler undoHandler;
 
+    private int lastTick;
     private int cursor;
+    private boolean playing;
 
     static
     {
@@ -180,7 +183,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.statesEditor.full(this);
         this.statesEditor.setVisible(false);
         this.statesKeyframes = new UIAnimationStateEditor(this);
-        this.statesKeyframes.relative(this.statesEditor).x(20).y(1F).w(1F, -20).h(240).anchorY(1F);
+        this.statesKeyframes.relative(this.statesEditor).x(20).y(1F).w(1F, -20).h(0.25F).anchorY(1F);
 
         this.openStates = new UIIcon(Icons.MORE, (b) ->
         {
@@ -191,9 +194,12 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         });
         this.openStates.relative(this.statesEditor);
         this.openStates.tooltip(IKey.raw("Open animation states manager"), Direction.RIGHT);
+        this.plause = new UIIcon(() -> this.playing ? Icons.PLAY : Icons.PAUSE, (b) -> this.plause());
+        this.plause.relative(this.openStates).y(1F);
+        this.plause.tooltip(IKey.raw("Play/pause"), Direction.RIGHT);
 
         this.renderer = new UIPickableFormRenderer(this);
-        this.renderer.full(this.formEditor);
+        this.renderer.full(this);
 
         this.finish = new UIIcon(Icons.IN, (b) -> this.palette.exit());
         this.finish.tooltip(UIKeys.FORMS_EDITOR_FINISH, Direction.RIGHT).relative(this.formEditor).xy(0, 1F).anchorY(1F);
@@ -236,11 +242,16 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
         this.forms.add(background, this.formsList, this.bodyPartEditor, draggable);
         this.formEditor.add(this.forms);
-        this.statesEditor.add(backgroundStates, this.openStates, this.statesKeyframes);
+        this.statesEditor.add(backgroundStates, this.openStates, this.plause, this.statesKeyframes);
         this.add(this.renderer, this.formEditor, this.statesEditor, this.icons);
 
         this.keys().register(Keys.UNDO, this::undo);
         this.keys().register(Keys.REDO, this::redo);
+        this.plause.keys().register(Keys.PLAUSE, () ->
+        {
+            this.plause();
+            UIUtils.playClick();
+        });
 
         this.setUndoId("form_editor");
     }
@@ -287,11 +298,18 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
     private void pickState(AnimationState state)
     {
+        this.form.resetValues();
         this.statesKeyframes.setState(state);
+    }
+
+    private void plause()
+    {
+        this.playing = !this.playing;
     }
 
     private void toggleStateEditor()
     {
+        this.form.resetValues();
         this.formEditor.toggleVisible();
         this.statesEditor.toggleVisible();
     }
@@ -530,6 +548,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
         this.form.setId("");
         this.form.resetCallbacks();
+        this.form.states.cleanUp();
         this.exit();
 
         this.editor.finishEdit();
@@ -599,6 +618,37 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
             this.formsList.setCurrentScroll(bodyPart);
             this.pickForm(bodyPart);
         }
+    }
+
+    public void preFormRender(UIContext context, Form form)
+    {
+        int tick = (int) context.getTick();
+
+        if (this.statesEditor.isVisible())
+        {
+            AnimationState state = this.statesKeyframes.getState();
+
+            if (state != null)
+            {
+                if (this.playing)
+                {
+                    if (tick != this.lastTick)
+                    {
+                        this.cursor += 1;
+                    }
+
+                    if (this.cursor >= state.duration.get())
+                    {
+                        this.playing = false;
+                        this.cursor = 0;
+                    }
+                }
+
+                state.properties.applyProperties(this.cursor + (this.playing ? context.getTransition() : 0), form);
+            }
+        }
+
+        this.lastTick = tick;
     }
 
     @Override

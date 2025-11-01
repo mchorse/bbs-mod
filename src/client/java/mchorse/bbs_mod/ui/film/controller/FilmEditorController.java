@@ -7,6 +7,7 @@ import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.MCEntity;
 import mchorse.bbs_mod.forms.entities.StubEntity;
+import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -76,7 +77,7 @@ public class FilmEditorController extends BaseFilmController
 
         if (entity != this.controller.getControlled() || (this.controller.isRecording() && this.controller.getRecordingCountdown() <= 0 && groups != null))
         {
-            replay.applyFrame(ticks, entity, entity == this.controller.getControlled() ? groups : null);
+            replay.keyframes.apply(ticks, entity, entity == this.controller.getControlled() ? groups : null);
             replay.applyClientActions(ticks, entity, this.film);
         }
 
@@ -170,8 +171,10 @@ public class FilmEditorController extends BaseFilmController
                     this.renderOnion(replay, pose.getKeyframes().indexOf(segment.a), -1, pose, onionSkin.preColor.get(), onionSkin.preFrames.get(), context, isPlaying, entity);
                     this.renderOnion(replay, pose.getKeyframes().indexOf(segment.b), 1, pose, onionSkin.postColor.get(), onionSkin.postFrames.get(), context, isPlaying, entity);
 
-                    replay.applyFrame(ticks, entity, null);
-                    replay.applyProperties(ticks + this.getTransition(entity, context.tickDelta()), entity.getForm());
+                    replay.keyframes.apply(ticks, entity);
+                    float tick = ticks + this.getTransition(entity, context.tickDelta());
+                    Form form = entity.getForm();
+                    replay.properties.applyProperties(tick, form);
 
                     if (!isPlaying)
                     {
@@ -202,8 +205,11 @@ public class FilmEditorController extends BaseFilmController
                 continue;
             }
 
-            replay.applyFrame((int) keyframe.getTick(), entity);
-            replay.applyProperties((int) keyframe.getTick(), entity.getForm());
+            int tick1 = (int) keyframe.getTick();
+            replay.keyframes.apply(tick1, entity);
+            float tick = (int) keyframe.getTick();
+            Form form = entity.getForm();
+            replay.properties.applyProperties(tick, form);
 
             BaseFilmController.renderEntity(FilmControllerContext.instance
                 .setup(this.getEntities(), entity, replay, context)

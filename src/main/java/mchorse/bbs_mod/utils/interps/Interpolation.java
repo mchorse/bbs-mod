@@ -119,6 +119,26 @@ public class Interpolation extends BaseValue implements IInterp
     }
 
     @Override
+    public boolean equals(Object obj)
+    {
+        if (super.equals(obj))
+        {
+            return true;
+        }
+
+        if (obj instanceof Interpolation i)
+        {
+            return this.interp == i.interp
+                && this.args.v1 == i.args.v1
+                && this.args.v2 == i.args.v2
+                && this.args.v3 == i.args.v3
+                && this.args.v4 == i.args.v4;
+        }
+
+        return false;
+    }
+
+    @Override
     public BaseType toData()
     {
         if (this.args.v1 == 0 && this.args.v2 == 0 && this.args.v3 == 0 && this.args.v4 == 0)

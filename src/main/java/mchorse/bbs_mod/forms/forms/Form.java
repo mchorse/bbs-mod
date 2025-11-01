@@ -10,6 +10,7 @@ import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.states.AnimationStates;
 import mchorse.bbs_mod.forms.values.ValueAnchor;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
@@ -268,5 +269,24 @@ public abstract class Form extends ValueGroup
         }
 
         return data;
+    }
+
+    public void resetValues()
+    {
+        for (BaseValue baseValue : this.getAll())
+        {
+            if (baseValue instanceof BaseValueBasic<?> valueBasic)
+            {
+                valueBasic.setRuntimeValue(null);
+            }
+        }
+
+        for (BodyPart part : this.parts.getAllTyped())
+        {
+            if (part.getForm() != null)
+            {
+                part.getForm().resetValues();
+            }
+        }
     }
 }

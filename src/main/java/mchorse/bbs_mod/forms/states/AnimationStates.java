@@ -47,6 +47,14 @@ public class AnimationStates extends ValueList<AnimationState>
         this.postNotify(IValueListener.FLAG_UNMERGEABLE);
     }
 
+    public void cleanUp()
+    {
+        for (AnimationState state : this.list)
+        {
+            state.properties.cleanUp();
+        }
+    }
+
     @Override
     protected AnimationState create(String id)
     {

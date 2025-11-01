@@ -8,11 +8,8 @@ import mchorse.bbs_mod.camera.values.ValuePoint;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
-import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.core.ValueForm;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
@@ -22,8 +19,6 @@ import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.base.BaseValueGroup;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.Clips;
-import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
-import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.List;
@@ -99,63 +94,6 @@ public class Replay extends ValueGroup
         this.keyframes.shift(tick);
         this.properties.shift(tick);
         this.actions.shift(tick);
-    }
-
-    public void applyFrame(int tick, IEntity actor)
-    {
-        this.applyFrame(tick, actor, null);
-    }
-
-    public void applyFrame(int tick, IEntity actor, List<String> groups)
-    {
-        this.keyframes.apply(tick, actor, groups);
-    }
-
-    public void applyProperties(float tick, Form form)
-    {
-        if (form == null)
-        {
-            return;
-        }
-
-        for (BaseValue value : this.properties.getAll())
-        {
-            if (value instanceof KeyframeChannel)
-            {
-                this.applyProperty(tick, form, (KeyframeChannel) value);
-            }
-        }
-    }
-
-    private void applyProperty(float tick, Form form, KeyframeChannel value)
-    {
-        BaseValueBasic property = FormUtils.getProperty(form, value.getId());
-
-        if (property == null)
-        {
-            return;
-        }
-
-        KeyframeSegment segment = value.find(tick);
-
-        if (segment != null)
-        {
-            property.set(segment.createInterpolated());
-        }
-        else
-        {
-            Form replayForm = this.form.get();
-
-            if (replayForm != null)
-            {
-                BaseValueBasic replayProperty = FormUtils.getProperty(replayForm, value.getId());
-
-                if (replayProperty != null)
-                {
-                    property.set(replayProperty.get());
-                }
-            }
-        }
     }
 
     public void applyActions(LivingEntity actor, SuperFakePlayer fakePlayer, Film film, int tick)
