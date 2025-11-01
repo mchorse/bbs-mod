@@ -1053,5 +1053,7 @@
     "bbs.ui.replays.bone_anchoring.select_bone": "Seleccionar hueso para anclar",
     "bbs.ui.replays.bone_anchoring.unanchor_bone": "Desanclar hueso",
     "bbs.ui.replays.bone_anchoring.select_bone_title": "Seleccionar hueso",
-    "bbs.ui.replays.bone_anchoring.select_bone_description": "Selecciona el hueso que deseas anclar a esta pista de pose"
+    "bbs.ui.replays.bone_anchoring.select_bone_description": "Selecciona el hueso que deseas anclar a esta pista de pose",
+    "bbs.ui.supporters.cml_animators": "Colaboradores De BBS CML Edition",
+    "bbs.ui.supporters.cml_intro": "Esta version de BBS CML Edition se logro gracias al apoyo del servidor de discord CML!!"
 }

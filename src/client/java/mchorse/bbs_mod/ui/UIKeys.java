@@ -800,6 +800,8 @@ public class UIKeys
     public static final IKey SUPPORTERS_TUTORIALS_LINK = L10n.lang("bbs.ui.supporters.tutorials_link");
     public static final IKey SUPPORTERS_WIKI = L10n.lang("bbs.ui.supporters.wiki");
     public static final IKey SUPPORTERS_WIKI_LINK = L10n.lang("bbs.ui.supporters.wiki_link");
+    public static final IKey SUPPORTERS_CML_INTRO = L10n.lang("bbs.ui.supporters.cml_intro");
+    public static final IKey SUPPORTERS_CML_ANIMATORS = L10n.lang("bbs.ui.supporters.cml_animators");
     public static final IKey TEXTURES_COPY = L10n.lang("bbs.ui.textures.copy");
     public static final IKey TEXTURES_DOWNLOAD = L10n.lang("bbs.ui.textures.download");
     public static final IKey TEXTURES_DOWNLOAD_DESCRIPTION = L10n.lang("bbs.ui.textures.download-description");
