@@ -100,6 +100,10 @@ public class BBSSettings
     public static ValueInt audioWaveformHeight;
     public static ValueBoolean audioWaveformFilename;
     public static ValueBoolean audioWaveformTime;
+    
+    /* Pose track bone anchoring */
+    public static ValueBoolean boneAnchoringEnabled;
+    public static ValueBoolean anchorOverrideEnabled;
 
     public static int primaryColor()
     {
@@ -232,5 +236,11 @@ public class BBSSettings
         audioWaveformHeight = builder.getInt("waveform_height", 24, 10, 40);
         audioWaveformFilename = builder.getBoolean("waveform_filename", false);
         audioWaveformTime = builder.getBoolean("waveform_time", false);
+
+
+        /* Pose track selection: restaurar opciones visibles en el panel */
+        builder.category("pose_track_selection");
+        boneAnchoringEnabled = builder.getBoolean("bone_anchoring_enabled", false);
+        anchorOverrideEnabled = builder.getBoolean("anchor_override_enabled", false);
     }
 }

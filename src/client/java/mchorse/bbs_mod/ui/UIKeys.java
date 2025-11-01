@@ -447,6 +447,12 @@ public class UIKeys
     public static final IKey GENERAL_Z = IKey.constant("Z");
     public static final IKey GENERIC_KEYFRAMES_ANCHOR_PICK_ACTOR = L10n.lang("bbs.ui.generic_keyframes.anchor.pick_actor");
     public static final IKey GENERIC_KEYFRAMES_ANCHOR_PICK_ATTACHMENT = L10n.lang("bbs.ui.generic_keyframes.anchor.pick_attachment");
+    /* Pose track bone anchoring */
+    /* Bone anchoring (pose tracks) */
+    public static final IKey POSE_TRACKS_ANCHOR_SELECT_BONE = L10n.lang("bbs.ui.replays.bone_anchoring.select_bone");
+    public static final IKey POSE_TRACKS_ANCHOR_UNANCHOR = L10n.lang("bbs.ui.replays.bone_anchoring.unanchor_bone");
+    public static final IKey POSE_TRACKS_ANCHOR_SELECT_BONE_TITLE = L10n.lang("bbs.ui.replays.bone_anchoring.select_bone_title");
+    public static final IKey POSE_TRACKS_ANCHOR_SELECT_BONE_DESCRIPTION = L10n.lang("bbs.ui.replays.bone_anchoring.select_bone_description");
     public static final IKey GENERIC_KEYFRAMES_BOOLEAN_TRUE = L10n.lang("bbs.ui.generic_keyframes.boolean.true");
     public static final IKey GENERIC_KEYFRAMES_LINK_PICK_TEXTURE = L10n.lang("bbs.ui.generic_keyframes.link.pick_texture");
     public static final IKey GRAPH_HELP = L10n.lang("bbs.ui.graph.help");

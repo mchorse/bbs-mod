@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
 import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
@@ -11,8 +12,14 @@ import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
 import mchorse.bbs_mod.utils.Axis;
@@ -47,6 +54,12 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             {
                 this.poseEditor.setPose(keyframe.getValue(), model.poseGroup);
                 this.poseEditor.fillGroups(model.model, model.flippedParts, false);
+
+                /* Si la pista está anclada, seleccionar el hueso anclado al crear el editor */
+                if (BBSSettings.boneAnchoringEnabled.get() && sheet != null && sheet.anchoredBone != null)
+                {
+                    this.poseEditor.selectBone(sheet.anchoredBone);
+                }
             }
         }
         else if (FormUtils.getForm(sheet.property) instanceof MobForm mobForm)
@@ -55,6 +68,11 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 
             this.poseEditor.setPose(keyframe.getValue(), "");
             this.poseEditor.fillGroups(bones, false);
+
+            if (BBSSettings.boneAnchoringEnabled.get() && sheet != null && sheet.anchoredBone != null)
+            {
+                this.poseEditor.selectBone(sheet.anchoredBone);
+            }
         }
 
         this.scroll.add(this.poseEditor);
@@ -65,16 +83,49 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
     {
         this.poseEditor.removeAll();
 
-        if (this.getFlex().getW() > 240)
+        /* Construir disposición según estado de anclaje */
+        UIKeyframeSheet sheet = this.editor.getGraph().getSheet(this.keyframe);
+        boolean isAnchored = BBSSettings.boneAnchoringEnabled.get() && sheet != null && sheet.anchoredBone != null;
+
+        if (isAnchored)
         {
-            this.poseEditor.add(UI.row(
-                UI.column(UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform),
-                UI.column(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups)
-            ));
+            this.poseEditor.anchoredLegend.setVisible(true);
+            this.poseEditor.anchoredLegend.label = mchorse.bbs_mod.l10n.keys.IKey.constant("Hueso anclado: " + sheet.anchoredBone);
+            this.poseEditor.selectBone(sheet.anchoredBone);
         }
         else
         {
-            this.poseEditor.add(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+            this.poseEditor.anchoredLegend.setVisible(false);
+        }
+
+        if (this.getFlex().getW() > 240)
+        {
+            UIElement left = UI.column(UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+
+            UIElement right;
+            if (isAnchored)
+            {
+                right = UI.column(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.anchoredLegend, this.poseEditor.unanchorBone);
+            }
+            else
+            {
+                right = UI.column(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.anchorBone);
+            }
+
+            this.poseEditor.add(UI.row(left, right));
+        }
+        else
+        {
+            if (isAnchored)
+            {
+                this.poseEditor.add(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.anchoredLegend, this.poseEditor.unanchorBone,
+                    UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+            }
+            else
+            {
+                this.poseEditor.add(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.anchorBone,
+                    UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+            }
         }
 
         /* Ew... */
@@ -90,6 +141,9 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
     {
         private UIKeyframes editor;
         private Keyframe<Pose> keyframe;
+        public UIButton anchorBone;
+        public UIButton unanchorBone;
+        public mchorse.bbs_mod.ui.framework.elements.utils.UILabel anchoredLegend;
 
         public static void apply(UIKeyframes editor, Keyframe keyframe, Consumer<Pose> consumer)
         {
@@ -122,6 +176,97 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             this.keyframe = keyframe;
 
             ((UIPoseTransforms) this.transform).setKeyframe(this);
+
+            /* Leyenda para indicar hueso anclado */
+            this.anchoredLegend = UI.label(mchorse.bbs_mod.l10n.keys.IKey.constant("Hueso anclado: -"));
+            this.anchoredLegend.h(20);
+            this.anchoredLegend.setVisible(false);
+
+            /* Bone anchoring buttons (optional) */
+            this.anchorBone = new UIButton(UIKeys.POSE_TRACKS_ANCHOR_SELECT_BONE, (b) ->
+            {
+                if (!BBSSettings.boneAnchoringEnabled.get()) return;
+
+                UIKeyframeSheet sheet = this.editor.getGraph().getSheet(this.keyframe);
+                if (sheet == null) return;
+
+                /* Overlay para elegir el hueso */
+                java.util.List<String> bones = this.groups.getList();
+                UISearchList<String> search = new UISearchList<>(new UIStringList(null));
+                UIList<String> list = search.list;
+                UIConfirmOverlayPanel panel = new UIConfirmOverlayPanel(
+                    UIKeys.POSE_TRACKS_ANCHOR_SELECT_BONE_TITLE,
+                    UIKeys.POSE_TRACKS_ANCHOR_SELECT_BONE_DESCRIPTION,
+                    (confirm) ->
+                    {
+                        if (confirm)
+                        {
+                            int index = list.getIndex();
+                            String bone = mchorse.bbs_mod.utils.CollectionUtils.getSafe(bones, index);
+
+                            if (bone != null)
+                            {
+                                sheet.anchoredBone = bone;
+                                /* Refrescar estado inmediato */
+                                this.selectBone(bone);
+                                this.anchoredLegend.setVisible(true);
+                                this.anchoredLegend.label = mchorse.bbs_mod.l10n.keys.IKey.constant("Hueso anclado: " + bone);
+
+                                /* Reacomodar el panel para evitar huecos */
+                                UIPoseKeyframeFactory factory = this.getParent(UIPoseKeyframeFactory.class);
+                                if (factory != null) { factory.resize(); }
+
+                                /* Renombrar automáticamente la pista usando títulos personalizados del Replay */
+                                mchorse.bbs_mod.ui.film.UIFilmPanel filmPanel = this.getParent(mchorse.bbs_mod.ui.film.UIFilmPanel.class);
+                                if (filmPanel != null && filmPanel.replayEditor != null && filmPanel.replayEditor.getReplay() != null)
+                                {
+                                    filmPanel.replayEditor.getReplay().setCustomSheetTitle(sheet.id, bone);
+                                    /* Evitar refresco pesado que cierra el editor; el título se reflejará en render */
+                                }
+                            }
+                        }
+                    }
+                );
+
+                for (String g : bones) { list.add(g); }
+
+                /* Preseleccionar */
+                String current = sheet.anchoredBone != null ? sheet.anchoredBone : this.groups.getCurrentFirst();
+                int idx = bones.indexOf(current);
+                list.setIndex(Math.max(idx, 0));
+
+                list.background();
+                search.relative(panel.confirm).y(-5).w(1F).h(16 * 9 + 20).anchor(0F, 1F);
+                panel.confirm.w(1F, -10);
+                panel.content.add(search);
+                UIOverlay.addOverlay(this.getContext(), panel, 240, 300);
+            });
+
+            this.unanchorBone = new UIButton(UIKeys.POSE_TRACKS_ANCHOR_UNANCHOR, (b) ->
+            {
+                UIKeyframeSheet sheet = this.editor.getGraph().getSheet(this.keyframe);
+                if (sheet != null)
+                {
+                    sheet.anchoredBone = null;
+                    this.anchoredLegend.setVisible(false);
+
+                    /* Quitar el título personalizado al desanclar y refrescar lista */
+                    mchorse.bbs_mod.ui.film.UIFilmPanel filmPanel = this.getParent(mchorse.bbs_mod.ui.film.UIFilmPanel.class);
+                    if (filmPanel != null && filmPanel.replayEditor != null && filmPanel.replayEditor.getReplay() != null)
+                    {
+                        filmPanel.replayEditor.getReplay().setCustomSheetTitle(sheet.id, null);
+                        /* Sin refresco inmediato para no cerrar el panel actual */
+                    }
+
+                    /* Reacomodar el panel para que la lista regrese a su sitio */
+                    UIPoseKeyframeFactory factory = this.getParent(UIPoseKeyframeFactory.class);
+                    if (factory != null) { factory.resize(); }
+                }
+            });
+
+            /* Asegurar que los botones ocupen el ancho completo cuando estén visibles */
+            this.anchorBone.w(1F);
+            this.unanchorBone.w(1F);
         }
 
         private String getGroup(PoseTransform transform)

@@ -154,6 +154,15 @@
     "bbs.config.video.log-comment": "If disabled, it will not generate the log in the video export folder (instead it will go into BBS mod's settings/video.log)",
     "bbs.config.video.title": "Video recording",
     "bbs.config.video.tooltip": "This category provides options for recording video in the film editor",
+    "bbs.config.bone_anchoring.title": "Bone anchoring",
+    "bbs.config.bone_anchoring.tooltip": "Bone anchoring and pose overlay behavior control",
+    
+    "bbs.config.pose_track_selection.title": "Pose track selection",
+    "bbs.config.pose_track_selection.tooltip": "Options for bone anchoring in pose tracks",
+    "bbs.config.pose_track_selection.bone_anchoring_enabled": "Bone anchoring",
+    "bbs.config.pose_track_selection.bone_anchoring_enabled-comment": "Allows anchoring specific bones to individual pose tracks",
+    "bbs.config.pose_track_selection.anchor_override_enabled": "Anchor override",
+    "bbs.config.pose_track_selection.anchor_override_enabled-comment": "Overrides automatic redirection to anchored bone, maintains current selection",
     "bbs.keystrokes_position.auto": "Auto",
     "bbs.keystrokes_position.bottom_left": "Bottom left",
     "bbs.keystrokes_position.bottom_right": "Bottom right",
@@ -1144,5 +1153,10 @@
     "bbs.ui.inventory.empty": "Empty",
     "bbs.ui.inventory.hotbar": "Hotbar",
     "bbs.ui.inventory.main": "Main inventory",
-    "bbs.ui.inventory.full": "Full Inventory"
+    "bbs.ui.inventory.full": "Full Inventory",
+    
+    "bbs.ui.replays.bone_anchoring.select_bone": "Select bone to anchor",
+    "bbs.ui.replays.bone_anchoring.unanchor_bone": "Unanchor bone",
+    "bbs.ui.replays.bone_anchoring.select_bone_title": "Select bone",
+    "bbs.ui.replays.bone_anchoring.select_bone_description": "Select the bone you want to anchor to this pose track"
 }

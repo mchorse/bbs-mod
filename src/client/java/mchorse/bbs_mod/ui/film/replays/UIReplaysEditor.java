@@ -390,6 +390,12 @@ public class UIReplaysEditor extends UIElement
                 ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, channel, null)
                 : new UIKeyframeSheet(getColor(key), false, channel, null);
 
+            /* Restaurar estado de anclaje desde título personalizado para canales de pose */
+            if (customTitle != null && !customTitle.isEmpty() && channel.getFactory() == KeyframeFactories.POSE)
+            {
+                sheet.anchoredBone = customTitle;
+            }
+
             sheets.add(sheet.icon(ICONS.get(key)));
         }
 
@@ -405,6 +411,12 @@ public class UIReplaysEditor extends UIElement
                 UIKeyframeSheet sheet = customTitle != null && !customTitle.isEmpty()
                     ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, property, formProperty)
                     : new UIKeyframeSheet(getColor(key), false, property, formProperty);
+
+                /* Restaurar estado de anclaje desde título personalizado para propiedades de pose */
+                if (customTitle != null && !customTitle.isEmpty() && property.getFactory() == KeyframeFactories.POSE)
+                {
+                    sheet.anchoredBone = customTitle;
+                }
 
                 sheets.add(sheet.icon(getIcon(key)));
             }
@@ -675,6 +687,19 @@ public class UIReplaysEditor extends UIElement
 
     private void pickProperty(String bone, String key, boolean insert)
     {
+        /* Redirección al sheet anclado si el hueso seleccionado está anclado y no hay override */
+        if (bone != null && !bone.isEmpty() && BBSSettings.boneAnchoringEnabled.get() && !BBSSettings.anchorOverrideEnabled.get())
+        {
+            for (UIKeyframeSheet s : this.keyframeEditor.view.getGraph().getSheets())
+            {
+                if (s.anchoredBone != null && s.anchoredBone.equals(bone))
+                {
+                    this.pickProperty(bone, s, insert);
+                    return;
+                }
+            }
+        }
+
         for (UIKeyframeSheet sheet : this.keyframeEditor.view.getGraph().getSheets())
         {
             BaseValueBasic property = sheet.property;
@@ -714,7 +739,15 @@ public class UIReplaysEditor extends UIElement
 
             if (this.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
             {
-                poseFactory.poseEditor.selectBone(bone);
+                String targetBone = bone;
+
+                if (BBSSettings.boneAnchoringEnabled.get() && sheet.anchoredBone != null)
+                {
+                    /* Redirigir siempre al hueso anclado cuando la pista está anclada */
+                    targetBone = sheet.anchoredBone;
+                }
+
+                poseFactory.poseEditor.selectBone(targetBone);
             }
 
             this.filmPanel.setCursor((int) closest.getTick());

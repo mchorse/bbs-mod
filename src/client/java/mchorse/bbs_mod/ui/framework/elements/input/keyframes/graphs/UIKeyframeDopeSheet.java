@@ -607,17 +607,19 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
             BufferRenderer.drawWithGlobalProgram(builder.end());
 
             FontRenderer font = context.batcher.getFont();
-            int lw = font.getWidth(sheet.title.get());
+            /* Mostrar el hueso anclado como título si existe, para evitar refrescos pesados */
+            String displayTitle = sheet.anchoredBone != null ? sheet.anchoredBone : sheet.title.get();
+            int lw = font.getWidth(displayTitle);
 
             context.batcher.gradientHBox(area.ex() - lw - 10, y, area.ex(), y + (int) this.trackHeight, sheet.color, sheet.color | (hover ? Colors.A75 : Colors.A25));
 
             if (hover)
             {
-                context.batcher.textShadow(sheet.title.get(), area.ex() - lw - 5, my - font.getHeight() / 2);
+                context.batcher.textShadow(displayTitle, area.ex() - lw - 5, my - font.getHeight() / 2);
             }
             else
             {
-                context.batcher.text(sheet.title.get(), area.ex() - lw - 5, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
+                context.batcher.text(displayTitle, area.ex() - lw - 5, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
             }
 
             Icon icon = sheet.getIcon();

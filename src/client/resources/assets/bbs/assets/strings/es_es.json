@@ -99,6 +99,8 @@
     "bbs.config.recording.countdown": "Cuenta regresiva de grabación",
     "bbs.config.recording.countdown-comment": "Cuenta regresiva de grabación (en segundos)",
     "bbs.config.recording.overlays-comment": "Si se mostrarán overlays de grabaciones (se mostrarán el contador, el tick actual y la vista previa de la cámara)",
+    "bbs.config.recording.pose_transform_overlays": "Overlays adicionales",
+    "bbs.config.recording.pose_transform_overlays-comment": "Cuántas pistas adicionales de pose y transform tendrán las formas (vuelve a entrar al mundo para refrescar el número de overlays)",
     "bbs.config.recording.swipe_damage": "Daño al golpear",
     "bbs.config.recording.swipe_damage-comment": "Cuando se graba un clip de acción de golpeo, se inserta también un clip de acción de ataque automático",
     "bbs.config.recording.title": "Grabación",
@@ -119,6 +121,17 @@
     "bbs.config.shader_curves.enabled-comment": "Si las curvas de sombreado (shader curves) están habilitadas",
     "bbs.config.shader_curves.title": "Curvas de sombreado",
     "bbs.config.shader_curves.tooltip": "Opciones relacionadas con las curvas de sombreado",
+    "bbs.config.bone_anchoring.title": "Anclaje de huesos",
+    "bbs.config.bone_anchoring.tooltip": "Control del anclaje de huesos y la combinación de poses",
+    
+    
+    "bbs.config.pose_track_selection.title": "Selección de pistas de pose",
+    "bbs.config.pose_track_selection.tooltip": "Opciones para el anclaje de huesos en pistas de pose",
+    "bbs.config.pose_track_selection.bone_anchoring_enabled": "Anclaje de huesos",
+    "bbs.config.pose_track_selection.bone_anchoring_enabled-comment": "Permite anclar huesos específicos a pistas de pose individuales",
+    "bbs.config.pose_track_selection.anchor_override_enabled": "Sobreposición de anclaje",
+    "bbs.config.pose_track_selection.anchor_override_enabled-comment": "Anula la redirección automática al hueso anclado, mantiene la selección actual",
+    
     "bbs.config.tutorials.cursor": "Cursor del ratón",
     "bbs.config.tutorials.cursor-comment": "Habilita el renderizado del cursor del ratón. Es muy útil para tutoriales cuando están grabados con la grabadora de vídeo de BBS y el cursor no está visible",
     "bbs.config.tutorials.keystrokes": "Pulsaciones de teclas",
@@ -1035,5 +1048,10 @@
     "bbs.ui.inventory.empty": "Vacío",
     "bbs.ui.inventory.hotbar": "Barra de acceso rápido",
     "bbs.ui.inventory.main": "Inventario principal",
-    "bbs.ui.inventory.full": "Inventario completo"
+    "bbs.ui.inventory.full": "Inventario completo",
+    
+    "bbs.ui.replays.bone_anchoring.select_bone": "Seleccionar hueso para anclar",
+    "bbs.ui.replays.bone_anchoring.unanchor_bone": "Desanclar hueso",
+    "bbs.ui.replays.bone_anchoring.select_bone_title": "Seleccionar hueso",
+    "bbs.ui.replays.bone_anchoring.select_bone_description": "Selecciona el hueso que deseas anclar a esta pista de pose"
 }
