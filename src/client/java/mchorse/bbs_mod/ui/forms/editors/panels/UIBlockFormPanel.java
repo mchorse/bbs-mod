@@ -17,10 +17,7 @@ public class UIBlockFormPanel extends UIFormPanel<BlockForm>
         super(editor);
 
         this.color = new UIColor((c) -> this.form.color.set(Color.rgba(c))).withAlpha();
-        this.stateEditor = new UIBlockStateEditor((blockState) ->
-        {
-            this.form.blockState.set(blockState);
-        });
+        this.stateEditor = new UIBlockStateEditor((blockState) -> this.form.blockState.set(blockState));
 
         this.options.add(this.color, this.stateEditor);
     }

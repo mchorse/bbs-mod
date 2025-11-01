@@ -90,6 +90,8 @@ public abstract class FormRenderer <T extends Form>
             return;
         }
 
+        this.form.applyStates(context.transition);
+
         int light = context.light;
         boolean visible = this.form.visible.get();
 
@@ -122,6 +124,8 @@ public abstract class FormRenderer <T extends Form>
         context.stack.pop();
 
         context.light = light;
+
+        this.form.unapplyStates();
     }
 
     protected void applyTransforms(MatrixStack stack, float transition)
@@ -191,7 +195,7 @@ public abstract class FormRenderer <T extends Form>
 
     public void renderBodyParts(FormRenderingContext context)
     {
-        for (BodyPart part : this.form.parts.getAll())
+        for (BodyPart part : this.form.parts.getAllTyped())
         {
             this.renderBodyPart(part, context);
         }
@@ -201,12 +205,12 @@ public abstract class FormRenderer <T extends Form>
     {
         IEntity oldEntity = context.entity;
 
-        context.entity = part.useTarget ? oldEntity : part.getEntity();
+        context.entity = part.useTarget.get() ? oldEntity : part.getEntity();
 
         if (part.getForm() != null)
         {
             context.stack.push();
-            MatrixStackUtils.applyTransform(context.stack, part.getTransform());
+            MatrixStackUtils.applyTransform(context.stack, part.transform.get());
 
             FormUtilsClient.render(part.getForm(), context);
 
@@ -225,14 +229,14 @@ public abstract class FormRenderer <T extends Form>
 
         int i = 0;
 
-        for (BodyPart part : this.form.parts.getAll())
+        for (BodyPart part : this.form.parts.getAllTyped())
         {
             Form form = part.getForm();
 
             if (form != null)
             {
                 stack.push();
-                MatrixStackUtils.applyTransform(stack, part.getTransform());
+                MatrixStackUtils.applyTransform(stack, part.transform.get());
 
                 FormUtilsClient.getRenderer(form).collectMatrices(entity, target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
 

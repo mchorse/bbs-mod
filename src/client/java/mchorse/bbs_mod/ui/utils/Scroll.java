@@ -229,10 +229,11 @@ public class Scroll
 
         if (this.scrollSize <= size)
         {
-            this.targetScroll = 0;
+            this.scroll = this.targetScroll = 0;
         }
         else
         {
+            this.scroll = MathUtils.clamp(this.scroll, 0, this.scrollSize - size);
             this.targetScroll = MathUtils.clamp(this.targetScroll, 0, this.scrollSize - size);
         }
     }

@@ -573,7 +573,7 @@ public class UIClips extends UIElement
             {
                 Form form = replay.form.get();
 
-                menu.action(Icons.EDITOR, IKey.constant(form == null ? "-" : form.getIdOrName()), () ->
+                menu.action(Icons.EDITOR, IKey.constant(form == null ? "-" : form.getFormIdOrName()), () ->
                 {
                     KeyframeClip clip = new KeyframeClip();
 

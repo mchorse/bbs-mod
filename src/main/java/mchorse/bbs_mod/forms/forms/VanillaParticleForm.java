@@ -26,16 +26,16 @@ public class VanillaParticleForm extends Form
 
         this.local.invisible();
 
-        this.register(this.settings);
-        this.register(this.paused);
-        this.register(this.local);
-        this.register(this.velocity);
-        this.register(this.count);
-        this.register(this.frequency);
-        this.register(this.scatteringYaw);
-        this.register(this.scatteringPitch);
-        this.register(this.offsetX);
-        this.register(this.offsetY);
-        this.register(this.offsetZ);
+        this.add(this.settings);
+        this.add(this.paused);
+        this.add(this.local);
+        this.add(this.velocity);
+        this.add(this.count);
+        this.add(this.frequency);
+        this.add(this.scatteringYaw);
+        this.add(this.scatteringPitch);
+        this.add(this.offsetX);
+        this.add(this.offsetY);
+        this.add(this.offsetZ);
     }
 }

@@ -6,7 +6,6 @@ import mchorse.bbs_mod.actions.ActionPlayer;
 import mchorse.bbs_mod.actions.ActionRecorder;
 import mchorse.bbs_mod.actions.ActionState;
 import mchorse.bbs_mod.actions.PlayerType;
-import mchorse.bbs_mod.actions.types.FormTriggerActionClip;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.BaseType;
@@ -468,14 +467,7 @@ public class ServerNetwork
 
         server.execute(() ->
         {
-            BBSMod.getActions().addAction(player, () ->
-            {
-                FormTriggerActionClip action = new FormTriggerActionClip();
-
-                action.trigger.set(string);
-
-                return action;
-            });
+            /* TODO: State Triggers */
         });
     }
 

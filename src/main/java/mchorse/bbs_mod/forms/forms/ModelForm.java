@@ -2,8 +2,6 @@ package mchorse.bbs_mod.forms.forms;
 
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.cubic.animation.ActionsConfig;
-import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.forms.triggers.StateTriggers;
 import mchorse.bbs_mod.forms.values.ValueActionsConfig;
 import mchorse.bbs_mod.forms.values.ValueShapeKeys;
 import mchorse.bbs_mod.obj.shapes.ShapeKeys;
@@ -26,7 +24,6 @@ public class ModelForm extends Form
     public final ValueActionsConfig actions = new ValueActionsConfig("actions", new ActionsConfig());
     public final ValueColor color = new ValueColor("color", Color.white());
     public final ValueShapeKeys shapeKeys = new ValueShapeKeys("shape_keys", new ShapeKeys());
-    public final StateTriggers triggers = new StateTriggers();
 
     public final List<ValuePose> additionalOverlays = new ArrayList<>();
 
@@ -34,56 +31,27 @@ public class ModelForm extends Form
     {
         super();
 
-        this.register(this.texture);
-        this.register(this.model);
-        this.register(this.pose);
-        this.register(this.poseOverlay);
+        this.add(this.texture);
+        this.add(this.model);
+        this.add(this.pose);
+        this.add(this.poseOverlay);
 
         for (int i = 0; i < BBSSettings.recordingPoseTransformOverlays.get(); i++)
         {
             ValuePose valuePose = new ValuePose("pose_overlay" + i, new Pose());
 
             this.additionalOverlays.add(valuePose);
-            this.register(valuePose);
+            this.add(valuePose);
         }
 
-        this.register(this.actions);
-        this.register(this.color);
-        this.register(this.shapeKeys);
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        boolean result = super.equals(obj);
-
-        if (result && obj instanceof ModelForm form)
-        {
-            result = result && this.triggers.equals(form.triggers);
-        }
-
-        return result;
+        this.add(this.actions);
+        this.add(this.color);
+        this.add(this.shapeKeys);
     }
 
     @Override
     public String getDefaultDisplayName()
     {
         return this.model.get();
-    }
-
-    @Override
-    public void fromData(MapType data)
-    {
-        super.fromData(data);
-
-        this.triggers.fromData(data.getMap("stateTriggers"));
-    }
-
-    @Override
-    public void toData(MapType data)
-    {
-        super.toData(data);
-
-        data.put("stateTriggers", this.triggers.toData());
     }
 }

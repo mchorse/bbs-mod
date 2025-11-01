@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.forms.editors.forms;
 
+import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.Form;
@@ -106,5 +107,23 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     protected void renderBackground(UIContext context, int x, int y, int w, int h)
     {
         context.batcher.box(x, y, x + w, y + h, Colors.A100);
+    }
+
+    @Override
+    public void collectUndoData(MapType data)
+    {
+        super.collectUndoData(data);
+
+        data.putInt("panel", this.panels.indexOf(this.view));
+        data.putDouble("scroll", this.view.options.scroll.getScroll());
+    }
+
+    @Override
+    public void applyUndoData(MapType data)
+    {
+        super.applyUndoData(data);
+
+        this.setPanel(this.panels.get(data.getInt("panel")));
+        this.view.options.scroll.setScroll(data.getDouble("scroll"));
     }
 }

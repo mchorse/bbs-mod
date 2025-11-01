@@ -8,12 +8,12 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
+import mchorse.bbs_mod.ui.forms.editors.panels.widgets.UIModelPoseEditor;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
-import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
 import mchorse.bbs_mod.ui.utils.shapes.UIShapeKeys;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.colors.Color;
@@ -23,7 +23,7 @@ import java.util.Set;
 public class UIModelFormPanel extends UIFormPanel<ModelForm>
 {
     public UIColor color;
-    public UIPoseEditor poseEditor;
+    public UIModelPoseEditor poseEditor;
     public UIShapeKeys shapeKeys;
 
     public UIButton pickModel;
@@ -60,7 +60,7 @@ public class UIModelFormPanel extends UIFormPanel<ModelForm>
         });
         this.color = new UIColor((c) -> this.form.color.set(new Color().set(c))).withAlpha();
         this.color.direction(Direction.LEFT);
-        this.poseEditor = new UIPoseEditor();
+        this.poseEditor = new UIModelPoseEditor();
         this.shapeKeys = new UIShapeKeys();
         this.pick = new UIButton(UIKeys.FORMS_EDITOR_MODEL_PICK_TEXTURE, (b) ->
         {
@@ -90,6 +90,7 @@ public class UIModelFormPanel extends UIFormPanel<ModelForm>
 
         ModelInstance model = ModelFormRenderer.getModel(this.form);
 
+        this.poseEditor.setValuePose(form.pose);
         this.poseEditor.setPose(form.pose.get(), model == null ? this.form.model.get() : model.poseGroup);
         this.poseEditor.fillGroups(model == null ? null : model.model, model == null ? null : model.flippedParts, true);
         this.color.setColor(form.color.get().getARGBColor());

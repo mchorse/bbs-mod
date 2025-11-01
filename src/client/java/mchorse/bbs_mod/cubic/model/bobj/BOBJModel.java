@@ -113,11 +113,7 @@ public class BOBJModel implements IModel
                 continue;
             }
 
-            if (pose.staticPose)
-            {
-                bone.transform.identity();
-            }
-            else if (transform.fix > 0F)
+            if (transform.fix > 0F)
             {
                 bone.transform.lerp(Transform.DEFAULT, transform.fix);
             }

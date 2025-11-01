@@ -9,8 +9,6 @@ import mchorse.bbs_mod.camera.CameraUtils;
 import mchorse.bbs_mod.camera.clips.misc.AudioClip;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.cubic.ModelInstance;
-import mchorse.bbs_mod.cubic.data.animation.Animation;
-import mchorse.bbs_mod.cubic.data.animation.AnimationPart;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
@@ -22,8 +20,6 @@ import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.window.Window;
-import mchorse.bbs_mod.l10n.keys.IKey;
-import mchorse.bbs_mod.math.molang.expressions.MolangExpression;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
@@ -31,19 +27,20 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIClipsPanel;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.clips.renderer.IUIClipRenderer;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIAnimationToPoseOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIKeyframeSheetFilterOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
-import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -55,9 +52,7 @@ import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.colors.Colors;
-import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
-import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -67,15 +62,12 @@ import net.minecraft.world.World;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class UIReplaysEditor extends UIElement
 {
@@ -195,52 +187,6 @@ public class UIReplaysEditor extends UIElement
         if (key.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
 
         return COLORS.getOrDefault(topLevel, Colors.ACTIVE);
-    }
-
-    public static void offerAdjacent(UIContext context, Form form, String bone, Consumer<String> consumer)
-    {
-        if (!bone.isEmpty() && form instanceof ModelForm modelForm)
-        {
-            ModelInstance model = ModelFormRenderer.getModel(modelForm);
-
-            if (model == null)
-            {
-                return;
-            }
-
-            context.replaceContextMenu((menu) ->
-            {
-                for (String modelGroup : model.model.getAdjacentGroups(bone))
-                {
-                    menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
-                }
-
-                menu.autoKeys();
-            });
-        }
-    }
-
-    public static void offerHierarchy(UIContext context, Form form, String bone, Consumer<String> consumer)
-    {
-        if (!bone.isEmpty() && form instanceof ModelForm modelForm)
-        {
-            ModelInstance model = ModelFormRenderer.getModel(modelForm);
-
-            if (model == null)
-            {
-                return;
-            }
-
-            context.replaceContextMenu((menu) ->
-            {
-                for (String modelGroup : model.model.getHierarchyGroups(bone))
-                {
-                    menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
-                }
-
-                menu.autoKeys();
-            });
-        }
     }
 
     public static boolean renderBackground(UIContext context, UIKeyframes keyframes, Clips camera, int clipOffset)
@@ -481,7 +427,21 @@ public class UIReplaysEditor extends UIElement
 
                     if (sheet != null && sheet.channel.getFactory() == KeyframeFactories.POSE && sheet.id.equals("pose"))
                     {
-                        menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () -> this.animationToPoses(modelForm, sheet));
+                        menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () ->
+                        {
+                            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+                            if (model != null)
+                            {
+                                UIOverlay.addOverlay(this.getContext(), new UIAnimationToPoseOverlayPanel((animationKey, onlyKeyframes, length, step) ->
+                                {
+                                    int current = this.filmPanel.getCursor();
+                                    IEntity entity = this.filmPanel.getController().getCurrentEntity();
+
+                                    UIReplaysEditorUtils.animationToPoseKeyframes(this.keyframeEditor, sheet, modelForm, entity, current, animationKey, onlyKeyframes, length, step);
+                                }, modelForm, sheet), 200, 197);
+                            }
+                        });
                     }
                 }
 
@@ -518,177 +478,14 @@ public class UIReplaysEditor extends UIElement
         }
     }
 
-    private void animationToPoses(ModelForm modelForm, UIKeyframeSheet sheet)
-    {
-        ModelInstance model = ModelFormRenderer.getModel(modelForm);
-
-        if (model != null)
-        {
-            UIOverlay.addOverlay(this.getContext(), new UIAnimationToPoseOverlayPanel(this::animationToPoseKeyframes, modelForm, sheet), 200, 197);
-        }
-    }
-
-    public void animationToPoseKeyframes(ModelForm modelForm, UIKeyframeSheet sheet, String animationKey, boolean onlyKeyframes, int length, int step)
-    {
-        ModelInstance model = ModelFormRenderer.getModel(modelForm);
-        Animation animation = model.animations.get(animationKey);
-
-        if (animation != null)
-        {
-            int current = this.filmPanel.getCursor();
-            IEntity entity = this.filmPanel.getController().getCurrentEntity();
-
-            this.keyframeEditor.view.getDopeSheet().clearSelection();
-
-            if (onlyKeyframes)
-            {
-                List<Float> list = this.getTicks(animation);
-
-                for (float i : list)
-                {
-                    this.fillAnimationPose(sheet, i, model, entity, animation, current);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < length; i += step)
-                {
-                    this.fillAnimationPose(sheet, i, model, entity, animation, current);
-                }
-            }
-
-            this.keyframeEditor.view.getDopeSheet().pickSelected();
-        }
-    }
-
-    private List<Float> getTicks(Animation animation)
-    {
-        Set<Float> integers = new HashSet<>();
-
-        for (AnimationPart value : animation.parts.values())
-        {
-            for (KeyframeChannel<MolangExpression> channel : value.channels)
-            {
-                for (Keyframe<MolangExpression> keyframe : channel.getKeyframes())
-                {
-                    integers.add(keyframe.getTick());
-                }
-            }
-        }
-
-        ArrayList<Float> ticks = new ArrayList<>(integers);
-
-        Collections.sort(ticks);
-
-        return ticks;
-    }
-
-    private void fillAnimationPose(UIKeyframeSheet sheet, float i, ModelInstance model, IEntity entity, Animation animation, int current)
-    {
-        model.model.resetPose();
-        model.model.apply(entity, animation, i, 1F, 0F, false);
-
-        int insert = sheet.channel.insert(current + i, model.model.createPose());
-
-        sheet.selection.add(insert);
-    }
-
     public void pickForm(Form form, String bone)
     {
-        String path = FormUtils.getPath(form);
-
-        if (this.keyframeEditor == null || bone.isEmpty())
-        {
-            return;
-        }
-
-        Keyframe selected = this.keyframeEditor.view.getGraph().getSelected();
-        String type = "pose";
-
-        if (selected != null)
-        {
-            String id = selected.getParentValue().getId();
-            int index = id.indexOf("pose_overlay");
-
-            if (index >= 0)
-            {
-                type = id.substring(index);
-            }
-        }
-
-        this.pickProperty(bone, StringUtils.combinePaths(path, type), false);
+        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, form, bone);
     }
 
     public void pickFormProperty(Form form, String bone)
     {
-        String path = FormUtils.getPath(form);
-        boolean shift = Window.isShiftPressed();
-        ContextMenuManager manager = new ContextMenuManager();
-
-        manager.autoKeys();
-
-        for (BaseValueBasic formProperty : form.getProperties().values())
-        {
-            if (!formProperty.isVisible())
-            {
-                continue;
-            }
-
-            manager.action(getIcon(formProperty.getId()), IKey.constant(formProperty.getId()), () ->
-            {
-                this.pickProperty(bone, StringUtils.combinePaths(path, formProperty.getId()), shift);
-            });
-        }
-
-        this.getContext().replaceContextMenu(manager.create());
-    }
-
-    private void pickProperty(String bone, String key, boolean insert)
-    {
-        for (UIKeyframeSheet sheet : this.keyframeEditor.view.getGraph().getSheets())
-        {
-            BaseValueBasic property = sheet.property;
-
-            if (property != null && FormUtils.getPropertyPath(property).equals(key))
-            {
-                this.pickProperty(bone, sheet, insert);
-
-                break;
-            }
-        }
-    }
-
-    private void pickProperty(String bone, UIKeyframeSheet sheet, boolean insert)
-    {
-        int tick = this.filmPanel.getRunner().ticks;
-
-        if (insert)
-        {
-            Keyframe keyframe = this.keyframeEditor.view.getGraph().addKeyframe(sheet, tick, null);
-
-            this.keyframeEditor.view.getGraph().selectKeyframe(keyframe);
-
-            return;
-        }
-
-        KeyframeSegment segment = sheet.channel.find(tick);
-
-        if (segment != null)
-        {
-            Keyframe closest = segment.getClosest();
-
-            if (this.keyframeEditor.view.getGraph().getSelected() != closest)
-            {
-                this.keyframeEditor.view.getGraph().selectKeyframe(closest);
-            }
-
-            if (this.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
-            {
-                poseFactory.poseEditor.selectBone(bone);
-            }
-
-            this.filmPanel.setCursor((int) closest.getTick());
-        }
+        UIReplaysEditorUtils.pickFormProperty(this.getContext(), this.keyframeEditor, this.filmPanel, form, bone);
     }
 
     public boolean clickViewport(UIContext context, Area area)
@@ -713,8 +510,8 @@ public class UIReplaysEditor extends UIElement
 
                 if (context.mouseButton == 0)
                 {
-                    if (Window.isCtrlPressed()) offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
-                    else if (Window.isShiftPressed()) offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
+                    if (Window.isCtrlPressed()) UIReplaysEditorUtils.offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
+                    else if (Window.isShiftPressed()) UIReplaysEditorUtils.offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
                     else this.pickForm(pair.a, pair.b);
 
                     return true;
@@ -828,7 +625,7 @@ public class UIReplaysEditor extends UIElement
 
     @Override
     public void collectUndoData(MapType data)
-    {
+     {
         super.collectUndoData(data);
 
         int index = this.film.replays.getList().indexOf(this.getReplay());

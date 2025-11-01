@@ -78,7 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler
+public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler, ICursor
 {
     private RunnerCameraController runner;
     private boolean lastRunning;
@@ -503,7 +503,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             Film data = new Film();
             Position position = new Position();
             IdleClip idle = new IdleClip();
-            int tick = this.runner.ticks;
+            int tick = this.getCursor();
 
             position.set(this.getCamera());
             idle.duration.set(BBSSettings.getDefaultDuration());
@@ -824,7 +824,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             /* Marking the latest undo as unmergeable */
             if (this.undoHandler != null && !flight)
             {
-                this.undoHandler.markLastUndoNoMerging();
+                this.undoHandler.getUndoManager().markLastUndoNoMerging();
             }
             else
             {
@@ -1074,7 +1074,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
 
         String id = this.data.getId();
-        int tick = this.runner.ticks;
+        int tick = this.getCursor();
 
         ClientNetwork.sendActionState(id, state, tick);
     }
@@ -1094,11 +1094,13 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         return BBSModClient.getCameraController();
     }
 
+    @Override
     public int getCursor()
     {
         return this.runner.ticks;
     }
 
+    @Override
     public void setCursor(int value)
     {
         this.flightEditTime.mark();
@@ -1123,11 +1125,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         if (this.runner.isRunning())
         {
-            this.cameraEditor.clips.scale.shiftIntoMiddle(this.runner.ticks);
+            this.cameraEditor.clips.scale.shiftIntoMiddle(this.getCursor());
 
             if (this.replayEditor.keyframeEditor != null)
             {
-                this.replayEditor.keyframeEditor.view.getXAxis().shiftIntoMiddle(this.runner.ticks);
+                this.replayEditor.keyframeEditor.view.getXAxis().shiftIntoMiddle(this.getCursor());
             }
         }
     }

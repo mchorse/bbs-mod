@@ -3,9 +3,11 @@ package mchorse.bbs_mod.settings.values.core;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.base.BaseValueGroup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,21 @@ public class ValueGroup extends BaseValueGroup
         return new ArrayList<>(this.children.values());
     }
 
+    public Map<String, BaseValueBasic> getAllMap()
+    {
+        Map<String, BaseValueBasic> map = new HashMap<>();
+
+        for (BaseValue value : this.children.values())
+        {
+            if (value instanceof BaseValueBasic<?> basic)
+            {
+                map.put(basic.getId(), basic);
+            }
+        }
+
+        return map;
+    }
+
     @Override
     public BaseValue get(String key)
     {
@@ -70,16 +87,42 @@ public class ValueGroup extends BaseValueGroup
     }
 
     @Override
+    public boolean equals(Object obj)
+    {
+        boolean equals = super.equals(obj);
+
+        if (equals)
+        {
+            return equals;
+        }
+
+        if (obj instanceof ValueGroup group)
+        {
+            return this.children.equals(group.children);
+        }
+
+        return false;
+    }
+
+    @Override
     public BaseType toData()
     {
         MapType data = new MapType();
 
         for (BaseValue value : this.children.values())
         {
-            data.put(value.getId(), value.toData());
+            if (this.canPersist(value))
+            {
+                data.put(value.getId(), value.toData());
+            }
         }
 
         return data;
+    }
+
+    protected boolean canPersist(BaseValue value)
+    {
+        return true;
     }
 
     @Override

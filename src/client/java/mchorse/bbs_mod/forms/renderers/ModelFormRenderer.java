@@ -16,7 +16,6 @@ import mchorse.bbs_mod.cubic.model.ArmorSlot;
 import mchorse.bbs_mod.cubic.model.ArmorType;
 import mchorse.bbs_mod.cubic.model.bobj.BOBJModel;
 import mchorse.bbs_mod.forms.CustomVertexConsumerProvider;
-import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
@@ -24,9 +23,7 @@ import mchorse.bbs_mod.forms.entities.StubEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
-import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.resources.Link;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.core.ValuePose;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -72,31 +69,6 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     private ModelInstance lastModel;
 
     private IEntity entity = new StubEntity();
-
-    public void triggerState(StateTrigger trigger)
-    {
-        if (!trigger.action.isEmpty())
-        {
-            this.ensureAnimator(0F);
-
-            IAnimator animator = this.getAnimator();
-
-            if (animator != null)
-            {
-                animator.playAnimation(trigger.action);
-            }
-        }
-
-        for (String key : trigger.states.keys())
-        {
-            BaseValueBasic property = FormUtils.getProperty(this.form, key);
-
-            if (property != null)
-            {
-                property.fromData(trigger.states.get(key));
-            }
-        }
-    }
 
     @Override
     protected void applyTransforms(MatrixStack stack, float transition)
@@ -557,9 +529,9 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     {
         context.stack.push();
 
-        for (BodyPart part : this.form.parts.getAll())
+        for (BodyPart part : this.form.parts.getAllTyped())
         {
-            Matrix4f matrix = this.bones.get(part.bone);
+            Matrix4f matrix = this.bones.get(part.bone.get());
 
             context.stack.push();
 
@@ -626,13 +598,13 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         int i = 0;
 
         /* Recursively do the same thing with body parts */
-        for (BodyPart part : this.form.parts.getAll())
+        for (BodyPart part : this.form.parts.getAllTyped())
         {
             Form form = part.getForm();
 
             if (form != null)
             {
-                Matrix4f matrix = this.bones.get(part.bone);
+                Matrix4f matrix = this.bones.get(part.bone.get());
 
                 stack.push();
 
@@ -645,13 +617,13 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                     stack.multiply(RotationAxis.POSITIVE_Y.rotation(MathUtils.PI));
                 }
 
-                MatrixStackUtils.applyTransform(stack, part.getTransform());
+                MatrixStackUtils.applyTransform(stack, part.transform.get());
 
                 FormRenderer formRenderer = FormUtilsClient.getRenderer(form);
 
                 if (formRenderer != null)
                 {
-                    formRenderer.collectMatrices(part.useTarget ? entity : part.getEntity(), target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
+                    formRenderer.collectMatrices(part.useTarget.get() ? entity : part.getEntity(), target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
                 }
 
                 stack.pop();

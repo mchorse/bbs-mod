@@ -13,8 +13,8 @@ public class BlockForm extends Form
 
     public BlockForm()
     {
-        this.register(this.blockState);
-        this.register(this.color);
+        this.add(this.blockState);
+        this.add(this.color);
     }
 
     @Override

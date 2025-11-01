@@ -28,8 +28,8 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.resources.Link;
-import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
@@ -38,10 +38,6 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -235,7 +231,7 @@ public class UIFilmController extends UIElement
 
     private int getTick()
     {
-        return this.panel.getRunner().ticks;
+        return this.panel.getCursor();
     }
 
     private Replay getReplay()
@@ -1089,7 +1085,7 @@ public class UIFilmController extends UIElement
         }
         else if (pair != null)
         {
-            String label = pair.a.getIdOrName();
+            String label = pair.a.getFormIdOrName();
 
             if (!pair.b.isEmpty())
             {
@@ -1162,40 +1158,7 @@ public class UIFilmController extends UIElement
     {
         UIKeyframeEditor keyframeEditor = this.panel.replayEditor.keyframeEditor;
 
-        if (keyframeEditor != null)
-        {
-            UIKeyframeFactory editor = keyframeEditor.editor;
-            String bone = null;
-            boolean local = false;
-
-            if (editor instanceof UIPoseKeyframeFactory pose)
-            {
-                UIKeyframeSheet sheet = keyframeEditor.getSheet(editor.getKeyframe());
-                String currentFirst = pose.poseEditor.groups.getCurrentFirst();
-
-                if (sheet != null && sheet.id.endsWith("pose"))
-                {
-                    bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
-                    local = pose.poseEditor.transform.isLocal();
-                }
-            }
-            else if (editor instanceof UITransformKeyframeFactory)
-            {
-                UIKeyframeSheet sheet = keyframeEditor.getSheet(editor.getKeyframe());
-
-                if (sheet != null && sheet.id.endsWith("transform"))
-                {
-                    bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
-                }
-            }
-
-            if (bone != null)
-            {
-                return new Pair<>(bone, local);
-            }
-        }
-
-        return null;
+        return keyframeEditor != null ? keyframeEditor.getBone() : null;
     }
 
     private void renderStencil(WorldRenderContext renderContext, UIContext context, boolean altPressed)

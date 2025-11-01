@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.forms;
 
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.forms.FormCategories;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.categories.FormCategory;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.ui.Keys;
@@ -178,7 +179,7 @@ public class UIFormList extends UIElement
 
         if (!found && form != null)
         {
-            Form copy = form.copy();
+            Form copy = FormUtils.copy(form);
 
             this.recent.category.addForm(copy);
             this.recent.select(copy, false);
@@ -219,7 +220,7 @@ public class UIFormList extends UIElement
         if (selected != null)
         {
             String displayName = selected.getDisplayName();
-            String id = selected.getId();
+            String id = selected.getFormId();
             FontRenderer font = context.batcher.getFont();
 
             int w = Math.max(font.getWidth(displayName), font.getWidth(id));

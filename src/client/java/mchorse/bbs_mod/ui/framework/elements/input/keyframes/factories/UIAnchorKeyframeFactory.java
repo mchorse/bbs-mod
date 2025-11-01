@@ -56,7 +56,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
 
                 Replay replay = replays == null ? null : replays.get(i);
                 Form form = entity.getForm();
-                String stringLabel = i + (replay != null ? " - " + replay.getName() : (form == null ? "" : " - " + form.getIdOrName()));
+                String stringLabel = i + (replay != null ? " - " + replay.getName() : (form == null ? "" : " - " + form.getFormIdOrName()));
                 IKey label = IKey.constant(stringLabel);
 
                 menu.action(Icons.CLOSE, label, actor == value, () -> callback.accept(actor));

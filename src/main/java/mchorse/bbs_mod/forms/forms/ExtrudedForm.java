@@ -17,10 +17,10 @@ public class ExtrudedForm extends Form
     {
         super();
 
-        this.register(this.texture);
-        this.register(this.color);
-        this.register(this.billboard);
-        this.register(this.shading);
+        this.add(this.texture);
+        this.add(this.color);
+        this.add(this.billboard);
+        this.add(this.shading);
     }
 
     @Override

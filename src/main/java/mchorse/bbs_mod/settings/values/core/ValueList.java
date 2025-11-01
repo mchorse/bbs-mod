@@ -49,6 +49,11 @@ public abstract class ValueList <T extends BaseValue> extends BaseValueGroup
         return (List<BaseValue>) this.list;
     }
 
+    public List<T> getAllTyped()
+    {
+        return this.list;
+    }
+
     @Override
     public BaseValue get(String key)
     {
@@ -62,6 +67,19 @@ public abstract class ValueList <T extends BaseValue> extends BaseValueGroup
         {}
 
         return null;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj.getClass() == this.getClass())
+        {
+            ValueList<?> list = (ValueList<?>) obj;
+
+            return list.list.equals(this.list);
+        }
+
+        return super.equals(obj);
     }
 
     @Override

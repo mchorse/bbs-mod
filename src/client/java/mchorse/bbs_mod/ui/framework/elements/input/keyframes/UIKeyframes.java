@@ -293,7 +293,7 @@ public class UIKeyframes extends UIElement
 
         if (keyframe != null)
         {
-            KeyframeChannel channel = (KeyframeChannel) keyframe.getParentValue();
+            KeyframeChannel channel = (KeyframeChannel) keyframe.getParent();
             int existingIndex = channel.getKeyframes().indexOf(keyframe);
             int index = MathUtils.cycler(existingIndex + direction, channel.getAll());
             Keyframe nextKeyframe = channel.get(index);

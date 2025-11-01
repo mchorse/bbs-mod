@@ -65,8 +65,8 @@ public class IrisUtils
             Map<String, DataPath> pathMap = new HashMap<>();
 
             collectPaths(pathMap, shaderPack.getMenuContainer(), shaderPack.getMenuContainer().mainScreen, Collections.emptyList());
-            fillInPaths(map, target, pathMap, prefix);
             fillInPaths(map, fallback, pathMap, prefix);
+            fillInPaths(map, target, pathMap, prefix);
 
             return map;
         }

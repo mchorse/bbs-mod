@@ -15,9 +15,9 @@ public class ItemForm extends Form
 
     public ItemForm()
     {
-        this.register(this.stack);
-        this.register(this.modelTransform);
-        this.register(this.color);
+        this.add(this.stack);
+        this.add(this.modelTransform);
+        this.add(this.color);
     }
 
     @Override

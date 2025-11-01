@@ -12,8 +12,6 @@ public class UIActionList extends UIList<ContextAction>
     public UIActionList(Consumer<List<ContextAction>> callback)
     {
         super(callback);
-
-        this.scroll.scrollItemSize = 20;
     }
 
     @Override

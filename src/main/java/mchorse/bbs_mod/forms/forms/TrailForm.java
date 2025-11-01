@@ -14,9 +14,9 @@ public class TrailForm extends Form
     
     public TrailForm()
     {
-        this.register(this.texture);
-        this.register(this.length);
-        this.register(this.loop);
-        this.register(this.paused);
+        this.add(this.texture);
+        this.add(this.length);
+        this.add(this.loop);
+        this.add(this.paused);
     }
 }

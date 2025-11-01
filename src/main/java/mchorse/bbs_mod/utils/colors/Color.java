@@ -175,4 +175,15 @@ public class Color
 
         return super.equals(obj);
     }
+
+    @Override
+    public String toString()
+    {
+        int r = (int) (MathUtils.clamp(this.r, 0F, 1F) * 255F);
+        int g = (int) (MathUtils.clamp(this.g, 0F, 1F) * 255F);
+        int b = (int) (MathUtils.clamp(this.b, 0F, 1F) * 255F);
+        int a = (int) (MathUtils.clamp(this.a, 0F, 1F) * 255F);
+
+        return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
+    }
 }

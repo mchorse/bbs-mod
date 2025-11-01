@@ -3,6 +3,7 @@ package mchorse.bbs_mod.ui.framework.elements.input;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.settings.values.IValueNotifier;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -19,7 +20,6 @@ import org.joml.Matrix3f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class UIPropTransform extends UITransform
@@ -28,7 +28,8 @@ public class UIPropTransform extends UITransform
     private static final double[] CURSOR_Y = new double[1];
 
     private Transform transform;
-    private Consumer<Transform> callback;
+    private Runnable preCallback;
+    private Runnable postCallback;
 
     private boolean editing;
     private int mode;
@@ -65,11 +66,30 @@ public class UIPropTransform extends UITransform
         this.noCulling();
     }
 
-    public UIPropTransform(Consumer<Transform> callback)
+    public UIPropTransform callbacks(Supplier<IValueNotifier> notifier)
     {
-        this();
+        return this.callbacks(
+            () -> notifier.get().preNotify(),
+            () -> notifier.get().postNotify()
+        );
+    }
 
-        this.callback = callback;
+    public UIPropTransform callbacks(Runnable pre, Runnable post)
+    {
+        this.preCallback = pre;
+        this.postCallback = post;
+
+        return this;
+    }
+
+    public void preCallback()
+    {
+        if (this.preCallback != null) this.preCallback.run();
+    }
+
+    public void postCallback()
+    {
+        if (this.postCallback != null) this.postCallback.run();
     }
 
     public void setModel()
@@ -108,7 +128,9 @@ public class UIPropTransform extends UITransform
             (float) (axis == Axis.Z ? factor : 0D)
         );
         /* I have no fucking idea why I have to rotate it 180 degrees by X axis... but it works! */
-        Matrix3f matrix = new Matrix3f().rotateX(this.model ? MathUtils.PI : 0F).mul(this.transform.createRotationMatrix());
+        Matrix3f matrix = new Matrix3f()
+            .rotateX(this.model ? MathUtils.PI : 0F)
+            .mul(this.transform.createRotationMatrix());
 
         matrix.transform(vector3f);
 
@@ -133,6 +155,11 @@ public class UIPropTransform extends UITransform
     public Transform getTransform()
     {
         return this.transform;
+    }
+
+    public void refillTransform()
+    {
+        this.setTransform(this.getTransform());
     }
 
     public void setTransform(Transform transform)
@@ -169,7 +196,6 @@ public class UIPropTransform extends UITransform
             this.axis = values[MathUtils.cycler(this.axis.ordinal() + 1, 0, values.length - 1)];
 
             this.restore(true);
-            this.submit();
         }
         else
         {
@@ -222,7 +248,6 @@ public class UIPropTransform extends UITransform
     public void acceptChanges()
     {
         this.disable();
-        this.submit();
         this.setTransform(this.transform);
     }
 
@@ -230,7 +255,6 @@ public class UIPropTransform extends UITransform
     {
         this.disable();
         this.restore(true);
-        this.submit();
         this.setTransform(this.transform);
     }
 
@@ -263,37 +287,33 @@ public class UIPropTransform extends UITransform
     @Override
     public void setT(Axis axis, double x, double y, double z)
     {
+        this.preCallback();
         this.transform.translate.set((float) x, (float) y, (float) z);
-        this.submit();
+        this.postCallback();
     }
 
     @Override
     public void setS(Axis axis, double x, double y, double z)
     {
+        this.preCallback();
         this.transform.scale.set((float) x, (float) y, (float) z);
-        this.submit();
+        this.postCallback();
     }
 
     @Override
     public void setR(Axis axis, double x, double y, double z)
     {
+        this.preCallback();
         this.transform.rotate.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
-        this.submit();
+        this.postCallback();
     }
 
     @Override
     public void setR2(Axis axis, double x, double y, double z)
     {
+        this.preCallback();
         this.transform.rotate2.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
-        this.submit();
-    }
-
-    protected void submit()
-    {
-        if (this.callback != null)
-        {
-            this.callback.accept(this.transform);
-        }
+        this.postCallback();
     }
 
     @Override

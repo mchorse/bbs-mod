@@ -75,7 +75,7 @@ public interface IUIKeyframeGraph
 
     public default UIKeyframeSheet getSheet(Keyframe keyframe)
     {
-        KeyframeChannel channel = (KeyframeChannel) keyframe.getParentValue();
+        KeyframeChannel channel = (KeyframeChannel) keyframe.getParent();
 
         for (UIKeyframeSheet sheet : this.getSheets())
         {

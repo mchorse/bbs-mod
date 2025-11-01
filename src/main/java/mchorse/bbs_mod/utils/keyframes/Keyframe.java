@@ -2,12 +2,14 @@ package mchorse.bbs_mod.utils.keyframes;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 
-public class Keyframe <T> extends ValueGroup
+import java.util.Objects;
+
+public class Keyframe <T> extends BaseValue
 {
     private float tick;
     private T value;
@@ -112,6 +114,29 @@ public class Keyframe <T> extends ValueGroup
         this.duration = keyframe.duration;
         this.value = this.factory.copy(keyframe.value);
         this.interp.copy(keyframe.interp);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (super.equals(obj))
+        {
+            return true;
+        }
+
+        if (obj instanceof Keyframe<?> kf)
+        {
+            return this.tick == kf.tick
+                && Objects.equals(this.value, kf.value)
+                && this.lx == kf.lx
+                && this.ly == kf.ly
+                && this.rx == kf.rx
+                && this.ry == kf.ry
+                && this.duration == kf.duration
+                && Objects.equals(this.interp, kf.interp);
+        }
+
+        return false;
     }
 
     @Override

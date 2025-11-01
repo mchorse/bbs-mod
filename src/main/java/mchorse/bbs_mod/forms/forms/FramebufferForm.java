@@ -14,8 +14,8 @@ public class FramebufferForm extends Form
         this.width.invisible();
         this.height.invisible();
 
-        this.register(this.width);
-        this.register(this.height);
-        this.register(this.scale);
+        this.add(this.width);
+        this.add(this.height);
+        this.add(this.scale);
     }
 }

@@ -34,5 +34,5 @@ public interface IValueNotifier
         }
     }
 
-    public IValueNotifier getParent();
+    public BaseValue getParent();
 }

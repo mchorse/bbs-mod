@@ -39,7 +39,7 @@ public class KeyframeSegment <T>
         this.a = a;
         this.b = b;
 
-        KeyframeChannel<T> channel = (KeyframeChannel<T>) a.getParentValue();
+        KeyframeChannel<T> channel = (KeyframeChannel<T>) a.getParent();
         int index = channel.getKeyframes().indexOf(a);
 
         if (index >= 0)

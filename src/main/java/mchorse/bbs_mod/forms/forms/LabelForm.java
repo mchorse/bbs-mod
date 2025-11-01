@@ -31,18 +31,18 @@ public class LabelForm extends Form
     {
         super();
 
-        this.register(this.text);
-        this.register(this.billboard);
-        this.register(this.color);
-        this.register(this.max);
-        this.register(this.anchorX);
-        this.register(this.anchorY);
-        this.register(this.anchorLines);
-        this.register(this.shadowX);
-        this.register(this.shadowY);
-        this.register(this.shadowColor);
-        this.register(this.background);
-        this.register(this.offset);
+        this.add(this.text);
+        this.add(this.billboard);
+        this.add(this.color);
+        this.add(this.max);
+        this.add(this.anchorX);
+        this.add(this.anchorY);
+        this.add(this.anchorLines);
+        this.add(this.shadowX);
+        this.add(this.shadowY);
+        this.add(this.shadowColor);
+        this.add(this.background);
+        this.add(this.offset);
     }
 
     @Override

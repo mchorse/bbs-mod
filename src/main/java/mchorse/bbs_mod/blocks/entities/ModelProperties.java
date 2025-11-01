@@ -29,9 +29,19 @@ public class ModelProperties implements IMapSerializable
         return this.form;
     }
 
+    private Form processForm(Form form)
+    {
+        if (form != null)
+        {
+            form.playMain();
+        }
+
+        return form;
+    }
+
     public void setForm(Form form)
     {
-        this.form = form;
+        this.form = this.processForm(form);
     }
 
     public Form getFormThirdPerson()
@@ -41,7 +51,7 @@ public class ModelProperties implements IMapSerializable
 
     public void setFormThirdPerson(Form form)
     {
-        this.formThirdPerson = form;
+        this.formThirdPerson = this.processForm(form);
     }
 
     public Form getFormInventory()
@@ -51,7 +61,7 @@ public class ModelProperties implements IMapSerializable
 
     public void setFormInventory(Form form)
     {
-        this.formInventory = form;
+        this.formInventory = this.processForm(form);
     }
 
     public Form getFormFirstPerson()
@@ -61,7 +71,7 @@ public class ModelProperties implements IMapSerializable
 
     public void setFormFirstPerson(Form form)
     {
-        this.formFirstPerson = form;
+        this.formFirstPerson = this.processForm(form);
     }
 
     public Transform getTransform()
@@ -157,10 +167,10 @@ public class ModelProperties implements IMapSerializable
     @Override
     public void fromData(MapType data)
     {
-        this.form = FormUtils.fromData(data.getMap("form"));
-        this.formThirdPerson = FormUtils.fromData(data.getMap("formThirdPerson"));
-        this.formInventory = FormUtils.fromData(data.getMap("formInventory"));
-        this.formFirstPerson = FormUtils.fromData(data.getMap("formFirstPerson"));
+        this.form = this.processForm(FormUtils.fromData(data.getMap("form")));
+        this.formThirdPerson = this.processForm(FormUtils.fromData(data.getMap("formThirdPerson")));
+        this.formInventory = this.processForm(FormUtils.fromData(data.getMap("formInventory")));
+        this.formFirstPerson = this.processForm(FormUtils.fromData(data.getMap("formFirstPerson")));
 
         this.transform.fromData(data.getMap("transform"));
         this.transformThirdPerson.fromData(data.getMap("transformThirdPerson"));

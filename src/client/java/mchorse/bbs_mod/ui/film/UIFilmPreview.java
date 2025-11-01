@@ -321,7 +321,7 @@ public class UIFilmPreview extends UIElement
             RunnerCameraController runner = this.panel.getRunner();
             int w = (int) (area.w * BBSSettings.audioWaveformWidth.get());
             int x = area.x(0.5F, w);
-            float tick = runner.isRunning() ? runner.ticks + context.getTransition() : runner.ticks;
+            float tick = this.panel.getCursor() + (runner.isRunning() ? context.getTransition() : 0);
 
             this.clips.clear();
 

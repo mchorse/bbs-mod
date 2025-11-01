@@ -21,12 +21,12 @@ public class MobForm extends Form
     {
         this.slim.invisible();
 
-        this.register(this.mobID);
-        this.register(this.mobNBT);
-        this.register(this.pose);
-        this.register(this.poseOverlay);
-        this.register(this.texture);
-        this.register(this.slim);
+        this.add(this.mobID);
+        this.add(this.mobNBT);
+        this.add(this.pose);
+        this.add(this.poseOverlay);
+        this.add(this.texture);
+        this.add(this.slim);
     }
 
     @Override

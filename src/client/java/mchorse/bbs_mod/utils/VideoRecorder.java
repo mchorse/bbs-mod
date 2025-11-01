@@ -139,10 +139,13 @@ public class VideoRecorder
 
             this.process = builder.start();
 
-            // Java wraps the process output stream into a BufferedOutputStream,
-            // but its little buffer is just slowing everything down with the
-            // huge amount of data we're dealing here, so unwrap it with this little
-            // hack.
+            /**
+             * Java wraps the process output stream into a BufferedOutputStream,
+             *
+             * but its little buffer is just slowing everything down with the
+             * huge amount of data we're dealing here, so unwrap it with this little
+             * hack.
+             */
             OutputStream os = this.process.getOutputStream();
             Unsafe unsafe = UnsafeUtils.getUnsafe();
 

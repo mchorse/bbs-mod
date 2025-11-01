@@ -28,10 +28,15 @@ public interface IFactory <T, D>
                 data = baseData.asMap();
             }
 
-            data.putString(this.getTypeKey(), this.getType(object).toString());
+            this.appendId(object, data);
         }
 
         return data;
+    }
+
+    public default void appendId(T object, MapType data)
+    {
+        data.putString(this.getTypeKey(), this.getType(object).toString());
     }
 
     public default T fromData(MapType data)

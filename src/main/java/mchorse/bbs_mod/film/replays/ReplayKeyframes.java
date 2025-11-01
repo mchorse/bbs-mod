@@ -1,8 +1,8 @@
 package mchorse.bbs_mod.film.replays;
 
 import mchorse.bbs_mod.forms.entities.IEntity;
-import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.interps.IInterp;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
@@ -227,6 +227,11 @@ public class ReplayKeyframes extends ValueGroup
             this.armorFeet.insert(tick, entity.getEquipmentStack(EquipmentSlot.FEET).copy());
             this.selectedSlot.insert(tick, entity.getSelectedSlot());
         }
+    }
+
+    public void apply(int tick, IEntity entity)
+    {
+        this.apply(tick, entity, null);
     }
 
     /**
