@@ -1,7 +1,6 @@
 package mchorse.bbs_mod;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mchorse.bbs_mod.actions.types.FormTriggerClientActionClip;
 import mchorse.bbs_mod.audio.SoundManager;
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
 import mchorse.bbs_mod.camera.clips.misc.AudioClientClip;
@@ -19,12 +18,9 @@ import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormCategories;
-import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.categories.UserFormCategory;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
-import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
-import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.FramebufferManager;
 import mchorse.bbs_mod.graphics.texture.TextureManager;
@@ -238,19 +234,7 @@ public class BBSModClient implements ClientModInitializer
         /* State trigger */
         if (morph != null && morph.getForm() instanceof ModelForm modelForm)
         {
-            for (StateTrigger trigger : modelForm.triggers.triggers)
-            {
-                if (trigger.hotkey == key)
-                {
-                    ModelFormRenderer renderer = (ModelFormRenderer) FormUtilsClient.getRenderer(modelForm);
-
-                    BBSModClient.getFilms().recordTrigger(modelForm, trigger);
-                    renderer.triggerState(trigger);
-                    ClientNetwork.sendFormTrigger(trigger.id);
-
-                    return;
-                }
-            }
+            /* TODO: State Triggers */
         }
 
         /* Change form based on the hotkey */
@@ -343,10 +327,6 @@ public class BBSModClient implements ClientModInitializer
             .register(Link.bbs("audio"), AudioClientClip.class, new ClipFactoryData(Icons.SOUND, 0xffc825))
             .register(Link.bbs("tracker"), TrackerClientClip.class, new ClipFactoryData(Icons.USER, 0x4cedfc))
             .register(Link.bbs("curve"), CurveClientClip.class, new ClipFactoryData(Icons.ARC, 0xff1493));
-
-        /* Replace form trigger action clip with client version that plays animation */
-        BBSMod.getFactoryActionClips()
-            .register(Link.bbs("form_trigger"), FormTriggerClientActionClip.class, new ClipFactoryData(Icons.KEY_CAP, Colors.PINK));
 
         /* Keybinds */
         keyDashboard = this.createKey("dashboard", GLFW.GLFW_KEY_0);

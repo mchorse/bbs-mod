@@ -24,16 +24,16 @@ public class ParticleForm extends Form
 
         this.effect.invisible();
 
-        this.register(this.effect);
-        this.register(this.paused);
-        this.register(this.texture);
+        this.add(this.effect);
+        this.add(this.paused);
+        this.add(this.texture);
 
-        this.register(this.user1);
-        this.register(this.user2);
-        this.register(this.user3);
-        this.register(this.user4);
-        this.register(this.user5);
-        this.register(this.user6);
+        this.add(this.user1);
+        this.add(this.user2);
+        this.add(this.user3);
+        this.add(this.user4);
+        this.add(this.user5);
+        this.add(this.user6);
     }
 
     @Override

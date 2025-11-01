@@ -8,6 +8,9 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.ui.film.utils.CameraAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -117,10 +120,45 @@ public class UIKeyframeEditor extends UIElement
 
         for (UIKeyframeSheet sheet : this.view.getGraph().getSheets())
         {
-            if (sheet.channel == keyframe.getParentValue())
+            if (sheet.channel == keyframe.getParent())
             {
                 return sheet;
             }
+        }
+
+        return null;
+    }
+
+    public Pair<String, Boolean> getBone()
+    {
+        UIKeyframeFactory editor = this.editor;
+        String bone = null;
+        boolean local = false;
+
+        if (editor instanceof UIPoseKeyframeFactory pose)
+        {
+            UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
+            String currentFirst = pose.poseEditor.groups.getCurrentFirst();
+
+            if (sheet != null && sheet.id.endsWith("pose"))
+            {
+                bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
+                local = pose.poseEditor.transform.isLocal();
+            }
+        }
+        else if (editor instanceof UITransformKeyframeFactory)
+        {
+            UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
+
+            if (sheet != null && sheet.id.endsWith("transform"))
+            {
+                bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
+            }
+        }
+
+        if (bone != null)
+        {
+            return new Pair<>(bone, local);
         }
 
         return null;

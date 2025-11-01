@@ -51,6 +51,11 @@ public class UIPickableFormRenderer extends UIFormRenderer
         this.update = true;
     }
 
+    public StencilFormFramebuffer getStencil()
+    {
+        return this.stencil;
+    }
+
     public void setRenderForm(Supplier<Boolean> renderForm)
     {
         this.renderForm = renderForm;
@@ -83,16 +88,9 @@ public class UIPickableFormRenderer extends UIFormRenderer
     @Override
     public boolean subMouseClicked(UIContext context)
     {
-        if (this.stencil.hasPicked() && context.mouseButton == 0)
+        if (this.formEditor.clickViewport(context, this.stencil))
         {
-            Pair<Form, String> pair = this.stencil.getPicked();
-
-            if (pair != null)
-            {
-                this.formEditor.pickFormFromRenderer(pair);
-
-                return true;
-            }
+            return true;
         }
 
         return super.subMouseClicked(context);
@@ -146,7 +144,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
     private void renderAxes(UIContext context)
     {
-        Matrix4f matrix = this.formEditor.editor.getOrigin(context.getTransition());
+        Matrix4f matrix = this.formEditor.getOrigin(context.getTransition());
         MatrixStack stack = context.render.batcher.getContext().getMatrices();
 
         stack.push();
@@ -221,7 +219,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
         if (pair != null)
         {
-            String label = pair.a.getIdOrName();
+            String label = pair.a.getFormIdOrName();
 
             if (!pair.b.isEmpty())
             {

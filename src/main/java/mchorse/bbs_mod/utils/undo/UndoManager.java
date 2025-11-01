@@ -81,6 +81,16 @@ public class UndoManager<T>
         return this.undos.size();
     }
 
+    public void markLastUndoNoMerging()
+    {
+        IUndo<T> undo = this.getCurrentUndo();
+
+        if (undo != null)
+        {
+            undo.noMerging();
+        }
+    }
+
     /**
      * Push the undo, and apply it immediately
      */

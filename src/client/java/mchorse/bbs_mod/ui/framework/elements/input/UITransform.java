@@ -366,30 +366,22 @@ public abstract class UITransform extends UIElement
 
     public void pasteTranslation(Vector3d translation)
     {
-        this.tx.setValue(translation.x);
-        this.ty.setValue(translation.y);
-        this.tz.setValueAndNotify(translation.z);
+        this.setT(null, translation.x, translation.y, translation.z);
     }
 
     public void pasteScale(Vector3d scale)
     {
-        this.sz.setValue(scale.z);
-        this.sy.setValue(scale.y);
-        this.sx.setValueAndNotify(scale.x);
+        this.setS(null, scale.x, scale.y, scale.z);
     }
 
     public void pasteRotation(Vector3d rotation)
     {
-        this.rx.setValue(rotation.x);
-        this.ry.setValue(rotation.y);
-        this.rz.setValueAndNotify(rotation.z);
+        this.setR(null, rotation.x, rotation.y, rotation.z);
     }
 
     public void pasteRotation2(Vector3d rotation)
     {
-        this.r2x.setValue(rotation.x);
-        this.r2y.setValue(rotation.y);
-        this.r2z.setValueAndNotify(rotation.z);
+        this.setR2(null, rotation.x, rotation.y, rotation.z);
     }
 
     private Vector3d getVector(ListType list, int offset)

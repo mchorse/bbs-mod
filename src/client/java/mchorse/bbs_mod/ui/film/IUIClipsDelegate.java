@@ -9,7 +9,7 @@ import mchorse.bbs_mod.utils.clips.Clip;
 
 import java.util.function.Consumer;
 
-public interface IUIClipsDelegate
+public interface IUIClipsDelegate extends ICursor
 {
     public Film getFilm();
 
@@ -22,10 +22,6 @@ public interface IUIClipsDelegate
     public void setFlight(boolean flight);
 
     public boolean isFlying();
-
-    public int getCursor();
-
-    public void setCursor(int tick);
 
     public boolean isRunning();
 

@@ -161,7 +161,7 @@ public class UIFormCategory extends UIElement
 
         for (Form form : this.category.getForms())
         {
-            if (form.getId().toLowerCase().contains(search) || form.getDisplayName().toLowerCase().contains(search))
+            if (form.getFormId().toLowerCase().contains(search) || form.getDisplayName().toLowerCase().contains(search))
             {
                 this.searched.add(form);
             }

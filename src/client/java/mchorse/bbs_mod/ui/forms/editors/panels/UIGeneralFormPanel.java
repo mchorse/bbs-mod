@@ -57,7 +57,7 @@ public class UIGeneralFormPanel extends UIFormPanel
         this.uiScale.limit(0.01D, 100D);
         this.name = new UITextbox(120, (t) -> this.form.name.set(t));
 
-        this.transform = new UIPropTransform();
+        this.transform = new UIPropTransform().callbacks(() -> this.form.transform);
         this.transform.enableHotkeys().relative(this).x(0.5F).y(1F, -10).anchor(0.5F, 1F);
 
         this.hitbox = new UIToggle(UIKeys.FORMS_EDITORS_GENERAL_HITBOX, (b) -> this.form.hitbox.set(b.getValue()));

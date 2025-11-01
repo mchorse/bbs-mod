@@ -61,36 +61,37 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         public void pasteTranslation(Vector3d translation)
         {
             apply(this.editor.editor, this.editor.keyframe, (poseT) -> poseT.translate.set(translation));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteScale(Vector3d scale)
         {
             apply(this.editor.editor, this.editor.keyframe, (poseT) -> poseT.scale.set(scale));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteRotation(Vector3d rotation)
         {
             apply(this.editor.editor, this.editor.keyframe, (poseT) -> poseT.rotate.set(Vectors.toRad(rotation)));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteRotation2(Vector3d rotation)
         {
             apply(this.editor.editor, this.editor.keyframe, (poseT) -> poseT.rotate2.set(Vectors.toRad(rotation)));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void setT(Axis axis, double x, double y, double z)
         {
-            float dx = (float) (x - this.getTransform().translate.x);
-            float dy = (float) (y - this.getTransform().translate.y);
-            float dz = (float) (z - this.getTransform().translate.z);
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.translate.x);
+            float dy = (float) (y - transform.translate.y);
+            float dz = (float) (z - transform.translate.z);
 
             apply(this.editor.editor, this.editor.keyframe, (poseT) ->
             {
@@ -103,9 +104,10 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         @Override
         public void setS(Axis axis, double x, double y, double z)
         {
-            float dx = (float) (x - this.getTransform().scale.x);
-            float dy = (float) (y - this.getTransform().scale.y);
-            float dz = (float) (z - this.getTransform().scale.z);
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.scale.x);
+            float dy = (float) (y - transform.scale.y);
+            float dz = (float) (z - transform.scale.z);
 
             apply(this.editor.editor, this.editor.keyframe, (poseT) ->
             {
@@ -118,9 +120,10 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         @Override
         public void setR(Axis axis, double x, double y, double z)
         {
-            float dx = MathUtils.toRad((float) x) - this.getTransform().rotate.x;
-            float dy = MathUtils.toRad((float) y) - this.getTransform().rotate.y;
-            float dz = MathUtils.toRad((float) z) - this.getTransform().rotate.z;
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate.z;
 
             apply(this.editor.editor, this.editor.keyframe, (poseT) ->
             {
@@ -133,9 +136,10 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         @Override
         public void setR2(Axis axis, double x, double y, double z)
         {
-            float dx = MathUtils.toRad((float) x) - this.getTransform().rotate2.x;
-            float dy = MathUtils.toRad((float) y) - this.getTransform().rotate2.y;
-            float dz = MathUtils.toRad((float) z) - this.getTransform().rotate2.z;
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate2.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate2.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate2.z;
 
             apply(this.editor.editor, this.editor.keyframe, (poseT) ->
             {

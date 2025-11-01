@@ -140,11 +140,7 @@ public class Model implements IMapSerializable, IModel
                 continue;
             }
 
-            if (pose.staticPose)
-            {
-                group.current.copy(group.initial);
-            }
-            else if (transform.fix > 0F)
+            if (transform.fix > 0F)
             {
                 group.current.lerp(group.initial, transform.fix);
             }

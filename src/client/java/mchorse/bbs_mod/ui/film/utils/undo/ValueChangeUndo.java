@@ -1,8 +1,10 @@
 package mchorse.bbs_mod.ui.film.utils.undo;
 
 import mchorse.bbs_mod.data.types.BaseType;
-import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.undo.IUndo;
 
@@ -11,6 +13,8 @@ public class ValueChangeUndo extends FilmEditorUndo
     public DataPath name;
     public BaseType oldValue;
     public BaseType newValue;
+    public MapType uiBefore;
+    public MapType uiAfter;
 
     private boolean mergable = true;
 
@@ -19,6 +23,21 @@ public class ValueChangeUndo extends FilmEditorUndo
         this.name = name;
         this.oldValue = oldValue;
         this.newValue = newValue;
+    }
+
+    public MapType getUIData(boolean redo)
+    {
+        return redo ? this.uiAfter : this.uiBefore;
+    }
+
+    public void cacheBefore(MapType uiData)
+    {
+        this.uiBefore = uiData;
+    }
+
+    public void cacheAfter(UIElement editor)
+    {
+        this.uiAfter = editor.getRoot().collectAllUndoData();
     }
 
     public DataPath getName()

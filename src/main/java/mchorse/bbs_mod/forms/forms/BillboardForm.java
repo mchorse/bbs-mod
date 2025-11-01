@@ -32,17 +32,17 @@ public class BillboardForm extends Form
         this.resizeCrop.invisible();
         this.shading.invisible();
 
-        this.register(this.texture);
-        this.register(this.billboard);
-        this.register(this.linear);
-        this.register(this.mipmap);
-        this.register(this.crop);
-        this.register(this.resizeCrop);
-        this.register(this.color);
-        this.register(this.offsetX);
-        this.register(this.offsetY);
-        this.register(this.rotation);
-        this.register(this.shading);
+        this.add(this.texture);
+        this.add(this.billboard);
+        this.add(this.linear);
+        this.add(this.mipmap);
+        this.add(this.crop);
+        this.add(this.resizeCrop);
+        this.add(this.color);
+        this.add(this.offsetX);
+        this.add(this.offsetY);
+        this.add(this.rotation);
+        this.add(this.shading);
     }
 
     @Override

@@ -141,10 +141,13 @@ public class Transform implements IMapSerializable
     @Override
     public void toData(MapType data)
     {
-        data.put("t", DataStorageUtils.vector3fToData(this.translate));
-        data.put("s", DataStorageUtils.vector3fToData(this.scale));
-        data.put("r", DataStorageUtils.vector3fToData(this.rotate));
-        data.put("r2", DataStorageUtils.vector3fToData(this.rotate2));
+        if (!this.isDefault())
+        {
+            data.put("t", DataStorageUtils.vector3fToData(this.translate));
+            data.put("s", DataStorageUtils.vector3fToData(this.scale));
+            data.put("r", DataStorageUtils.vector3fToData(this.rotate));
+            data.put("r2", DataStorageUtils.vector3fToData(this.rotate2));
+        }
     }
 
     @Override

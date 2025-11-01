@@ -10,12 +10,8 @@ import mchorse.bbs_mod.camera.controller.PlayCameraController;
 import mchorse.bbs_mod.camera.controller.RunnerCameraController;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.film.replays.Replay;
-import mchorse.bbs_mod.forms.FormUtils;
-import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.network.ClientNetwork;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.ContentType;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.utils.Batcher2D;
@@ -139,32 +135,6 @@ public class Films
     public Recorder getRecorder()
     {
         return this.recorder;
-    }
-
-    public void recordTrigger(Form form, StateTrigger trigger)
-    {
-        if (this.recorder == null)
-        {
-            return;
-        }
-
-        for (String key : trigger.states.keys())
-        {
-            boolean existed = this.recorder.properties.properties.containsKey(key);
-            KeyframeChannel channel = this.recorder.properties.getOrCreate(form, key);
-
-            if (channel != null)
-            {
-                if (!existed)
-                {
-                    BaseValueBasic property = FormUtils.getProperty(form, key);
-
-                    channel.insert(0, channel.getFactory().fromData(property.toData()));
-                }
-
-                channel.insert(this.recorder.getTick(), channel.getFactory().fromData(trigger.states.get(key)));
-            }
-        }
     }
 
     public void startRecording(Film film, int replayId, int tick)

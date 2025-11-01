@@ -11,11 +11,8 @@ import mchorse.bbs_mod.entity.IEntityFormProvider;
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.forms.FormUtils;
-import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
-import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
-import mchorse.bbs_mod.forms.triggers.StateTrigger;
 import mchorse.bbs_mod.items.GunProperties;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
@@ -209,15 +206,7 @@ public class ClientNetwork
 
             if (morph.getForm() instanceof ModelForm modelForm)
             {
-                for (StateTrigger trigger : modelForm.triggers.triggers)
-                {
-                    if (trigger.id.equals(triggerId))
-                    {
-                        ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).triggerState(trigger);
-
-                        return;
-                    }
-                }
+                /* TODO: State Triggers */
             }
         });
     }

@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.film.clips;
 
 import mchorse.bbs_mod.camera.clips.misc.SubtitleClip;
+import mchorse.bbs_mod.settings.values.IValueNotifier;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.IUIClipsDelegate;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
@@ -92,10 +93,14 @@ public class UISubtitleClip extends UIClip<SubtitleClip>
             value.set(b.getValue());
         }));
 
-        this.transform = new UIPropTransform((t) -> this.editor.editMultiple(this.clip.transform, (value) ->
-        {
-            value.set(t.copy());
-        }));
+        this.transform = new UIPropTransform().callbacks(
+            () -> this.editor.editMultiple(this.clip.transform, IValueNotifier::preNotify),
+            () -> this.editor.editMultiple(this.clip.transform, (t) ->
+            {
+                t.set(this.transform.getTransform().copy());
+                t.postNotify();
+            })
+        );
 
         this.lineHeight = new UITrackpad((v) -> this.editor.editMultiple(this.clip.lineHeight, (value) ->
         {

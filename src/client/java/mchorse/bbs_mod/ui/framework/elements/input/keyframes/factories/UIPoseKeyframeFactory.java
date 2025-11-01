@@ -8,7 +8,6 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.MobForm;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
-import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
@@ -29,6 +28,7 @@ import mchorse.bbs_mod.utils.joml.Vectors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.pose.PoseTransform;
+import mchorse.bbs_mod.utils.pose.Transform;
 import org.joml.Vector3d;
 
 import java.util.List;
@@ -299,12 +299,6 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         }
 
         @Override
-        protected void changedPose(Runnable runnable)
-        {
-            BaseValue.edit(this.keyframe, (kf) -> runnable.run());
-        }
-
-        @Override
         protected void setFix(PoseTransform transform, float value)
         {
             apply(this.editor, this.keyframe, this.getGroup(transform), (poseT) -> poseT.fix = value);
@@ -342,43 +336,44 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 poseT.rotate.set(0F, 0F, 0F);
                 poseT.rotate2.set(0F, 0F, 0F);
             });
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteTranslation(Vector3d translation)
         {
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.translate.set(translation));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteScale(Vector3d scale)
         {
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.scale.set(scale));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteRotation(Vector3d rotation)
         {
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.rotate.set(Vectors.toRad(rotation)));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void pasteRotation2(Vector3d rotation)
         {
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.rotate2.set(Vectors.toRad(rotation)));
-            this.setTransform(this.getTransform());
+            this.refillTransform();
         }
 
         @Override
         public void setT(Axis axis, double x, double y, double z)
         {
-            float dx = (float) (x - this.getTransform().translate.x);
-            float dy = (float) (y - this.getTransform().translate.y);
-            float dz = (float) (z - this.getTransform().translate.z);
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.translate.x);
+            float dy = (float) (y - transform.translate.y);
+            float dz = (float) (z - transform.translate.z);
 
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
             {
@@ -391,9 +386,10 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         @Override
         public void setS(Axis axis, double x, double y, double z)
         {
-            float dx = (float) (x - this.getTransform().scale.x);
-            float dy = (float) (y - this.getTransform().scale.y);
-            float dz = (float) (z - this.getTransform().scale.z);
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.scale.x);
+            float dy = (float) (y - transform.scale.y);
+            float dz = (float) (z - transform.scale.z);
 
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
             {
@@ -406,9 +402,10 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         @Override
         public void setR(Axis axis, double x, double y, double z)
         {
-            float dx = MathUtils.toRad((float) x) - this.getTransform().rotate.x;
-            float dy = MathUtils.toRad((float) y) - this.getTransform().rotate.y;
-            float dz = MathUtils.toRad((float) z) - this.getTransform().rotate.z;
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate.z;
 
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
             {
@@ -421,9 +418,10 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         @Override
         public void setR2(Axis axis, double x, double y, double z)
         {
-            float dx = MathUtils.toRad((float) x) - this.getTransform().rotate2.x;
-            float dy = MathUtils.toRad((float) y) - this.getTransform().rotate2.y;
-            float dz = MathUtils.toRad((float) z) - this.getTransform().rotate2.z;
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate2.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate2.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate2.z;
 
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
             {

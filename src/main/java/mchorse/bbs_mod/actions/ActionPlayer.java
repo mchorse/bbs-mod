@@ -197,6 +197,12 @@ public class ActionPlayer
             actor.equipStack(EquipmentSlot.MAINHAND, replay.keyframes.mainHand.interpolate(tick, ItemStack.EMPTY));
         }
 
+        double vx = x - replay.keyframes.x.interpolate(tick - 1);
+        double vy = y - replay.keyframes.y.interpolate(tick - 1);
+        double vz = z - replay.keyframes.z.interpolate(tick - 1);
+
+        actor.setVelocity(vx, vy, vz);
+
         actor.fallDistance = replay.keyframes.fall.interpolate(tick).floatValue();
     }
 

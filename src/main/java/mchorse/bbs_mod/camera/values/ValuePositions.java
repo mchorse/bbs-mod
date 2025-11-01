@@ -79,9 +79,7 @@ public class ValuePositions extends ValueList<ValuePosition>
     public void reset()
     {
         this.preNotify();
-
         this.list.clear();
-
         this.postNotify();
     }
 

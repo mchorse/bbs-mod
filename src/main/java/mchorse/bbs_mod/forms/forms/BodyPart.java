@@ -1,47 +1,33 @@
 package mchorse.bbs_mod.forms.forms;
 
-import mchorse.bbs_mod.data.IMapSerializable;
+import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.StubEntity;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.utils.pose.Transform;
 
-import java.util.Objects;
-
-public class BodyPart implements IMapSerializable
+public class BodyPart extends ValueGroup
 {
-    /**
-     * This body part's owner.
-     */
-    private BodyPartManager manager;
-
     private Form form;
-    private Transform transform = new Transform();
 
-    public String bone = "";
-    public boolean useTarget;
+    public final ValueTransform transform = new ValueTransform("transform", new Transform());
+    public final ValueString bone = new ValueString("bone", "");
+    public final ValueBoolean useTarget = new ValueBoolean("useTarget", false);
 
     private IEntity entity = new StubEntity();
 
-    public IEntity getEntity()
+    public BodyPart(String id)
     {
-        return this.entity;
-    }
+        super(id);
 
-    void setManager(BodyPartManager manager)
-    {
-        this.manager = manager;
-
-        if (this.form != null)
-        {
-            this.form.setParent(manager == null ? null : manager.getOwner());
-        }
-    }
-
-    public BodyPartManager getManager()
-    {
-        return this.manager;
+        this.add(this.transform);
+        this.add(this.bone);
+        this.add(this.useTarget);
     }
 
     public Form getForm()
@@ -49,31 +35,44 @@ public class BodyPart implements IMapSerializable
         return this.form;
     }
 
+    public IEntity getEntity()
+    {
+        return this.entity;
+    }
+
+    public BodyPartManager getManager()
+    {
+        return this.parent instanceof BodyPartManager parts ? parts : null;
+    }
+
     public void setForm(Form form)
+    {
+        this.preNotify();
+        this.setInternalForm(form);
+        this.postNotify();
+    }
+
+    private void setInternalForm(Form form)
     {
         if (this.form != null)
         {
-            this.form.setParent(null);
+            this.remove(this.form);
         }
 
         this.form = form;
 
-        if (this.form != null && this.manager != null)
+        if (this.form != null)
         {
-            this.form.setParent(this.manager.getOwner());
+            form.setId("form");
+            this.add(this.form);
         }
-    }
-
-    public Transform getTransform()
-    {
-        return this.transform;
     }
 
     public void update(IEntity target)
     {
         if (this.form != null)
         {
-            this.form.update(this.useTarget ? target : this.entity);
+            this.form.update(this.useTarget.get() ? target : this.entity);
         }
 
         this.entity.update();
@@ -81,7 +80,7 @@ public class BodyPart implements IMapSerializable
 
     public BodyPart copy()
     {
-        BodyPart part = new BodyPart();
+        BodyPart part = new BodyPart(this.id);
 
         part.fromData(this.toData());
 
@@ -89,49 +88,16 @@ public class BodyPart implements IMapSerializable
     }
 
     @Override
-    public boolean equals(Object obj)
+    public void fromData(BaseType data)
     {
-        if (super.equals(obj))
+        super.fromData(data);
+
+        if (data.isMap())
         {
-            return true;
+            MapType map = data.asMap();
+            Form form = map.has("form") ? FormUtils.fromData(map.getMap("form")) : null;
+
+            this.setInternalForm(form);
         }
-
-        if (obj instanceof BodyPart)
-        {
-            BodyPart bodyPart = (BodyPart) obj;
-
-            return Objects.equals(this.form, bodyPart.form)
-                && Objects.equals(this.bone, bodyPart.bone)
-                && Objects.equals(this.transform, bodyPart.transform)
-                && this.useTarget == bodyPart.useTarget;
-        }
-
-        return false;
-    }
-
-    @Override
-    public void toData(MapType data)
-    {
-        if (this.form != null)
-        {
-            data.put("form", FormUtils.toData(this.form));
-        }
-
-        data.put("transform", this.transform.toData());
-        data.putString("bone", this.bone);
-        data.putBool("useTarget", this.useTarget);
-    }
-
-    @Override
-    public void fromData(MapType data)
-    {
-        if (data.has("form"))
-        {
-            this.setForm(FormUtils.fromData(data.getMap("form")));
-        }
-
-        this.transform.fromData(data.getMap("transform"));
-        this.bone = data.getString("bone");
-        this.useTarget = data.getBool("useTarget");
     }
 }

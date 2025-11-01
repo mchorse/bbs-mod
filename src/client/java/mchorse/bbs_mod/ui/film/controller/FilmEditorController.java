@@ -42,7 +42,7 @@ public class FilmEditorController extends BaseFilmController
     @Override
     public int getTick()
     {
-        return this.controller.panel.getRunner().ticks;
+        return this.controller.panel.getCursor();
     }
 
     @Override
@@ -82,7 +82,7 @@ public class FilmEditorController extends BaseFilmController
 
         if (entity == this.controller.getControlled() && this.controller.isRecording() && this.controller.panel.getRunner().isRunning())
         {
-            replay.keyframes.record(this.controller.panel.getRunner().ticks, entity, groups);
+            replay.keyframes.record(this.controller.panel.getCursor(), entity, groups);
         }
 
         ticks = this.getTick() + (this.controller.panel.getRunner().isRunning() ? 1 : 0);

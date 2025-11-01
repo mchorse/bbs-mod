@@ -22,7 +22,14 @@ public class UIActionsConfigKeyframeFactory extends UIKeyframeFactory<ActionsCon
         ModelForm form = (ModelForm) FormUtils.getForm(editor.getGraph().getSheet(keyframe).property);
         ModelFormRenderer renderer = (ModelFormRenderer) FormUtilsClient.getRenderer(form);
 
-        this.actionsEditor = new UIActionsConfigEditor(() -> renderer.resetAnimator());
+        this.actionsEditor = new UIActionsConfigEditor(() ->
+        {
+            this.keyframe.preNotify();
+        }, () ->
+        {
+            renderer.resetAnimator();
+            this.keyframe.postNotify();
+        });
         this.actionsEditor.setConfigs(keyframe.getValue(), form);
 
         this.scroll.add(this.actionsEditor);

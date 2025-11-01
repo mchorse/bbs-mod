@@ -2,40 +2,30 @@ package mchorse.bbs_mod.forms.forms;
 
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSSettings;
-import mchorse.bbs_mod.data.IMapSerializable;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.forms.FormArchitect;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.states.AnimationStates;
 import mchorse.bbs_mod.forms.values.ValueAnchor;
-import mchorse.bbs_mod.settings.values.IValueNotifier;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
-import mchorse.bbs_mod.settings.values.core.ValuePose;
+import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.utils.StringUtils;
-import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-public abstract class Form implements IMapSerializable, IValueNotifier
+public abstract class Form extends ValueGroup
 {
-    private Form parent;
-
     public final ValueBoolean visible = new ValueBoolean("visible", true);
     public final ValueBoolean animatable = new ValueBoolean("animatable", true);
     public final ValueString trackName = new ValueString("track_name", "");
@@ -63,40 +53,41 @@ public abstract class Form implements IMapSerializable, IValueNotifier
 
     public final ValueInt hotkey = new ValueInt("keybind", 0);
 
-    public final BodyPartManager parts = new BodyPartManager(this);
+    public final BodyPartManager parts = new BodyPartManager("parts");
     public final AnimationStates states = new AnimationStates("states");
 
     protected Object renderer;
     protected String cachedID;
-    protected final Map<String, BaseValueBasic> properties = new LinkedHashMap<>();
 
     public Form()
     {
+        super("");
+
         this.animatable.invisible();
         this.trackName.invisible();
         this.name.invisible();
         this.uiScale.invisible();
         this.shaderShadow.invisible();
 
-        this.register(this.visible);
-        this.register(this.animatable);
-        this.register(this.trackName);
-        this.register(this.lighting);
-        this.register(this.name);
-        this.register(this.transform);
-        this.register(this.transformOverlay);
+        this.add(this.visible);
+        this.add(this.animatable);
+        this.add(this.trackName);
+        this.add(this.lighting);
+        this.add(this.name);
+        this.add(this.transform);
+        this.add(this.transformOverlay);
 
         for (int i = 0; i < BBSSettings.recordingPoseTransformOverlays.get(); i++)
         {
             ValueTransform valueTransform = new ValueTransform("transform_overlay" + i, new Transform());
 
             this.additionalTransforms.add(valueTransform);
-            this.register(valueTransform);
+            this.add(valueTransform);
         }
 
-        this.register(this.uiScale);
-        this.register(this.anchor);
-        this.register(this.shaderShadow);
+        this.add(this.uiScale);
+        this.add(this.anchor);
+        this.add(this.shaderShadow);
 
         this.hitbox.invisible();
         this.hitboxWidth.invisible();
@@ -104,23 +95,26 @@ public abstract class Form implements IMapSerializable, IValueNotifier
         this.hitboxSneakMultiplier.invisible();
         this.hitboxEyeHeight.invisible();
 
-        this.register(this.hitbox);
-        this.register(this.hitboxWidth);
-        this.register(this.hitboxHeight);
-        this.register(this.hitboxSneakMultiplier);
-        this.register(this.hitboxEyeHeight);
+        this.add(this.hitbox);
+        this.add(this.hitboxWidth);
+        this.add(this.hitboxHeight);
+        this.add(this.hitboxSneakMultiplier);
+        this.add(this.hitboxEyeHeight);
 
         this.hp.invisible();
         this.speed.invisible();
         this.stepHeight.invisible();
 
-        this.register(this.hp);
-        this.register(this.speed);
-        this.register(this.stepHeight);
+        this.add(this.hp);
+        this.add(this.speed);
+        this.add(this.stepHeight);
 
         this.hotkey.invisible();
 
-        this.register(this.hotkey);
+        this.add(this.hotkey);
+
+        this.add(this.parts);
+        this.add(this.states);
     }
 
     public Object getRenderer()
@@ -133,33 +127,21 @@ public abstract class Form implements IMapSerializable, IValueNotifier
         this.renderer = renderer;
     }
 
-    protected void register(BaseValueBasic property)
+    public Form getParentForm()
     {
-        if (this.properties.containsKey(property.getId()))
+        BaseValue parentValue = this.getParent();
+
+        while (parentValue != null)
         {
-            throw new IllegalStateException("Property " + property.getId() + " was already registered for form by ID " + this.getId() + "!");
+            if (parentValue instanceof Form form)
+            {
+                return form;
+            }
+
+            parentValue = parentValue.getParent();
         }
 
-        this.properties.put(property.getId(), property);
-        property.setParent(this);
-    }
-
-    public Map<String, BaseValueBasic> getProperties()
-    {
-        return Collections.unmodifiableMap(this.properties);
-    }
-
-    /**
-     * Only body parts can set form's parent.
-     */
-    void setParent(Form parent)
-    {
-        this.parent = parent;
-    }
-
-    public Form getParent()
-    {
-        return this.parent;
+        return null;
     }
 
     /* Morphing */
@@ -189,7 +171,7 @@ public abstract class Form implements IMapSerializable, IValueNotifier
 
     /* ID and display name */
 
-    public String getId()
+    public String getFormId()
     {
         if (this.cachedID == null)
         {
@@ -199,11 +181,11 @@ public abstract class Form implements IMapSerializable, IValueNotifier
         return this.cachedID;
     }
 
-    public String getIdOrName()
+    public String getFormIdOrName()
     {
         String name = this.name.get();
 
-        return name.isEmpty() ? this.getId() : name;
+        return name.isEmpty() ? this.getFormId() : name;
     }
 
     public final String getDisplayName()
@@ -220,7 +202,7 @@ public abstract class Form implements IMapSerializable, IValueNotifier
 
     protected String getDefaultDisplayName()
     {
-        return this.getId();
+        return this.getFormId();
     }
 
     public String getTrackName(String property)
@@ -257,81 +239,34 @@ public abstract class Form implements IMapSerializable, IValueNotifier
 
     /* Data comparison and (de)serialization */
 
-    public final Form copy()
+    @Override
+    public void fromData(BaseType data)
     {
-        FormArchitect forms = BBSMod.getForms();
+        /* Compatibility with older forms */
+        if (data instanceof MapType map && map.has("bodyParts"))
+        {
+            MapType bodyParts = map.getMap("bodyParts");
 
-        return forms.fromData(forms.toData(this));
+            if (bodyParts.has("parts"))
+            {
+                map.remove("bodyParts");
+                map.put("parts", bodyParts.getList("parts"));
+            }
+        }
+
+        super.fromData(data);
     }
 
     @Override
-    public boolean equals(Object obj)
+    public BaseType toData()
     {
-        if (super.equals(obj))
+        BaseType data = super.toData();
+
+        if (data instanceof MapType map)
         {
-            return true;
+            BBSMod.getForms().appendId(this, map);
         }
 
-        if (obj instanceof Form)
-        {
-            Form form = (Form) obj;
-
-            if (!this.parts.equals(form.parts))
-            {
-                return false;
-            }
-
-            if (this.properties.size() != form.properties.size())
-            {
-                return false;
-            }
-
-            for (String key : this.properties.keySet())
-            {
-                if (!this.properties.get(key).equals(form.properties.get(key)))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public void preNotify(int flag)
-    {}
-
-    @Override
-    public void postNotify(int flag)
-    {}
-
-    @Override
-    public void toData(MapType data)
-    {
-        data.put("bodyParts", this.parts.toData());
-        data.put("states", this.states.toData());
-
-        for (BaseValue property : this.properties.values())
-        {
-            data.put(property.getId(), property.toData());
-        }
-    }
-
-    @Override
-    public void fromData(MapType data)
-    {
-        this.parts.fromData(data.getMap("bodyParts"));
-        this.states.fromData(data.getMap("states"));
-
-        for (BaseValue property : this.properties.values())
-        {
-            BaseType type = data.get(property.getId());
-
-            if (type != null)
-            {
-                property.fromData(type);
-            }
-        }
+        return data;
     }
 }

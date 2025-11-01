@@ -1,4 +1,4 @@
-package mchorse.bbs_mod.ui.film.replays;
+package mchorse.bbs_mod.ui.film.replays.overlays;
 
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.cubic.data.animation.Animation;
@@ -53,7 +53,6 @@ public class UIAnimationToPoseOverlayPanel extends UIOverlayPanel
         this.generate = new UIButton(UIKeys.FILM_REPLAY_ANIMATION_TO_POSE_GENERATE, (b) ->
         {
             this.callback.animationToPoseKeyframes(
-                this.modelForm, sheet,
                 this.list.getCurrentFirst(),
                 this.onlyKeyframes.getValue(),
                 (int) this.length.getValue(),
@@ -79,6 +78,6 @@ public class UIAnimationToPoseOverlayPanel extends UIOverlayPanel
 
     public static interface IUIAnimationPoseCallback
     {
-        public void animationToPoseKeyframes(ModelForm modelForm, UIKeyframeSheet sheet, String animationKey, boolean onlyKeyframes, int length, int step);
+        public void animationToPoseKeyframes(String animationKey, boolean onlyKeyframes, int length, int step);
     }
 }

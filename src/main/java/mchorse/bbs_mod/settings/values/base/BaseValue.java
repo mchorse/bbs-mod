@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNotifier
 {
     protected String id;
-    protected IValueNotifier parent;
+    protected BaseValue parent;
 
     private boolean visible = true;
     private List<IValueListener> preCallbacks;
@@ -89,7 +89,7 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
         while (value != null)
         {
             visible = visible && value.visible;
-            value = value.getParentValue();
+            value = value.getParent();
         }
 
         return visible;
@@ -101,16 +101,16 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
 
         while (true)
         {
-            if (value.getParentValue() == null)
+            if (value.getParent() == null)
             {
                 return value;
             }
 
-            value = value.getParentValue();
+            value = value.getParent();
         }
     }
 
-    public void setParent(IValueNotifier parent)
+    public void setParent(BaseValue parent)
     {
         this.parent = parent;
     }
@@ -118,6 +118,11 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
     public String getId()
     {
         return this.id;
+    }
+
+    public void resetCallbacks()
+    {
+        this.preCallbacks = this.postCallbacks = null;
     }
 
     @Override
@@ -161,14 +166,9 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
     }
 
     @Override
-    public IValueNotifier getParent()
+    public BaseValue getParent()
     {
         return this.parent;
-    }
-
-    public BaseValue getParentValue()
-    {
-        return this.parent instanceof BaseValue ? (BaseValue) this.parent : null;
     }
 
     public List<String> getPathSegments()
@@ -185,7 +185,7 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
                 strings.add(id);
             }
 
-            value = value.getParentValue();
+            value = value.getParent();
         }
 
         Collections.reverse(strings);
@@ -217,7 +217,7 @@ public abstract class BaseValue implements IDataSerializable<BaseType>, IValueNo
                 strings.strings.add(id);
             }
 
-            value = value.getParentValue();
+            value = value.getParent();
 
             if (value == ancestor)
             {

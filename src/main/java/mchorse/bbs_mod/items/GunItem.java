@@ -25,21 +25,22 @@ public class GunItem extends Item
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand)
     {
+        Entity owner = actor == null ? user : actor;
         ItemStack stack = user.getStackInHand(hand);
         GunProperties properties = this.getProperties(stack);
 
         /* Launch the player */
         if (properties.launch)
         {
-            Vec3d rotationVector = user.getRotationVector().multiply(properties.launchPower);
+            Vec3d rotationVector = owner.getRotationVector().multiply(properties.launchPower);
 
             if (properties.launchAdditive)
             {
-                user.addVelocity(rotationVector);
+                owner.addVelocity(rotationVector);
             }
             else
             {
-                user.setVelocity(rotationVector);
+                owner.setVelocity(rotationVector);
             }
 
             return new TypedActionResult<>(ActionResult.SUCCESS, stack);
@@ -49,17 +50,16 @@ public class GunItem extends Item
         {
             /* Shoot projectiles */
             int projectiles = Math.max(properties.projectiles, 1);
-            Entity owner = actor == null ? user : actor;
 
             for (int i = 0; i < projectiles; i++)
             {
                 GunProjectileEntity projectile = new GunProjectileEntity(BBSMod.GUN_PROJECTILE_ENTITY, world);
-                float yaw = user.getHeadYaw() + (float) (properties.scatterY * (Math.random() - 0.5D));
-                float pitch = user.getPitch() + (float) (properties.scatterX * (Math.random() - 0.5D));
+                float yaw = owner.getHeadYaw() + (float) (properties.scatterY * (Math.random() - 0.5D));
+                float pitch = owner.getPitch() + (float) (properties.scatterX * (Math.random() - 0.5D));
 
                 projectile.setProperties(properties);
                 projectile.setForm(FormUtils.copy(properties.projectileForm));
-                projectile.setPos(user.getX(), user.getY() + user.getEyeHeight(user.getPose()), user.getZ());
+                projectile.setPos(owner.getX(), owner.getY() + owner.getEyeHeight(owner.getPose()), owner.getZ());
                 projectile.setVelocity(owner, pitch, yaw, 0F, properties.speed, 0F);
                 projectile.calculateDimensions();
 
@@ -68,7 +68,7 @@ public class GunItem extends Item
 
             if (!properties.cmdFiring.isEmpty())
             {
-                user.getServer().getCommandManager().executeWithPrefix(user.getCommandSource(), properties.cmdFiring);
+                owner.getServer().getCommandManager().executeWithPrefix(owner.getCommandSource(), properties.cmdFiring);
             }
         }
 

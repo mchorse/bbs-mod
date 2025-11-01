@@ -46,7 +46,7 @@ public class UIForms extends UIList<UIForms.FormEntry>
 
         this.add(new FormEntry(form, null, 0));
 
-        for (BodyPart part : form.parts.getAll())
+        for (BodyPart part : form.parts.getAllTyped())
         {
             this.setupRecursively(form, part, 1);
         }
@@ -61,7 +61,7 @@ public class UIForms extends UIList<UIForms.FormEntry>
             return;
         }
 
-        for (BodyPart childPart : part.getForm().parts.getAll())
+        for (BodyPart childPart : part.getForm().parts.getAllTyped())
         {
             this.setupRecursively(part.getForm(), childPart, depth + 1);
         }
@@ -137,14 +137,14 @@ public class UIForms extends UIList<UIForms.FormEntry>
         {
             if (this.part == null)
             {
-                return this.form.getIdOrName();
+                return this.form.getFormIdOrName();
             }
             else if (this.part.getForm() == null)
             {
                 return "-";
             }
 
-            return this.part.getForm().getIdOrName();
+            return this.part.getForm().getFormIdOrName();
         }
     }
 }
