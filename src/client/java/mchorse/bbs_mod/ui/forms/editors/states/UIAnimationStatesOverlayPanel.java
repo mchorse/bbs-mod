@@ -4,6 +4,7 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.forms.states.AnimationStates;
 import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIKeybind;
@@ -16,6 +17,7 @@ import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
@@ -26,6 +28,10 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
     public UIToggle main;
     public UIKeybind keybind;
     public UITrackpad duration;
+    public UITrackpad fadeIn;
+    public UITrackpad fadeOut;
+    public UIToggle looping;
+    public UITrackpad offset;
 
     protected AnimationStates states;
     protected AnimationState state;
@@ -34,7 +40,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
 
     public UIAnimationStatesOverlayPanel(AnimationStates states, AnimationState current, Consumer<AnimationState> consumer)
     {
-        super(IKey.raw("Animation states"));
+        super(UIKeys.FORMS_EDITOR_STATES_MANAGER_TITLE);
 
         this.states = states;
         this.callback = consumer;
@@ -42,30 +48,33 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.list = this.createList();
         this.list.context((menu) ->
         {
-            menu.action(Icons.ADD, IKey.raw("Add an animation state"), this::addState);
+            menu.action(Icons.ADD, UIKeys.FORMS_EDITOR_STATES_MANAGER_CONTEXT_ADD, this::addState);
 
             if (!this.list.getList().isEmpty())
             {
-                menu.action(Icons.REMOVE, IKey.raw("Remove animation state"), Colors.NEGATIVE, this::removeState);
+                menu.action(Icons.REMOVE, UIKeys.FORMS_EDITOR_STATES_MANAGER_CONTEXT_REMOVE, Colors.NEGATIVE, this::removeState);
             }
         });
         this.list.background();
 
-        this.main = new UIToggle(IKey.raw("Main"), (b) ->
-        {
-            /* There can be only one main */
-            for (AnimationState state : this.states.getList())
-            {
-                state.main.set(false);
-            }
-
-            this.state.main.set(b.getValue());
-        });
+        this.main = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_MAIN, (b) -> this.state.main.set(b.getValue()));
         this.keybind = new UIKeybind((keybind) -> this.state.keybind.set(keybind.getMainKey()));
         this.keybind.single();
         this.duration = new UITrackpad((v) -> this.state.duration.set(v.intValue())).integer().limit(0D);
+        this.fadeIn = new UITrackpad((v) -> this.state.fadeIn.set(v.intValue())).integer().limit(0D);
+        this.fadeIn.tooltip(UIKeys.CAMERA_PANELS_ENVELOPES_START_D);
+        this.fadeOut = new UITrackpad((v) -> this.state.fadeOut.set(v.intValue())).integer().limit(0D);
+        this.fadeOut.tooltip(UIKeys.CAMERA_PANELS_ENVELOPES_END_D);
+        this.looping = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_LOOPING, (b) -> this.state.looping.set(b.getValue()));
+        this.offset = new UITrackpad((v) -> this.state.offset.set(v.intValue())).integer().limit(0D);
+        this.offset.tooltip(UIKeys.FORMS_EDITOR_STATES_MANAGER_OFFSET);
 
-        this.editor = UI.scrollView(this.main, this.keybind, UI.label(IKey.raw("Duration")).marginTop(6), this.duration);
+        this.editor = UI.scrollView(
+            this.main, this.keybind,
+            UI.label(UIKeys.FORMS_EDITOR_STATES_MANAGER_DURATION).marginTop(6), this.duration,
+            UI.label(IKey.comp(Arrays.asList(UIKeys.CAMERA_PANELS_ENVELOPES_START_D, IKey.constant(" / "), UIKeys.CAMERA_PANELS_ENVELOPES_END_D))).marginTop(6), UI.row(this.fadeIn, this.fadeOut),
+            this.looping.marginTop(6), this.offset
+        );
 
         this.list.relative(this.content).w(120).h(1F);
         this.list.setList(states.getList());
@@ -131,6 +140,10 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.main.setValue(state.main.get());
         this.keybind.setKeyCombo(new KeyCombo(IKey.EMPTY, state.keybind.get()));
         this.duration.setValue(state.duration.get());
+        this.fadeIn.setValue(state.fadeIn.get());
+        this.fadeOut.setValue(state.fadeOut.get());
+        this.looping.setValue(state.looping.get());
+        this.offset.setValue(state.offset.get());
     }
 
     @Override

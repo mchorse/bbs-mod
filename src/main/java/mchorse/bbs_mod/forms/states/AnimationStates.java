@@ -2,12 +2,29 @@ package mchorse.bbs_mod.forms.states;
 
 import mchorse.bbs_mod.settings.values.IValueListener;
 import mchorse.bbs_mod.settings.values.core.ValueList;
+import mchorse.bbs_mod.utils.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AnimationStates extends ValueList<AnimationState>
 {
     public AnimationStates(String id)
     {
         super(id);
+    }
+
+    public AnimationState getById(String triggerId)
+    {
+        for (AnimationState state : this.list)
+        {
+            if (state.id.get().equals(triggerId))
+            {
+                return state;
+            }
+        }
+
+        return null;
     }
 
     public AnimationState getMain()
@@ -18,6 +35,28 @@ public class AnimationStates extends ValueList<AnimationState>
             {
                 return state;
             }
+        }
+
+        return null;
+    }
+
+    public AnimationState getMainRandom()
+    {
+        List<AnimationState> states = new ArrayList<>();
+
+        for (AnimationState state : this.list)
+        {
+            if (state.main.get())
+            {
+                states.add(state);
+            }
+        }
+
+        if (!states.isEmpty())
+        {
+            int index = (int) (Math.random() * (states.size() + 1));
+
+            return CollectionUtils.getSafe(states, index);
         }
 
         return null;

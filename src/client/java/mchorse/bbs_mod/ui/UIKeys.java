@@ -106,6 +106,7 @@ public class UIKeys
     public static final IKey CAMERA_PANELS_EDIT_KEYFRAMES = L10n.lang("bbs.ui.camera.panels.edit_keyframes");
     public static final IKey CAMERA_PANELS_ENABLED = L10n.lang("bbs.ui.camera.panels.enabled");
     public static final IKey CAMERA_PANELS_ENVELOPES_END_D = L10n.lang("bbs.ui.camera.panels.envelopes.end_d");
+    public static final IKey CAMERA_PANELS_ENVELOPES_MODES_NORMAL = L10n.lang("bbs.ui.camera.panels.envelopes.modes.normal");
     public static final IKey CAMERA_PANELS_ENVELOPES_POST = L10n.lang("bbs.ui.camera.panels.envelopes.post");
     public static final IKey CAMERA_PANELS_ENVELOPES_PRE = L10n.lang("bbs.ui.camera.panels.envelopes.pre");
     public static final IKey CAMERA_PANELS_ENVELOPES_START_D = L10n.lang("bbs.ui.camera.panels.envelopes.start_d");
@@ -416,6 +417,15 @@ public class UIKeys
     public static final IKey FORMS_EDITOR_PICK_FORM = L10n.lang("bbs.ui.forms.editor.pick_form");
     public static final IKey FORMS_EDITOR_SLIM = L10n.lang("bbs.ui.forms.editor.slim");
     public static final IKey FORMS_EDITOR_SLIM_TOOLTIP = L10n.lang("bbs.ui.forms.editor.slim-tooltip");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.states.manager.context.add");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_REMOVE = L10n.lang("bbs.ui.forms.editor.states.manager.context.remove");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_DURATION = L10n.lang("bbs.ui.forms.editor.states.manager.duration");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_LOOPING = L10n.lang("bbs.ui.forms.editor.states.manager.looping");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_MAIN = L10n.lang("bbs.ui.forms.editor.states.manager.main");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_OFFSET = L10n.lang("bbs.ui.forms.editor.states.manager.offset");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_TITLE = L10n.lang("bbs.ui.forms.editor.states.manager-title");
+    public static final IKey FORMS_EDITOR_STATES_OPEN = L10n.lang("bbs.ui.forms.editor.states.open");
+    public static final IKey FORMS_EDITOR_STATES_TOGGLE = L10n.lang("bbs.ui.forms.editor.states.toggle");
     public static final IKey FORMS_EDITOR_TOGGLE_TREE = L10n.lang("bbs.ui.forms.editor.toggle_tree");
     public static final IKey FORMS_EDITOR_USE_TARGET = L10n.lang("bbs.ui.forms.editor.use_target");
     public static final IKey FORMS_LIST_CONTEXT_FOCUS = L10n.lang("bbs.ui.forms.list.context.focus");

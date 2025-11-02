@@ -94,6 +94,11 @@ public class SelectorOwner
             if (selectorFor != null)
             {
                 this.form = FormUtils.copy(selectorFor.form);
+
+                if (this.form != null)
+                {
+                    this.form.playMain();
+                }
             }
             else
             {

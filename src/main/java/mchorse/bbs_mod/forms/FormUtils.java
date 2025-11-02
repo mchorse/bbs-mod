@@ -2,13 +2,16 @@ package mchorse.bbs_mod.forms;
 
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.data.types.BaseType;
+import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.StringUtils;
+import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -275,5 +278,52 @@ public class FormUtils
         }
 
         return null;
+    }
+
+    /**
+     * Prior to 1.6, there was a mechanism called state triggers (commissioned by Checkpoint).
+     *
+     * It was a way to override form properties by pressing a key. In 1.6, they were superseded
+     * by animation states mechanism. This code converts the data from state trigger format into
+     * animation states. It's not 1-to-1, but better than nothing.
+     */
+    public static void readOldStateTriggers(Form form, MapType map)
+    {
+        if (map.has("stateTriggers") && map.getMap("stateTriggers").has("list"))
+        {
+            ListType list = map.getMap("stateTriggers").getList("list");
+
+            for (BaseType type : list)
+            {
+                if (!type.isMap())
+                {
+                    continue;
+                }
+
+                MapType stateTrigger = type.asMap();
+                AnimationState state = new AnimationState("");
+                MapType states = stateTrigger.getMap("states");
+
+                state.id.set(stateTrigger.getString("id"));
+                state.keybind.set(stateTrigger.getInt("hotkey"));
+
+                for (String key : states.keys())
+                {
+                    BaseType stateData = states.get(key);
+                    KeyframeChannel channel = state.properties.getOrCreate(form, key);
+
+                    if (channel != null)
+                    {
+                        Object o = channel.getFactory().fromData(stateData);
+
+                        channel.insert(0F, o);
+                    }
+                }
+
+                form.states.add(state);
+            }
+        }
+
+        form.states.sync();
     }
 }

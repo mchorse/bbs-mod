@@ -90,6 +90,8 @@ public abstract class FormRenderer <T extends Form>
             return;
         }
 
+        this.form.applyStates(context.transition);
+
         int light = context.light;
         boolean visible = this.form.visible.get();
 
@@ -122,6 +124,8 @@ public abstract class FormRenderer <T extends Form>
         context.stack.pop();
 
         context.light = light;
+
+        this.form.unapplyStates();
     }
 
     protected void applyTransforms(MatrixStack stack, float transition)

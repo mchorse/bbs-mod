@@ -86,6 +86,7 @@ public class Morph
         if (this.form != null && this.entity.getMcEntity() instanceof PlayerEntity player)
         {
             this.form.onMorph(player);
+            this.form.playMain();
         }
 
         this.entity.getMcEntity().calculateDimensions();

@@ -174,7 +174,7 @@ public class FilmEditorController extends BaseFilmController
                     replay.keyframes.apply(ticks, entity);
                     float tick = ticks + this.getTransition(entity, context.tickDelta());
                     Form form = entity.getForm();
-                    replay.properties.applyProperties(tick, form);
+                    replay.properties.applyProperties(form, tick);
 
                     if (!isPlaying)
                     {
@@ -209,7 +209,7 @@ public class FilmEditorController extends BaseFilmController
             replay.keyframes.apply(tick1, entity);
             float tick = (int) keyframe.getTick();
             Form form = entity.getForm();
-            replay.properties.applyProperties(tick, form);
+            replay.properties.applyProperties(form, tick);
 
             BaseFilmController.renderEntity(FilmControllerContext.instance
                 .setup(this.getEntities(), entity, replay, context)

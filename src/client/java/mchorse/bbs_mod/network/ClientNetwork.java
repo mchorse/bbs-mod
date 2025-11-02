@@ -12,7 +12,6 @@ import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.items.GunProperties;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
@@ -204,9 +203,9 @@ public class ClientNetwork
             Entity entity = client.world.getEntityById(id);
             Morph morph = Morph.getMorph(entity);
 
-            if (morph.getForm() instanceof ModelForm modelForm)
+            if (morph != null && morph.getForm() != null)
             {
-                /* TODO: State Triggers */
+                morph.getForm().playState(triggerId);
             }
         });
     }

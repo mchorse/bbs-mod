@@ -4,13 +4,15 @@ import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.utils.Anchor;
+import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.forms.states.AnimationStates;
+import mchorse.bbs_mod.forms.states.StatePlayer;
 import mchorse.bbs_mod.forms.values.ValueAnchor;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
@@ -23,6 +25,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class Form extends ValueGroup
@@ -59,6 +62,8 @@ public abstract class Form extends ValueGroup
 
     protected Object renderer;
     protected String cachedID;
+
+    private final List<StatePlayer> statePlayers = new ArrayList<>();
 
     public Form()
     {
@@ -143,6 +148,61 @@ public abstract class Form extends ValueGroup
         }
 
         return null;
+    }
+
+    /* Animation states */
+
+    public void clearStatePlayers()
+    {
+        this.statePlayers.clear();
+    }
+
+    public void playState(AnimationState state)
+    {
+        if (state != null)
+        {
+            if (state.looping.get())
+            {
+                for (StatePlayer statePlayer : this.statePlayers)
+                {
+                    if (statePlayer.getState() == state)
+                    {
+                        statePlayer.expire();
+
+                        return;
+                    }
+                }
+            }
+
+            this.statePlayers.add(new StatePlayer(state));
+        }
+    }
+
+    public void playState(String triggerId)
+    {
+        this.playState(this.states.getById(triggerId));
+    }
+
+    public void playMain()
+    {
+        this.clearStatePlayers();
+        this.playState(this.states.getMainRandom());
+    }
+
+    public void applyStates(float transition)
+    {
+        for (StatePlayer statePlayer : this.statePlayers)
+        {
+            statePlayer.assignValues(this, transition);
+        }
+    }
+
+    public void unapplyStates()
+    {
+        for (StatePlayer statePlayer : this.statePlayers)
+        {
+            statePlayer.resetValues(this);
+        }
     }
 
     /* Morphing */
@@ -236,6 +296,20 @@ public abstract class Form extends ValueGroup
         {
             ((ITickable) this.renderer).tick(entity);
         }
+
+        Iterator<StatePlayer> it = this.statePlayers.iterator();
+
+        while (it.hasNext())
+        {
+            StatePlayer next = it.next();
+
+            next.update();
+
+            if (next.canBeRemoved())
+            {
+                it.remove();
+            }
+        }
     }
 
     /* Data comparison and (de)serialization */
@@ -243,19 +317,28 @@ public abstract class Form extends ValueGroup
     @Override
     public void fromData(BaseType data)
     {
-        /* Compatibility with older forms */
-        if (data instanceof MapType map && map.has("bodyParts"))
+        if (data instanceof MapType map)
         {
-            MapType bodyParts = map.getMap("bodyParts");
-
-            if (bodyParts.has("parts"))
+            /* Compatibility with older forms */
+            if (map.has("bodyParts"))
             {
-                map.remove("bodyParts");
-                map.put("parts", bodyParts.getList("parts"));
+                MapType bodyParts = map.getMap("bodyParts");
+
+                if (bodyParts.has("parts"))
+                {
+                    map.remove("bodyParts");
+                    map.put("parts", bodyParts.getList("parts"));
+                }
             }
         }
 
         super.fromData(data);
+
+        if (data instanceof MapType map)
+        {
+            /* Compatibility with state triggers */
+            FormUtils.readOldStateTriggers(this, map);
+        }
     }
 
     @Override
@@ -269,24 +352,5 @@ public abstract class Form extends ValueGroup
         }
 
         return data;
-    }
-
-    public void resetValues()
-    {
-        for (BaseValue baseValue : this.getAll())
-        {
-            if (baseValue instanceof BaseValueBasic<?> valueBasic)
-            {
-                valueBasic.setRuntimeValue(null);
-            }
-        }
-
-        for (BodyPart part : this.parts.getAllTyped())
-        {
-            if (part.getForm() != null)
-            {
-                part.getForm().resetValues();
-            }
-        }
     }
 }

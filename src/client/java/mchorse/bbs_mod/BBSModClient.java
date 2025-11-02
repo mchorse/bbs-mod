@@ -20,7 +20,7 @@ import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormCategories;
 import mchorse.bbs_mod.forms.categories.UserFormCategory;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.FramebufferManager;
 import mchorse.bbs_mod.graphics.texture.TextureManager;
@@ -232,9 +232,18 @@ public class BBSModClient implements ClientModInitializer
         Morph morph = Morph.getMorph(MinecraftClient.getInstance().player);
 
         /* State trigger */
-        if (morph != null && morph.getForm() instanceof ModelForm modelForm)
+        if (morph != null && morph.getForm() != null)
         {
-            /* TODO: State Triggers */
+            for (AnimationState state : morph.getForm().states.getAllTyped())
+            {
+                if (state.keybind.get() == key)
+                {
+                    ClientNetwork.sendFormTrigger(state.id.get());
+                    morph.getForm().playState(state);
+
+                    return;
+                }
+            }
         }
 
         /* Change form based on the hotkey */

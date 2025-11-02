@@ -20,7 +20,6 @@ import mchorse.bbs_mod.forms.forms.TrailForm;
 import mchorse.bbs_mod.forms.forms.VanillaParticleForm;
 import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.graphics.window.Window;
-import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.ICursor;
@@ -196,10 +195,10 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
             UIOverlay.addOverlay(this.getContext(), panel, 280, 0.5F).eventPropagataion(EventPropagation.PASS);
         });
         this.openStates.relative(this.statesEditor);
-        this.openStates.tooltip(IKey.raw("Open animation states manager"), Direction.RIGHT);
-        this.plause = new UIIcon(() -> this.playing ? Icons.PLAY : Icons.PAUSE, (b) -> this.plause());
+        this.openStates.tooltip(UIKeys.FORMS_EDITOR_STATES_OPEN, Direction.RIGHT);
+        this.plause = new UIIcon(() -> this.playing ? Icons.PAUSE : Icons.PLAY, (b) -> this.plause());
         this.plause.relative(this.openStates).y(1F);
-        this.plause.tooltip(IKey.raw("Play/pause"), Direction.RIGHT);
+        this.plause.tooltip(UIKeys.CAMERA_EDITOR_KEYS_EDITOR_PLAUSE, Direction.RIGHT);
 
         this.renderer = new UIPickableFormRenderer(this);
         this.renderer.full(this);
@@ -214,7 +213,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         });
         this.toggleSidebar.tooltip(UIKeys.FORMS_EDITOR_TOGGLE_TREE, Direction.RIGHT);
         this.openStateEditor = new UIIcon(Icons.GALLERY, (b) -> this.toggleStateEditor());
-        this.openStateEditor.tooltip(IKey.raw("Toggle animation state editor"), Direction.RIGHT);
+        this.openStateEditor.tooltip(UIKeys.FORMS_EDITOR_STATES_TOGGLE, Direction.RIGHT);
         this.icons = UI.column(this.openStateEditor, this.toggleSidebar, this.finish);
         this.icons.relative(this).y(1F).w(20).anchorY(1F);
 
@@ -301,7 +300,6 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
     private void pickState(AnimationState state)
     {
-        this.form.resetValues();
         this.statesKeyframes.setState(state);
     }
 
@@ -312,7 +310,6 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
     private void toggleStateEditor()
     {
-        this.form.resetValues();
         this.formEditor.toggleVisible();
         this.statesEditor.toggleVisible();
     }
@@ -477,11 +474,23 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         {
             this.undoHandler.reset();
 
+            if (this.statesEditor.isVisible())
+            {
+                this.toggleStateEditor();
+            }
+
             this.form = form;
             this.form.setId("form");
             this.form.preCallback(this.undoHandler::handlePreValues);
 
-            this.pickState(form.states.getMain());
+            AnimationState main = form.states.getMain();
+
+            if (main == null)
+            {
+                main = CollectionUtils.getSafe(form.states.getAllTyped(), 0);
+            }
+
+            this.pickState(main);
 
             if (TOGGLED != this.forms.isVisible())
             {
@@ -493,6 +502,8 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
             this.renderer.form = form;
             this.refreshFormList();
             this.formsList.setIndex(0);
+
+            this.form.clearStatePlayers();
 
             return true;
         }
@@ -647,7 +658,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
                     }
                 }
 
-                state.properties.applyProperties(this.cursor + (this.playing ? context.getTransition() : 0), form);
+                state.properties.applyProperties(form, this.cursor + (this.playing ? context.getTransition() : 0));
             }
         }
 
