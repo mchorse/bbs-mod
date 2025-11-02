@@ -348,6 +348,14 @@ public class BBSMod implements ModInitializer
         return films;
     }
 
+    /**
+     * Expose current world's root folder. Returns null when no world is loaded.
+     */
+    public static File getWorldFolder()
+    {
+        return worldFolder;
+    }
+
     public static MapFactory<Clip, ClipFactoryData> getFactoryCameraClips()
     {
         return factoryCameraClips;
@@ -374,6 +382,8 @@ public class BBSMod implements ModInitializer
         dynamicSourcePack = new DynamicSourcePack(originalSourcePack);
         provider = new AssetProvider();
         provider.register(dynamicSourcePack);
+        /* Registrar primero el pack de estructuras del mundo para priorizar archivos del mundo */
+        provider.registerFirst(new mchorse.bbs_mod.resources.packs.WorldStructuresSourcePack());
         provider.register(new InternalAssetsSourcePack());
 
         settings = new SettingsManager();
