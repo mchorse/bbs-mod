@@ -3,11 +3,13 @@ package mchorse.bbs_mod.ui.framework.elements.overlay;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 
 import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class UIStringOverlayPanel extends UIOverlayPanel
@@ -16,6 +18,7 @@ public class UIStringOverlayPanel extends UIOverlayPanel
 
     private Consumer<String> callback;
     private boolean none;
+    private Function<String, String> displayFormatter = Function.identity();
 
     public static UIStringOverlayPanel links(IKey title, Collection<Link> links, Consumer<Link> callback)
     {
@@ -38,17 +41,37 @@ public class UIStringOverlayPanel extends UIOverlayPanel
 
     public UIStringOverlayPanel(IKey title, Collection<String> strings, Consumer<String> callback)
     {
-        this(title, true, strings, callback);
+        this(title, true, strings, callback, Function.identity());
     }
 
     public UIStringOverlayPanel(IKey title, boolean none, Collection<String> strings, Consumer<String> callback)
+    {
+        this(title, none, strings, callback, Function.identity());
+    }
+
+    public UIStringOverlayPanel(IKey title, boolean none, Collection<String> strings, Consumer<String> callback, Function<String, String> displayFormatter)
     {
         super(title);
 
         this.none = none;
         this.callback = callback;
+        this.displayFormatter = displayFormatter == null ? Function.identity() : displayFormatter;
 
-        this.strings = new UISearchList<>(new UIStringList((list) -> this.accept(list.get(0))));
+        this.strings = new UISearchList<>(new UIStringList((list) -> this.accept(list.get(0)))
+        {
+            @Override
+            protected String elementToString(UIContext context, int i, String element)
+            {
+                try
+                {
+                    return UIStringOverlayPanel.this.displayFormatter.apply(element);
+                }
+                catch (Throwable t)
+                {
+                    return element;
+                }
+            }
+        });
         this.strings.label(UIKeys.GENERAL_SEARCH).full(this.content).x(6).w(1F, -12);
 
         this.strings.list.add(strings);
