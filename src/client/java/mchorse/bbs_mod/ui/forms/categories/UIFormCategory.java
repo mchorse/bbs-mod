@@ -13,6 +13,8 @@ import mchorse.bbs_mod.forms.categories.FormCategory;
 import mchorse.bbs_mod.forms.categories.UserFormCategory;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.forms.StructureForm;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.forms.sections.UserFormSection;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -30,6 +32,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 
 import java.util.ArrayList;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -71,6 +76,65 @@ public class UIFormCategory extends UIElement
 
                     UIUtils.openFolder(BBSMod.getAssetsPath(ModelManager.MODELS_PREFIX + form.model.get() + "/"));
                 });
+            }
+
+            /* Guardar estructura: aparece sólo cuando la forma seleccionada es StructureForm
+             * y el archivo proviene de la carpeta del mundo (generated/.../structures). */
+            if (this.selected instanceof StructureForm)
+            {
+                StructureForm s = (StructureForm) this.selected;
+                String relPath = s.structureFile.get();
+
+                if (relPath != null && !relPath.isEmpty())
+                {
+                    try
+                    {
+                        Link link = Link.assets(relPath);
+                        File src = BBSMod.getProvider().getFile(link);
+                        File world = BBSMod.getWorldFolder();
+
+                        if (src != null && world != null)
+                        {
+                            String base1 = new File(world, "generated/minecraft/structures").getAbsolutePath();
+                            String base2 = new File(world, "generated/structures").getAbsolutePath();
+                            String abs = src.getAbsolutePath();
+
+                            boolean isWorldStructure = abs.startsWith(base1) || abs.startsWith(base2);
+
+                            if (isWorldStructure)
+                            {
+                                menu.action(Icons.DOWNLOAD, IKey.raw("Guardar estructura"), () ->
+                                {
+                                    try
+                                    {
+                                        File assetsStructures = new File(BBSMod.getAssetsFolder(), "structures");
+                                        if (!assetsStructures.exists()) assetsStructures.mkdirs();
+
+                                        String sub = relPath.startsWith("structures/") ? relPath.substring("structures/".length()) : relPath;
+                                        File dst = new File(assetsStructures, sub);
+
+                                        /* Asegurar subcarpetas */
+                                        File parent = dst.getParentFile();
+                                        if (parent != null && !parent.exists()) parent.mkdirs();
+
+                                        Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                                        System.out.println("[BBS] Estructura guardada: " + src.getAbsolutePath() + " -> " + dst.getAbsolutePath());
+
+                                        /* Forzar refresco de la lista de formas */
+                                        BBSModClient.getFormCategories().markDirty();
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception ignored)
+                    {}
+                }
             }
 
             menu.action(Icons.ADD, UIKeys.FORMS_CATEGORIES_CONTEXT_ADD_CATEGORY, () ->
