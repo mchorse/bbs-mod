@@ -379,18 +379,19 @@ public class BBSMod implements ModInitializer
         settings = new SettingsManager();
         forms = new FormArchitect();
         forms
-            .register(Link.bbs("billboard"), BillboardForm.class, null)
-            .register(Link.bbs("label"), LabelForm.class, null)
-            .register(Link.bbs("model"), ModelForm.class, null)
-            .register(Link.bbs("particle"), ParticleForm.class, null)
-            .register(Link.bbs("extruded"), ExtrudedForm.class, null)
-            .register(Link.bbs("block"), BlockForm.class, null)
-            .register(Link.bbs("item"), ItemForm.class, null)
-            .register(Link.bbs("anchor"), AnchorForm.class, null)
-            .register(Link.bbs("mob"), MobForm.class, null)
-            .register(Link.bbs("vanilla_particles"), VanillaParticleForm.class, null)
-            .register(Link.bbs("trail"), TrailForm.class, null)
-            .register(Link.bbs("framebuffer"), FramebufferForm.class, null);
+        .register(Link.bbs("billboard"), BillboardForm.class, null)
+        .register(Link.bbs("label"), LabelForm.class, null)
+        .register(Link.bbs("model"), ModelForm.class, null)
+        .register(Link.bbs("particle"), ParticleForm.class, null)
+        .register(Link.bbs("extruded"), ExtrudedForm.class, null)
+        .register(Link.bbs("block"), BlockForm.class, null)
+        .register(Link.bbs("item"), ItemForm.class, null)
+        .register(Link.bbs("anchor"), AnchorForm.class, null)
+        .register(Link.bbs("mob"), MobForm.class, null)
+        .register(Link.bbs("vanilla_particles"), VanillaParticleForm.class, null)
+        .register(Link.bbs("trail"), TrailForm.class, null)
+        .register(Link.bbs("framebuffer"), FramebufferForm.class, null)
+        .register(Link.bbs("structure"), mchorse.bbs_mod.forms.forms.StructureForm.class, null);
 
         films = new FilmManager(() -> new File(worldFolder, "bbs/films"));
 

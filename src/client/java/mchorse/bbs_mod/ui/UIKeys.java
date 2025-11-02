@@ -399,6 +399,9 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_VANILLA_PARTICLE_TITLE = L10n.lang("bbs.ui.forms.editors.vanilla_particle.title");
     public static final IKey FORMS_EDITORS_VANILLA_PARTICLE_VELOCITY = L10n.lang("bbs.ui.forms.editors.vanilla_particle.velocity");
     public static final IKey FORMS_EDITORS_VANILLA_PARTICLE_VERTICAL = L10n.lang("bbs.ui.forms.editors.vanilla_particle.vertical");
+    public static final IKey FORMS_EDITORS_STRUCTURE_TITLE = L10n.lang("bbs.ui.forms.editors.structure.title");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PICK_STRUCTURE = L10n.lang("bbs.ui.forms.editors.structure.pick_structure");
+    public static final IKey FORMS_EDITORS_STRUCTURE_TINT = L10n.lang("bbs.ui.forms.editors.structure.tint");
     public static final IKey FORMS_EDITOR_BONE = L10n.lang("bbs.ui.forms.editor.bone");
     public static final IKey FORMS_EDITOR_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.context.add");
     public static final IKey FORMS_EDITOR_CONTEXT_COPY = L10n.lang("bbs.ui.forms.editor.context.copy");
