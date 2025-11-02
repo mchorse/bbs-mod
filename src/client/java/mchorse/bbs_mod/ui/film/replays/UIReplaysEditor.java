@@ -182,6 +182,9 @@ public class UIReplaysEditor extends UIElement
         ICONS.put("count", Icons.BUCKET);
 
         ICONS.put("settings", Icons.GEAR);
+
+        /* Structure selection icon for structure_file property */
+        ICONS.put("structure_file", Icons.FILE);
     }
 
     public static Icon getIcon(String key)

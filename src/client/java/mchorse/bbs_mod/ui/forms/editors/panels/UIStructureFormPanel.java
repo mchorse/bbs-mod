@@ -56,7 +56,8 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
                 overlay.set("");
             }
         }
-        UIOverlay.addOverlay(this.getContext(), overlay, 0.4F, 0.8F);
+        /* Igualar tamaño al overlay usado en el panel de keyframes */
+        UIOverlay.addOverlay(this.getContext(), overlay, 280, 0.5F);
     }
 
     private void setStructure(Link link)
