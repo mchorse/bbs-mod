@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.forms;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.forms.categories.FormCategory;
 import mchorse.bbs_mod.forms.sections.ExtraFormSection;
 import mchorse.bbs_mod.forms.sections.FormSection;
@@ -7,6 +8,7 @@ import mchorse.bbs_mod.forms.sections.ModelFormSection;
 import mchorse.bbs_mod.forms.sections.ParticleFormSection;
 import mchorse.bbs_mod.forms.sections.RecentFormSection;
 import mchorse.bbs_mod.forms.sections.UserFormSection;
+import mchorse.bbs_mod.forms.sections.StructureFormSection;
 import mchorse.bbs_mod.utils.watchdog.IWatchDogListener;
 import mchorse.bbs_mod.utils.watchdog.WatchDogEvent;
 
@@ -33,6 +35,11 @@ public class FormCategories implements IWatchDogListener
         this.sections.add(this.userForms);
         this.sections.add(new ModelFormSection(this));
         this.sections.add(new ParticleFormSection(this));
+        /* Mostrar la categoría de estructuras sólo si está activada en ajustes */
+        if (BBSSettings.visualizeStructures != null && BBSSettings.visualizeStructures.get())
+        {
+            this.sections.add(new StructureFormSection(this));
+        }
         this.sections.add(new ExtraFormSection(this));
 
         for (FormSection section : this.sections)

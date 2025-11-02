@@ -298,6 +298,10 @@ public class BBSModClient implements ClientModInitializer
         BBSMod.setupConfig(Icons.KEY_CAP, "keybinds", new File(BBSMod.getSettingsFolder(), "keybinds.json"), KeybindSettings::register);
 
         BBSSettings.language.postCallback((v, f) -> reloadLanguage(getLanguageKey()));
+        /* Reconfigurar las categorías de formularios cuando se cambie la visualización de estructuras */
+        BBSSettings.visualizeStructures.postCallback((v, f) -> {
+            getFormCategories().setup();
+        });
         BBSSettings.editorSeconds.postCallback((v, f) ->
         {
             if (dashboard != null && dashboard.getPanels().panel instanceof UIFilmPanel panel)

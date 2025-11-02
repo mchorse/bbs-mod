@@ -54,6 +54,36 @@ public class ExtraFormSection extends FormSection
         VanillaParticleForm vanillaParticle = new VanillaParticleForm();
         TrailForm trail = new TrailForm();
         StructureForm structure = new StructureForm();
+        /* Preferir 'structures/tree.nbt' si existe en el listado; si no, tomar el primero .nbt */
+        try
+        {
+            String preferred = "structures/tree.nbt";
+            boolean foundPreferred = false;
+
+            for (Link link : mchorse.bbs_mod.BBSMod.getProvider().getLinksFromPath(Link.assets("structures")))
+            {
+                if (!foundPreferred && preferred.equals(link.path))
+                {
+                    structure.structureFile.set(preferred);
+                    foundPreferred = true;
+                    /* No rompemos el bucle para permitir que el set inicial quede si existe */
+                }
+            }
+
+            if (!foundPreferred)
+            {
+                for (Link link : mchorse.bbs_mod.BBSMod.getProvider().getLinksFromPath(Link.assets("structures")))
+                {
+                    if (link.path.toLowerCase().endsWith(".nbt"))
+                    {
+                        structure.structureFile.set(link.path);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception ignored)
+        {}
 
         billboard.texture.set(Link.assets("textures/error.png"));
         extruded.texture.set(Link.assets("textures/error.png"));

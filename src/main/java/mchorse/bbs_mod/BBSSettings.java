@@ -87,6 +87,7 @@ public class BBSSettings
 
     public static ValueBoolean renderAllModelBlocks;
     public static ValueBoolean clickModelBlocks;
+    public static ValueBoolean visualizeStructures;
 
     public static ValueString entitySelectorsPropertyWhitelist;
 
@@ -222,6 +223,7 @@ public class BBSSettings
 
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);
+        visualizeStructures = builder.getBoolean("visualize_structures", false);
 
         entitySelectorsPropertyWhitelist = builder.category("entity_selectors").getString("whitelist", "CustomName,Name");
 

@@ -32,6 +32,8 @@ import org.joml.Matrix4f;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -217,49 +219,71 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         boundsMax = null;
         lastFile = file;
 
-        if (nbtFile == null || !nbtFile.exists())
+        /* Intentar leer como archivo externo si existe; si no, usar InputStream de assets internos */
+        if (nbtFile != null && nbtFile.exists())
         {
-            return;
-        }
-
-        try
-        {
-            NbtCompound root = NbtIo.readCompressed(nbtFile.toPath(), NbtTagSizeTracker.ofUnlimitedBytes());
-            parseStructure(root);
-            System.out.println("[BBS][Structure] Cargado comprimido OK: '" + file + "'");
-        }
-        catch (IOException e)
-        {
-            System.out.println("[BBS][Structure] Lectura comprimida falló, probando sin comprimir: '" + file + "'");
-            e.printStackTrace();
-
-            // Fallo al leer comprimido; intentar lectura sin comprimir (algunos .nbt no están gz)
-            try (java.io.DataInputStream dis = new java.io.DataInputStream(new java.io.FileInputStream(nbtFile)))
+            try
             {
-                NbtElement elem = NbtIo.read(dis, NbtTagSizeTracker.ofUnlimitedBytes());
-                if (elem instanceof NbtCompound)
+                NbtCompound root = NbtIo.readCompressed(nbtFile.toPath(), NbtTagSizeTracker.ofUnlimitedBytes());
+                parseStructure(root);
+                System.out.println("[BBS][Structure] Cargado comprimido desde File OK: '" + file + "'");
+                return;
+            }
+            catch (IOException e)
+            {
+                System.out.println("[BBS][Structure] Lectura comprimida desde File falló, probando sin comprimir: '" + file + "'");
+                e.printStackTrace();
+
+                try (DataInputStream dis = new DataInputStream(new java.io.FileInputStream(nbtFile)))
                 {
-                    parseStructure((NbtCompound) elem);
-                    System.out.println("[BBS][Structure] Cargado sin comprimir OK: '" + file + "'");
+                    NbtElement elem = NbtIo.read(dis, NbtTagSizeTracker.ofUnlimitedBytes());
+                    if (elem instanceof NbtCompound)
+                    {
+                        parseStructure((NbtCompound) elem);
+                        System.out.println("[BBS][Structure] Cargado sin comprimir desde File OK: '" + file + "'");
+                        return;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    System.out.println("[BBS][Structure] NBT raíz no es compound: " + (elem != null ? elem.getType() : "null"));
+                    System.out.println("[BBS][Structure] Lectura sin comprimir desde File también falló: '" + file + "'");
+                    ex.printStackTrace();
                 }
             }
-            catch (Exception ex)
+        }
+
+        /* Si no hay File (assets internos), leer vía InputStream del provider */
+        try (InputStream is = BBSMod.getProvider().getAsset(Link.assets(file)))
+        {
+            try
             {
-                System.out.println("[BBS][Structure] Lectura sin comprimir también falló: '" + file + "'");
-                ex.printStackTrace();
-                // Mantener estructura vacía si ambas lecturas fallan
+                NbtCompound root = NbtIo.readCompressed(is, NbtTagSizeTracker.ofUnlimitedBytes());
+                parseStructure(root);
+                System.out.println("[BBS][Structure] Cargado comprimido vía InputStream OK: '" + file + "'");
+            }
+            catch (IOException e)
+            {
+                System.out.println("[BBS][Structure] Lectura comprimida vía InputStream falló, probando sin comprimir: '" + file + "'");
+                e.printStackTrace();
+
+                /* Reiniciar stream para lectura sin comprimir */
+                try (InputStream is2 = BBSMod.getProvider().getAsset(Link.assets(file)); DataInputStream dis = new DataInputStream(is2))
+                {
+                    NbtElement elem = NbtIo.read(dis, NbtTagSizeTracker.ofUnlimitedBytes());
+                    if (elem instanceof NbtCompound)
+                    {
+                        parseStructure((NbtCompound) elem);
+                        System.out.println("[BBS][Structure] Cargado sin comprimir vía InputStream OK: '" + file + "'");
+                    }
+                }
             }
         }
         catch (Exception e)
         {
-            System.out.println("[BBS][Structure] Error inesperado leyendo NBT de '" + file + "'");
+            System.out.println("[BBS][Structure] No se pudo abrir asset '" + file + "' vía provider");
             e.printStackTrace();
-            // Cualquier otro fallo inesperado; mantener estructura vacía
         }
+        
     }
 
     private void parseStructure(NbtCompound root)

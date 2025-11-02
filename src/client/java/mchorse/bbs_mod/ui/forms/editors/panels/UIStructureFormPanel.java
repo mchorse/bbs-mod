@@ -28,8 +28,9 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.structureFile = new UITextbox(100, (s) -> this.form.structureFile.set(s)).path().border();
         this.color = new UIColor((c) -> this.form.color.set(Color.rgba(c))).withAlpha();
 
-        this.options.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_TITLE), this.pickStructure, this.structureFile);
-        this.options.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_TINT), this.color);
+        /* Quitar etiquetas; mostrar solo los controles */
+        this.options.add(this.color);
+        this.options.add(this.pickStructure);
     }
 
     private void pickStructure()
