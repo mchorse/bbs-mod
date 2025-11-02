@@ -83,7 +83,31 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         matrices.push();
         MatrixStackUtils.multiply(matrices, uiMatrix);
-        matrices.scale(this.form.uiScale.get(), this.form.uiScale.get(), this.form.uiScale.get());
+        /* Autoescala: ajustar para que la estructura quepa en la celda sin recortarse */
+        float cellW = x2 - x1;
+        float cellH = y2 - y1;
+        float baseScale = cellH / 2.5F; /* igual que en ModelFormRenderer#getUIMatrix */
+
+        int wUnits = 1, hUnits = 1, dUnits = 1;
+        if (this.boundsMin != null && this.boundsMax != null)
+        {
+            wUnits = Math.max(1, this.boundsMax.getX() - this.boundsMin.getX() + 1);
+            hUnits = Math.max(1, this.boundsMax.getY() - this.boundsMin.getY() + 1);
+            dUnits = Math.max(1, this.boundsMax.getZ() - this.boundsMin.getZ() + 1);
+        }
+        else
+        {
+            wUnits = Math.max(1, this.size.getX());
+            hUnits = Math.max(1, this.size.getY());
+            dUnits = Math.max(1, this.size.getZ());
+        }
+
+        int maxUnits = Math.max(wUnits, Math.max(hUnits, dUnits));
+        float targetPixels = Math.min(cellW, cellH) * 0.9F; /* margen del 10% */
+        float auto = maxUnits > 0 ? targetPixels / (baseScale * maxUnits) : 1F;
+        /* No exceder la escala definida por el usuario; sólo reducir si es necesario */
+        float finalScale = this.form.uiScale.get() * Math.min(1F, auto);
+        matrices.scale(finalScale, finalScale, finalScale);
 
         matrices.peek().getNormalMatrix().getScale(Vectors.EMPTY_3F);
         matrices.peek().getNormalMatrix().scale(1F / Vectors.EMPTY_3F.x, -1F / Vectors.EMPTY_3F.y, 1F / Vectors.EMPTY_3F.z);
