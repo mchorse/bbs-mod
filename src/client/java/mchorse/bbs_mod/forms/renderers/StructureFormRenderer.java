@@ -14,10 +14,16 @@ import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.joml.Vectors;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -28,6 +34,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
 import org.joml.Matrix4f;
 
 import java.io.File;
@@ -130,7 +137,6 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
     {
         ensureLoaded();
 
-        CustomVertexConsumerProvider consumers = FormUtilsClient.getProvider();
         int light = context.light;
 
         context.stack.push();
@@ -146,18 +152,37 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
             light = 0;
         }
+
+        // Detectar shaders (Iris) para alternar buffers/capas apropiadas
+        boolean shadersActive = isShadersActive();
+
+        net.minecraft.client.render.VertexConsumerProvider.Immediate consumers;
+        boolean useEntityLayers;
+
+        if (shadersActive)
+        {
+            // Buffers del WorldRenderer para compatibilidad con shaders
+            consumers = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+            useEntityLayers = true;
+        }
         else
         {
-            CustomVertexConsumerProvider.hijackVertexFormat((l) -> RenderSystem.enableBlend());
+            // En vanilla, el proveedor custom da una iluminación más consistente
+            consumers = FormUtilsClient.getProvider();
+            useEntityLayers = false;
         }
 
-        Color tint = this.form.color.get();
-        consumers.setSubstitute(BBSRendering.getColorConsumer(tint));
+        // Ajuste de gráfica para capas (hojas, etc.)
+        try
+        {
+            net.minecraft.client.option.GraphicsMode gm = MinecraftClient.getInstance().options.getGraphicsMode().getValue();
+            net.minecraft.client.render.RenderLayers.setFancyGraphicsOrBetter(gm != net.minecraft.client.option.GraphicsMode.FAST);
+        }
+        catch (Throwable ignored) {}
 
-        renderStructure(context.stack, consumers, light, context.overlay);
+        renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, useEntityLayers);
 
         consumers.draw();
-        consumers.setSubstitute(null);
         CustomVertexConsumerProvider.clearRunnables();
         context.stack.pop();
     }
@@ -207,6 +232,134 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         }
     }
 
+    /**
+     * Render con culling usando BlockRenderView virtual para aprovechar la lógica vanilla.
+     * Mantiene el mismo centrado y paridad que renderStructure.
+     */
+    private void renderStructureCulledWorld(FormRenderingContext context, MatrixStack stack, net.minecraft.client.render.VertexConsumerProvider consumers, int light, int overlay, boolean useEntityLayers)
+    {
+        // Centrado basado en límites reales (min/max) para compensar offsets del NBT
+        float cx;
+        float cy;
+        float cz;
+
+        if (boundsMin != null && boundsMax != null)
+        {
+            cx = (boundsMin.getX() + boundsMax.getX()) / 2f;
+            cz = (boundsMin.getZ() + boundsMax.getZ()) / 2f;
+            // Mantener apoyado sobre el suelo: usar el mínimo Y como base
+            cy = boundsMin.getY();
+        }
+        else
+        {
+            // Fallback si no hay límites calculados
+            cx = size.getX() / 2f;
+            cy = 0f;
+            cz = size.getZ() / 2f;
+        }
+
+        float parityX = 0f;
+        float parityZ = 0f;
+        if (boundsMin != null && boundsMax != null)
+        {
+            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+            parityX = (widthX % 2 == 1) ? -0.5f : 0f;
+            parityZ = (widthZ % 2 == 1) ? -0.5f : 0f;
+        }
+
+        // Construir vista virtual con todos los bloques
+        java.util.ArrayList<mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry> entries = new java.util.ArrayList<>();
+        for (BlockEntry be : blocks)
+        {
+            entries.add(new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry(be.state, be.pos));
+        }
+        mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView view = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries);
+
+        BlockEntityRenderDispatcher beDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
+
+        // Posición ancla en el mundo: el formulario se renderiza relativo a su entidad
+        net.minecraft.util.math.BlockPos anchor = new net.minecraft.util.math.BlockPos(
+            (int)Math.floor(context.entity.getX()),
+            (int)Math.floor(context.entity.getY()),
+            (int)Math.floor(context.entity.getZ())
+        );
+
+        for (BlockEntry entry : blocks)
+        {
+            stack.push();
+            stack.translate(entry.pos.getX() - cx + parityX, entry.pos.getY() - cy, entry.pos.getZ() - cz + parityZ);
+
+            // Usar la capa de entidad para bloques cuando se renderiza con el proveedor
+            // de vértices de entidad del WorldRenderer. Esto asegura compatibilidad
+            // con shaders (Iris/Sodium) para capas translúcidas y especiales.
+            RenderLayer layer = useEntityLayers
+                ? RenderLayers.getEntityBlockLayer(entry.state, false)
+                : RenderLayers.getBlockLayer(entry.state);
+
+            VertexConsumer vc = consumers.getBuffer(layer);
+            MinecraftClient.getInstance().getBlockRenderManager().renderBlock(entry.state, entry.pos, view, stack, vc, true, Random.create());
+
+            // Renderizar bloques con entidad (cofres, camas, carteles, cráneos, etc.)
+            Block block = entry.state.getBlock();
+            if (block instanceof BlockEntityProvider)
+            {
+                // Alinear la posición del BE con la ubicación real donde se dibuja
+                int dx = (int)Math.floor(entry.pos.getX() - cx + parityX);
+                int dy = (int)Math.floor(entry.pos.getY() - cy);
+                int dz = (int)Math.floor(entry.pos.getZ() - cz + parityZ);
+                net.minecraft.util.math.BlockPos worldPos = anchor.add(dx, dy, dz);
+
+                BlockEntity be = ((BlockEntityProvider) block).createBlockEntity(worldPos, entry.state);
+                if (be != null)
+                {
+                    // Asociar mundo real para que el renderer pueda consultar luz y efectos
+                    if (MinecraftClient.getInstance().world != null)
+                    {
+                        be.setWorld(MinecraftClient.getInstance().world);
+                    }
+
+                    // Diagnóstico: verificar si existe renderer para este BE
+                    net.minecraft.client.render.block.entity.BlockEntityRenderer<?> renderer = beDispatcher.get(be);
+
+                    // Render del BE directamente con el renderer para evitar traducciones internas
+                    // basadas en cámara/posición mundial que desalinean el dibujo respecto a la matriz local.
+                    int beLight = (MinecraftClient.getInstance().world != null)
+                        ? net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(MinecraftClient.getInstance().world, worldPos)
+                        : light;
+
+                    if (renderer != null)
+                    {
+                        @SuppressWarnings({"rawtypes", "unchecked"})
+                        net.minecraft.client.render.block.entity.BlockEntityRenderer raw = (net.minecraft.client.render.block.entity.BlockEntityRenderer) renderer;
+                        raw.render(be, 0F, stack, consumers, beLight, overlay);
+                    }
+                }
+            }
+
+            stack.pop();
+        }
+    }
+
+    /**
+     * Detecta si hay shaders activos (Iris). Evita dependencias duras usando reflexión.
+     */
+    private boolean isShadersActive()
+    {
+        try
+        {
+            Class<?> apiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
+            Object api = apiClass.getMethod("getInstance").invoke(null);
+            Object result = apiClass.getMethod("isShaderPackInUse").invoke(api);
+            return result instanceof Boolean && (Boolean) result;
+        }
+        catch (Throwable ignored)
+        {
+        }
+
+        return false;
+    }
+
     private void ensureLoaded()
     {
         String file = form.structureFile.get();
@@ -229,13 +382,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         File nbtFile = BBSMod.getProvider().getFile(Link.assets(file));
 
-        try
-        {
-            System.out.println("[BBS][Structure] Intentando cargar '" + file + "' => " + (nbtFile != null ? nbtFile.getAbsolutePath() : "null"));
-        }
-        catch (Throwable ignored)
-        {
-        }
+        
 
         blocks.clear();
         size = BlockPos.ORIGIN;
@@ -250,29 +397,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             {
                 NbtCompound root = NbtIo.readCompressed(nbtFile.toPath(), NbtTagSizeTracker.ofUnlimitedBytes());
                 parseStructure(root);
-                System.out.println("[BBS][Structure] Cargado comprimido desde File OK: '" + file + "'");
                 return;
             }
             catch (IOException e)
             {
-                System.out.println("[BBS][Structure] Lectura comprimida desde File falló, probando sin comprimir: '" + file + "'");
-                e.printStackTrace();
-
-                try (DataInputStream dis = new DataInputStream(new java.io.FileInputStream(nbtFile)))
-                {
-                    NbtElement elem = NbtIo.read(dis, NbtTagSizeTracker.ofUnlimitedBytes());
-                    if (elem instanceof NbtCompound)
-                    {
-                        parseStructure((NbtCompound) elem);
-                        System.out.println("[BBS][Structure] Cargado sin comprimir desde File OK: '" + file + "'");
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.out.println("[BBS][Structure] Lectura sin comprimir desde File también falló: '" + file + "'");
-                    ex.printStackTrace();
-                }
+                
             }
         }
 
@@ -283,29 +412,15 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             {
                 NbtCompound root = NbtIo.readCompressed(is, NbtTagSizeTracker.ofUnlimitedBytes());
                 parseStructure(root);
-                System.out.println("[BBS][Structure] Cargado comprimido vía InputStream OK: '" + file + "'");
             }
             catch (IOException e)
             {
-                System.out.println("[BBS][Structure] Lectura comprimida vía InputStream falló, probando sin comprimir: '" + file + "'");
-                e.printStackTrace();
-
-                /* Reiniciar stream para lectura sin comprimir */
-                try (InputStream is2 = BBSMod.getProvider().getAsset(Link.assets(file)); DataInputStream dis = new DataInputStream(is2))
-                {
-                    NbtElement elem = NbtIo.read(dis, NbtTagSizeTracker.ofUnlimitedBytes());
-                    if (elem instanceof NbtCompound)
-                    {
-                        parseStructure((NbtCompound) elem);
-                        System.out.println("[BBS][Structure] Cargado sin comprimir vía InputStream OK: '" + file + "'");
-                    }
-                }
+                
             }
         }
         catch (Exception e)
         {
-            System.out.println("[BBS][Structure] No se pudo abrir asset '" + file + "' vía provider");
-            e.printStackTrace();
+            
         }
         
     }
@@ -369,11 +484,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 boundsMin = new BlockPos(minX, minY, minZ);
                 boundsMax = new BlockPos(maxX, maxY, maxZ);
 
-                try
-                {
-                    System.out.println("[BBS][Structure] Bounds min=" + boundsMin + ", max=" + boundsMax);
-                }
-                catch (Throwable ignored) {}
+                
             }
         }
     }
@@ -404,15 +515,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             block = Registries.BLOCK.get(id);
             if (block == null)
             {
-                // Identificador válido pero bloque no encontrado
-                System.out.println("[BBS][Structure] Bloque no encontrado para id: " + id + ", usando aire");
                 block = net.minecraft.block.Blocks.AIR;
             }
         }
         catch (Exception e)
         {
-            // Identificador inválido (por ejemplo sin namespace); usar aire
-            System.out.println("[BBS][Structure] Identificador inválido en paleta: '" + name + "', usando aire");
             block = net.minecraft.block.Blocks.AIR;
         }
 
