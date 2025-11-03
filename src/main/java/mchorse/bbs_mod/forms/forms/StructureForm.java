@@ -16,6 +16,8 @@ public class StructureForm extends Form
     public final ValueString structureFile = new ValueString("structure_file", "");
     /** Color de tinte aplicado al renderizado (multiplicado) */
     public final ValueColor color = new ValueColor("color", Color.white());
+    /** Bioma seleccionado para coloreo (override). Vacío para usar el del mundo */
+    public final ValueString biomeId = new ValueString("biome_id", "");
 
     public StructureForm()
     {
@@ -23,6 +25,7 @@ public class StructureForm extends Form
 
         this.add(this.structureFile);
         this.add(this.color);
+        this.add(this.biomeId);
     }
 
     @Override

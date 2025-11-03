@@ -2,6 +2,9 @@ package mchorse.bbs_mod.forms.renderers.utils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.util.Identifier;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
@@ -12,6 +15,7 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.biome.ColorResolver;
+import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +33,10 @@ public class VirtualBlockRenderView implements BlockRenderView
     private final Map<BlockPos, BlockState> states = new HashMap<>();
     private int bottomY = 0;
     private int topY = 256;
+
+    // Biome override, if provided by the UI
+    private Identifier biomeOverrideId = null;
+    private Biome biomeOverride = null;
 
     public static class Entry
     {
@@ -60,6 +68,41 @@ public class VirtualBlockRenderView implements BlockRenderView
             this.bottomY = minY;
             this.topY = maxY;
         }
+    }
+
+    /**
+     * Establece un bioma a usar para consultas de color. Pasa null o "" para limpiar.
+     */
+    public VirtualBlockRenderView setBiomeOverride(String biomeId)
+    {
+        if (biomeId == null || biomeId.isEmpty())
+        {
+            this.biomeOverrideId = null;
+            this.biomeOverride = null;
+            return this;
+        }
+
+        try
+        {
+            this.biomeOverrideId = new Identifier(biomeId);
+            // Resolver preferentemente desde el mundo del cliente
+            if (MinecraftClient.getInstance().world != null)
+            {
+                Registry<Biome> reg = MinecraftClient.getInstance().world.getRegistryManager().get(RegistryKeys.BIOME);
+                this.biomeOverride = reg.get(this.biomeOverrideId);
+            }
+            else
+            {
+                this.biomeOverride = null;
+            }
+        }
+        catch (Throwable t)
+        {
+            this.biomeOverrideId = null;
+            this.biomeOverride = null;
+        }
+
+        return this;
     }
 
     // BlockView
@@ -123,6 +166,12 @@ public class VirtualBlockRenderView implements BlockRenderView
     @Override
     public int getColor(BlockPos pos, ColorResolver colorResolver)
     {
+        // Si hay bioma forzado, usarlo para resolver el color
+        if (this.biomeOverride != null)
+        {
+            return colorResolver.getColor(this.biomeOverride, pos.getX(), pos.getZ());
+        }
+
         if (MinecraftClient.getInstance().world != null)
         {
             return MinecraftClient.getInstance().world.getColor(pos, colorResolver);

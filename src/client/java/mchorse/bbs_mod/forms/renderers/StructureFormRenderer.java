@@ -274,7 +274,8 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         {
             entries.add(new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry(be.state, be.pos));
         }
-        mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView view = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries);
+        mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView view = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries)
+            .setBiomeOverride(this.form.biomeId.get());
 
         BlockEntityRenderDispatcher beDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 
