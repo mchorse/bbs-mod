@@ -333,6 +333,13 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             anchor = net.minecraft.util.math.BlockPos.ORIGIN;
         }
 
+        // Definir offset base desde el centro/paridad para que el BlockRenderView
+        // pueda traducir las consultas de luz/color a coordenadas de mundo reales.
+        int baseDx = (int)Math.floor(-cx + parityX);
+        int baseDy = (int)Math.floor(-cy);
+        int baseDz = (int)Math.floor(-cz + parityZ);
+        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz);
+
         for (BlockEntry entry : blocks)
         {
             stack.push();

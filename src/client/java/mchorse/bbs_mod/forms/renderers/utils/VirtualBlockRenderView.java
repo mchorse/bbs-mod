@@ -38,6 +38,13 @@ public class VirtualBlockRenderView implements BlockRenderView
     private Identifier biomeOverrideId = null;
     private Biome biomeOverride = null;
 
+    // Ancla mundial y offsets base para traducir posiciones locales de la estructura
+    // a coordenadas reales del mundo al consultar iluminación y color.
+    private net.minecraft.util.math.BlockPos worldAnchor = net.minecraft.util.math.BlockPos.ORIGIN;
+    private int baseDx = 0;
+    private int baseDy = 0;
+    private int baseDz = 0;
+
     public static class Entry
     {
         public final BlockState state;
@@ -68,6 +75,19 @@ public class VirtualBlockRenderView implements BlockRenderView
             this.bottomY = minY;
             this.topY = maxY;
         }
+    }
+
+    /**
+     * Establece ancla de mundo y offset base (derivado del centrado/paridad) para
+     * mapear las posiciones locales a posiciones absolutas del mundo.
+     */
+    public VirtualBlockRenderView setWorldAnchor(net.minecraft.util.math.BlockPos anchor, int baseDx, int baseDy, int baseDz)
+    {
+        this.worldAnchor = anchor == null ? net.minecraft.util.math.BlockPos.ORIGIN : anchor;
+        this.baseDx = baseDx;
+        this.baseDy = baseDy;
+        this.baseDz = baseDz;
+        return this;
     }
 
     /**
@@ -169,12 +189,15 @@ public class VirtualBlockRenderView implements BlockRenderView
         // Si hay bioma forzado, usarlo para resolver el color
         if (this.biomeOverride != null)
         {
-            return colorResolver.getColor(this.biomeOverride, pos.getX(), pos.getZ());
+            int wx = this.worldAnchor.getX() + this.baseDx + pos.getX();
+            int wz = this.worldAnchor.getZ() + this.baseDz + pos.getZ();
+            return colorResolver.getColor(this.biomeOverride, wx, wz);
         }
 
         if (MinecraftClient.getInstance().world != null)
         {
-            return MinecraftClient.getInstance().world.getColor(pos, colorResolver);
+            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+            return MinecraftClient.getInstance().world.getColor(worldPos, colorResolver);
         }
 
         return 0xFFFFFF;
@@ -183,23 +206,38 @@ public class VirtualBlockRenderView implements BlockRenderView
     @Override
     public int getLightLevel(LightType type, BlockPos pos)
     {
+        int worldLevel = 0;
         if (MinecraftClient.getInstance().world != null)
         {
-            return MinecraftClient.getInstance().world.getLightLevel(type, pos);
+            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+            worldLevel = MinecraftClient.getInstance().world.getLightLevel(type, worldPos);
         }
 
-        return 0;
+        // Para luz de bloque, combinar con la emitida por bloques luminosos
+        // contenidos en esta vista virtual (no presentes en el mundo real).
+        if (type == LightType.BLOCK)
+        {
+            int local = getLocalBlockLight(pos);
+            return Math.max(worldLevel, local);
+        }
+
+        return worldLevel;
     }
 
     @Override
     public int getBaseLightLevel(BlockPos pos, int ambientDarkness)
     {
+        int worldBase = 0;
         if (MinecraftClient.getInstance().world != null)
         {
-            return MinecraftClient.getInstance().world.getBaseLightLevel(pos, ambientDarkness);
+            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+            worldBase = MinecraftClient.getInstance().world.getBaseLightLevel(worldPos, ambientDarkness);
         }
 
-        return 0;
+        // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
+        // local de bloque para que fuentes virtuales iluminen correctamente.
+        int localBlock = getLocalBlockLight(pos);
+        return Math.max(worldBase, localBlock);
     }
 
     @Override
@@ -207,10 +245,47 @@ public class VirtualBlockRenderView implements BlockRenderView
     {
         if (MinecraftClient.getInstance().world != null)
         {
-            return MinecraftClient.getInstance().world.isSkyVisible(pos);
+            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+            return MinecraftClient.getInstance().world.isSkyVisible(worldPos);
         }
 
         return false;
+    }
+
+    /**
+     * Calcula luz de bloque local emitida por estados dentro de esta vista.
+     * Aproximación: atenuación por distancia Manhattan como en propagación clásica.
+     * Ignora oclusión para mantener costo bajo y evitar rutas complejas.
+     */
+    private int getLocalBlockLight(BlockPos pos)
+    {
+        int max = 0;
+        for (Map.Entry<BlockPos, BlockState> e : this.states.entrySet())
+        {
+            BlockState s = e.getValue();
+            if (s == null)
+            {
+                continue;
+            }
+
+            int luminance = s.getLuminance();
+            if (luminance <= 0)
+            {
+                continue;
+            }
+
+            BlockPos sp = e.getKey();
+            int dist = Math.abs(sp.getX() - pos.getX()) + Math.abs(sp.getY() - pos.getY()) + Math.abs(sp.getZ() - pos.getZ());
+            int contrib = luminance - dist;
+            if (contrib > max)
+            {
+                max = contrib;
+            }
+        }
+
+        if (max < 0) max = 0;
+        if (max > 15) max = 15;
+        return max;
     }
 
     // HeightLimitView
