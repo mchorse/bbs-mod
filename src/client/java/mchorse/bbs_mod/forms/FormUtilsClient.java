@@ -59,6 +59,11 @@ public class FormUtilsClient
             map.put(TexturedRenderLayers.getEntityCutout(), storage.get(RenderLayer.getCutout()));
             map.put(TexturedRenderLayers.getBannerPatterns(), storage.get(RenderLayer.getCutoutMipped()));
             map.put(TexturedRenderLayers.getEntityTranslucentCull(), storage.get(RenderLayer.getTranslucent()));
+            /* Asegurar soporte de capas base de bloques para miniaturas (vidrio, portales, hojas, etc.) */
+            assignBufferBuilder(map, RenderLayer.getSolid());
+            assignBufferBuilder(map, RenderLayer.getCutout());
+            assignBufferBuilder(map, RenderLayer.getTranslucent());
+            assignBufferBuilder(map, RenderLayer.getCutoutMipped());
             assignBufferBuilder(map, TexturedRenderLayers.getShieldPatterns());
             assignBufferBuilder(map, TexturedRenderLayers.getBeds());
             assignBufferBuilder(map, TexturedRenderLayers.getShulkerBoxes());

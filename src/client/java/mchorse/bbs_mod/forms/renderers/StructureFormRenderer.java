@@ -123,9 +123,29 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         consumers.setSubstitute(BBSRendering.getColorConsumer(tint));
         consumers.setUI(true);
 
-        renderStructure(matrices, consumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
+        /* Usar el render con culling y soporte de bloques interactivos también en UI */
+        FormRenderingContext uiContext = new FormRenderingContext()
+            .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, context.getTransition())
+            .inUI();
+
+        // Ajuste de gráfica para capas (hojas, portales, etc.) igual que en 3D
+        try
+        {
+            net.minecraft.client.option.GraphicsMode gm = net.minecraft.client.MinecraftClient.getInstance().options.getGraphicsMode().getValue();
+            net.minecraft.client.render.RenderLayers.setFancyGraphicsOrBetter(gm != net.minecraft.client.option.GraphicsMode.FAST);
+        }
+        catch (Throwable ignored) {}
+
+        // Igual que en vanilla: proveedor custom y capas de bloque (no de entidad)
+        boolean useEntityLayers = false;
+        renderStructureCulledWorld(uiContext, matrices, consumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, useEntityLayers);
 
         consumers.draw();
+        // Restaurar estado GL para evitar fugas hacia otros renders UI
+        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+        com.mojang.blaze3d.systems.RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
+        mchorse.bbs_mod.forms.CustomVertexConsumerProvider.clearRunnables();
         consumers.setUI(false);
         consumers.setSubstitute(null);
 
@@ -288,11 +308,20 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         BlockEntityRenderDispatcher beDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 
         // Posición ancla en el mundo: el formulario se renderiza relativo a su entidad
-        net.minecraft.util.math.BlockPos anchor = new net.minecraft.util.math.BlockPos(
-            (int)Math.floor(context.entity.getX()),
-            (int)Math.floor(context.entity.getY()),
-            (int)Math.floor(context.entity.getZ())
-        );
+        // Si no hay entidad (UI), usar origen como ancla
+        net.minecraft.util.math.BlockPos anchor;
+        if (context.entity != null)
+        {
+            anchor = new net.minecraft.util.math.BlockPos(
+                (int)Math.floor(context.entity.getX()),
+                (int)Math.floor(context.entity.getY()),
+                (int)Math.floor(context.entity.getZ())
+            );
+        }
+        else
+        {
+            anchor = net.minecraft.util.math.BlockPos.ORIGIN;
+        }
 
         for (BlockEntry entry : blocks)
         {
