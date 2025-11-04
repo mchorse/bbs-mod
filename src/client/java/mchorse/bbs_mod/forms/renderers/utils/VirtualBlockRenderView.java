@@ -31,6 +31,8 @@ import java.util.Map;
 public class VirtualBlockRenderView implements BlockRenderView
 {
     private final Map<BlockPos, BlockState> states = new HashMap<>();
+    // Luz de bloque local precomputada (máximo por posición)
+    private final Map<BlockPos, Integer> localBlockLight = new HashMap<>();
     private int bottomY = 0;
     private int topY = 256;
 
@@ -62,9 +64,21 @@ public class VirtualBlockRenderView implements BlockRenderView
         int minY = Integer.MAX_VALUE;
         int maxY = Integer.MIN_VALUE;
 
+        java.util.ArrayList<BlockPos> emitters = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> emitterLevels = new java.util.ArrayList<>();
+
         for (Entry e : entries)
         {
             this.states.put(e.pos, e.state == null ? Blocks.AIR.getDefaultState() : e.state);
+
+            // Registrar emisores de luz para precomputación
+            BlockState st = this.states.get(e.pos);
+            int lum = st == null ? 0 : st.getLuminance();
+            if (lum > 0)
+            {
+                emitters.add(e.pos);
+                emitterLevels.add(lum);
+            }
 
             if (e.pos.getY() < minY) minY = e.pos.getY();
             if (e.pos.getY() > maxY) maxY = e.pos.getY();
@@ -74,6 +88,36 @@ public class VirtualBlockRenderView implements BlockRenderView
         {
             this.bottomY = minY;
             this.topY = maxY;
+        }
+
+        // Precomputar contribución de luz local en posiciones presentes
+        if (!emitters.isEmpty() && !this.states.isEmpty())
+        {
+            for (Map.Entry<BlockPos, BlockState> target : this.states.entrySet())
+            {
+                BlockPos tp = target.getKey();
+                int max = 0;
+                for (int i = 0; i < emitters.size(); i++)
+                {
+                    BlockPos sp = emitters.get(i);
+                    int L = emitterLevels.get(i);
+                    int dist = Math.abs(sp.getX() - tp.getX()) + Math.abs(sp.getY() - tp.getY()) + Math.abs(sp.getZ() - tp.getZ());
+                    int contrib = L - dist;
+                    if (contrib > max)
+                    {
+                        max = contrib;
+                        if (max >= 15)
+                        {
+                            max = 15;
+                            break;
+                        }
+                    }
+                }
+                if (max > 0)
+                {
+                    this.localBlockLight.put(tp, max);
+                }
+            }
         }
     }
 
@@ -217,7 +261,7 @@ public class VirtualBlockRenderView implements BlockRenderView
         // contenidos en esta vista virtual (no presentes en el mundo real).
         if (type == LightType.BLOCK)
         {
-            int local = getLocalBlockLight(pos);
+            int local = this.localBlockLight.getOrDefault(pos, 0);
             return Math.max(worldLevel, local);
         }
 
@@ -236,7 +280,7 @@ public class VirtualBlockRenderView implements BlockRenderView
 
         // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
         // local de bloque para que fuentes virtuales iluminen correctamente.
-        int localBlock = getLocalBlockLight(pos);
+        int localBlock = this.localBlockLight.getOrDefault(pos, 0);
         return Math.max(worldBase, localBlock);
     }
 
@@ -257,36 +301,7 @@ public class VirtualBlockRenderView implements BlockRenderView
      * Aproximación: atenuación por distancia Manhattan como en propagación clásica.
      * Ignora oclusión para mantener costo bajo y evitar rutas complejas.
      */
-    private int getLocalBlockLight(BlockPos pos)
-    {
-        int max = 0;
-        for (Map.Entry<BlockPos, BlockState> e : this.states.entrySet())
-        {
-            BlockState s = e.getValue();
-            if (s == null)
-            {
-                continue;
-            }
-
-            int luminance = s.getLuminance();
-            if (luminance <= 0)
-            {
-                continue;
-            }
-
-            BlockPos sp = e.getKey();
-            int dist = Math.abs(sp.getX() - pos.getX()) + Math.abs(sp.getY() - pos.getY()) + Math.abs(sp.getZ() - pos.getZ());
-            int contrib = luminance - dist;
-            if (contrib > max)
-            {
-                max = contrib;
-            }
-        }
-
-        if (max < 0) max = 0;
-        if (max > 15) max = 15;
-        return max;
-    }
+    // Método retirado: ahora usamos el mapa precomputado O(1)
 
     // HeightLimitView
     @Override
