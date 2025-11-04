@@ -192,6 +192,16 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             useEntityLayers = false;
         }
 
+        // Aplicar tinte/opacidad del formulario cuando sea posible
+        // - En vanilla: el proveedor custom soporta sustitución del consumidor
+        // - Con shaders: el tinte se aplicará envolviendo cada VertexConsumer en el bucle
+        //   de render (más abajo), por lo que aquí no hay sustitución global
+        Color tint3D = this.form.color.get();
+        if (!shadersActive && consumers instanceof CustomVertexConsumerProvider)
+        {
+            ((CustomVertexConsumerProvider) consumers).setSubstitute(BBSRendering.getColorConsumer(tint3D));
+        }
+
         // Ajuste de gráfica para capas (hojas, etc.)
         try
         {
@@ -335,7 +345,25 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 ? RenderLayers.getEntityBlockLayer(entry.state, false)
                 : RenderLayers.getBlockLayer(entry.state);
 
+            // Si hay opacidad global (<1), forzar capa translúcida para todos los bloques
+            // de la estructura, de modo que el alpha se aplique incluso a geometría sólida/cutout.
+            float globalAlpha = this.form.color.get().a;
+            if (globalAlpha < 0.999f)
+            {
+                layer = useEntityLayers
+                    ? net.minecraft.client.render.TexturedRenderLayers.getEntityTranslucentCull()
+                    : RenderLayer.getTranslucent();
+            }
+
             VertexConsumer vc = consumers.getBuffer(layer);
+            // Envolver el consumidor con tinte/opacidad para garantizar coloración
+            // también cuando se usan buffers de entidad (compatibilidad con shaders).
+            Color tint = this.form.color.get();
+            java.util.function.Function<VertexConsumer, VertexConsumer> recolor = BBSRendering.getColorConsumer(tint);
+            if (recolor != null)
+            {
+                vc = recolor.apply(vc);
+            }
             MinecraftClient.getInstance().getBlockRenderManager().renderBlock(entry.state, entry.pos, view, stack, vc, true, Random.create());
 
             // Renderizar bloques con entidad (cofres, camas, carteles, cráneos, etc.)

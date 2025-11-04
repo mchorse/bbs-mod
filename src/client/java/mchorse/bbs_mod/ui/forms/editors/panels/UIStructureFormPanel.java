@@ -12,7 +12,6 @@ import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
-import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.colors.Color;
 import net.minecraft.client.MinecraftClient;
@@ -27,7 +26,6 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
     public UIButton pickBiome;
     public UITextbox structureFile;
     public UIColor color;
-    public UILabel biomeLabel;
 
     public UIStructureFormPanel(UIForm editor)
     {
@@ -37,12 +35,10 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.structureFile = new UITextbox(100, (s) -> this.form.structureFile.set(s)).path().border();
         this.color = new UIColor((c) -> this.form.color.set(Color.rgba(c))).withAlpha();
         this.pickBiome = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_PICK_BIOME, (b) -> this.pickBiome());
-        this.biomeLabel = new UILabel(IKey.raw(""));
 
         /* Quitar etiquetas; mostrar solo los controles */
         this.options.add(this.color);
         this.options.add(this.pickStructure);
-        this.options.add(this.biomeLabel);
         this.options.add(this.pickBiome);
     }
 
@@ -79,7 +75,6 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         {
             String id = value == null ? "" : value;
             this.form.biomeId.set(id);
-            this.updateBiomeLabel();
         });
 
         // Construir lista de biomas de forma segura
@@ -102,18 +97,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         UIOverlay.addOverlay(this.getContext(), overlay, 280, 0.5F);
     }
 
-    private void updateBiomeLabel()
-    {
-        String current = this.form.biomeId.get();
-        if (current == null || current.isEmpty())
-        {
-            this.biomeLabel.label = IKey.raw("Bioma: (mundo)");
-        }
-        else
-        {
-            this.biomeLabel.label = IKey.raw("Bioma: " + current);
-        }
-    }
+    
 
     private void setStructure(Link link)
     {
@@ -130,6 +114,5 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
         this.structureFile.setText(form.structureFile.get());
         this.color.setColor(form.color.get().getARGBColor());
-        this.updateBiomeLabel();
     }
 }
