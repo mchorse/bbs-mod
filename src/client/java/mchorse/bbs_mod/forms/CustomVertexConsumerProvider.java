@@ -81,10 +81,11 @@ public class CustomVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
         if (this.ui)
         {
-            /* Force back the depth func because it seems like stuff rendered by a vertex
-             * consumer is resetting the depth func to GL_LESS, and since this vertex consumer
-             * is designed  */
-            RenderSystem.depthFunc(GL11.GL_ALWAYS);
+            /* Restore the default depth function used by 3D UI rendering.
+             * Some vertex consumer paths may change it (e.g., to GL_LESS),
+             * so bring it back to GL_LEQUAL to avoid leaking incorrect state
+             * into subsequent renders. */
+            RenderSystem.depthFunc(GL11.GL_LEQUAL);
         }
     }
 }

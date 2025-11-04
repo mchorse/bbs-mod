@@ -183,6 +183,14 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, useEntityLayers);
 
         consumers.draw();
+        /* Asegurar que no se filtren estados GL hacia el render de partes de cuerpo.
+         * El pipeline de bloques/entidades puede ajustar blend/depth, así que
+         * restablecemos a valores seguros antes de renderizar formularios hijos. */
+        RenderSystem.disableBlend();
+        RenderSystem.enableDepthTest();
+        // Mantener la función de profundidad estándar usada en el mundo
+        RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
+
         CustomVertexConsumerProvider.clearRunnables();
         context.stack.pop();
     }

@@ -79,12 +79,14 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     {
         this.form = form;
 
+        /* Ensure a current view exists before any panel's startEdit triggers
+         * value changes that may collect undo data. */
+        this.setPanel(this.defaultPanel);
+
         for (UIFormPanel<T> panel : this.panels)
         {
             panel.startEdit(form);
         }
-
-        this.setPanel(this.defaultPanel);
     }
 
     public void finishEdit()
@@ -114,8 +116,16 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     {
         super.collectUndoData(data);
 
-        data.putInt("panel", this.panels.indexOf(this.view));
-        data.putDouble("scroll", this.view.options.scroll.getScroll());
+        int panelIndex = this.panels.indexOf(this.view);
+        data.putInt("panel", panelIndex);
+
+        double scroll = 0D;
+        if (this.view != null && this.view.options != null)
+        {
+            scroll = this.view.options.scroll.getScroll();
+        }
+
+        data.putDouble("scroll", scroll);
     }
 
     @Override
@@ -123,7 +133,19 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     {
         super.applyUndoData(data);
 
-        this.setPanel(this.panels.get(data.getInt("panel")));
-        this.view.options.scroll.setScroll(data.getDouble("scroll"));
+        int panelIndex = data.getInt("panel");
+        if (panelIndex >= 0 && panelIndex < this.panels.size())
+        {
+            this.setPanel(this.panels.get(panelIndex));
+        }
+        else
+        {
+            this.setPanel(this.defaultPanel);
+        }
+
+        if (this.view != null && this.view.options != null)
+        {
+            this.view.options.scroll.setScroll(data.getDouble("scroll"));
+        }
     }
 }
