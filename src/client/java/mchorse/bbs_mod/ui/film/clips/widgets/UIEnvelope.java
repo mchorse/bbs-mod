@@ -54,9 +54,9 @@ public class UIEnvelope extends UIElement
         {
             this.panel.editor.editMultiple(this.get().mode, (value) -> value.set(b.getValue()));
         });
-        this.mode.addLabel(IKey.raw("Normal"));
-        this.mode.addLabel(IKey.raw("Fade in"));
-        this.mode.addLabel(IKey.raw("Fade out"));
+        this.mode.addLabel(UIKeys.CAMERA_PANELS_ENVELOPES_MODES_NORMAL);
+        this.mode.addLabel(UIKeys.CAMERA_PANELS_ENVELOPES_START_D);
+        this.mode.addLabel(UIKeys.CAMERA_PANELS_ENVELOPES_END_D);
         this.pre = new UIButton(UIKeys.CAMERA_PANELS_ENVELOPES_PRE, (b) ->
         {
             this.getContext().replaceContextMenu(new UIInterpolationContextMenu(this.get().pre));

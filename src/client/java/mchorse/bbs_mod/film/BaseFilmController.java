@@ -22,6 +22,7 @@ import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.interps.Lerps;
 import mchorse.bbs_mod.utils.joml.Matrices;
@@ -48,7 +49,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +85,6 @@ public abstract class BaseFilmController
             Lerps.lerp(entity.getPrevZ(), entity.getZ(), transition)
         );
 
-        Anchor value = form.anchor.get();
         double cx = camera.getPos().x;
         double cy = camera.getPos().y;
         double cz = camera.getPos().z;
@@ -105,45 +104,10 @@ public abstract class BaseFilmController
 
         if (!relative)
         {
-            boolean same = value.previousActor == -2
-                || (value.actor == value.previousActor && Objects.equals(value.attachment, value.previousAttachment));
+            Pair<Matrix4f, Float> pair = getTotalMatrix(entities, form.anchor.get(), defaultMatrix, cx, cy, cz, transition);
 
-            if (same)
-            {
-                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
-
-                if (matrix != defaultMatrix)
-                {
-                    target = matrix;
-                    opacity = 0F;
-                }
-            }
-            else if (value.x <= 0F && value.previousActor >= -1)
-            {
-                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
-
-                if (matrix != defaultMatrix)
-                {
-                    target = matrix;
-                    opacity = 0F;
-                }
-            }
-            else
-            {
-                Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value.actor, value.attachment, value.translate, value.scale, defaultMatrix, transition);
-                Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previousActor, value.previousAttachment, value.previousTranslate, value.previousScale, defaultMatrix, transition);
-
-                if (matrix != lastMatrix)
-                {
-                    float factor = value.x;
-
-                    target = factor >= 1F ? matrix : Matrices.lerp(lastMatrix, matrix, factor);
-
-                    if (value.actor == -1 && value.previousActor >= 0) opacity = factor;
-                    else if (value.actor >= 0 && value.previousActor == -1) opacity = 1F - factor;
-                    else opacity = 0F;
-                }
-            }
+            target = pair.a;
+            opacity = pair.b;
         }
 
         if (target != null)
@@ -182,10 +146,7 @@ public abstract class BaseFilmController
         if (context.bone != null && UIBaseMenu.renderAxes)
         {
             Form root = FormUtils.getRoot(form);
-            MatrixStack tempStack = new MatrixStack();
-            Map<String, Matrix4f> map = new HashMap<>();
-
-            FormUtilsClient.getRenderer(root).collectMatrices(entity, context.local ? null : context.bone, tempStack, map, "", transition);
+            Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(entity, context.local ? null : context.bone, transition);
 
             Matrix4f matrix = map.get(context.bone);
 
@@ -224,57 +185,60 @@ public abstract class BaseFilmController
         RenderSystem.enableDepthTest();
     }
 
-    private static void renderNameTag(IEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)
+    private static Pair<Matrix4f, Float> getTotalMatrix(IntObjectMap<IEntity> entities, Anchor value, Matrix4f defaultMatrix, double cx, double cy, double cz, float transition)
     {
-        boolean sneaking = !entity.isSneaking();
-        float hitboxH = (float) entity.getPickingHitbox().h + 0.5F;
+        boolean same = value.previous == null || Objects.equals(value, value.previous);
+        boolean only = value.x <= 0F && value.previous != null;
+        Pair<Matrix4f, Float> result = new Pair<>(null, 1F);
 
-        matrices.push();
-        matrices.translate(0F, hitboxH, 0F);
-        matrices.multiply(MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation());
-        matrices.scale(-0.025F, -0.025F, 0.025F);
-
-        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-
-        float opacity = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-        int background = (int) (opacity * 255F) << 24;
-        float h = (float) (-textRenderer.getWidth(text) / 2);
-
-        textRenderer.draw(text, h, 0, 0x20ffffff, false, matrix4f, vertexConsumers, sneaking ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL, background, light);
-
-        if (sneaking)
+        if (same || only)
         {
-            textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
+            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, same ? value : value.previous, defaultMatrix, transition);
+
+            if (matrix != defaultMatrix)
+            {
+                result.a = matrix;
+                result.b = 0F;
+            }
+        }
+        else
+        {
+            Matrix4f matrix = getEntityMatrix(entities, cx, cy, cz, value, defaultMatrix, transition);
+            Matrix4f lastMatrix = getEntityMatrix(entities, cx, cy, cz, value.previous, defaultMatrix, transition);
+
+            if (matrix != lastMatrix)
+            {
+                result.a = value.x >= 1F ? matrix : Matrices.lerp(lastMatrix, matrix, value.x);
+
+                if (value.isFadeOut()) result.b = value.x;
+                else if (value.isFadeIn()) result.b = 1F - value.x;
+                else result.b = 0F;
+            }
         }
 
-        matrices.pop();
+        return result;
     }
 
-    public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, int actor, String attachment, boolean translate, boolean scale, Matrix4f defaultMatrix, float transition)
+    public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, Anchor anchor, Matrix4f defaultMatrix, float transition)
     {
-        IEntity entity = entities.get(actor);
+        IEntity entity = entities.get(anchor.replay);
 
         if (entity != null)
         {
             Matrix4f basic = new Matrix4f(getMatrixForRenderWithRotation(entity, cameraX, cameraY, cameraZ, transition));
 
-            Map<String, Matrix4f> map = new HashMap<>();
-            MatrixStack stack = new MatrixStack();
-
             Form form = entity.getForm();
 
             if (form != null)
             {
-                FormUtilsClient.getRenderer(form).collectMatrices(entity, null, stack, map, "", transition);
-
-                Matrix4f matrix = map.get(attachment);
+                Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, transition);
+                Matrix4f matrix = map.get(anchor.attachment);
 
                 if (matrix != null)
                 {
                     basic.mul(matrix);
 
-                    if (scale)
+                    if (anchor.scale)
                     {
                         Matrix3f mat = Matrices.TEMP_3F;
                         Vector3f vec = Vectors.TEMP_3F;
@@ -295,7 +259,7 @@ public abstract class BaseFilmController
                         basic.set3x3(mat);
                     }
 
-                    if (translate)
+                    if (anchor.translate)
                     {
                         basic.getTranslation(Vectors.TEMP_3F);
                         basic.set(Matrices.TEMP_3F.set(defaultMatrix));
@@ -324,6 +288,33 @@ public abstract class BaseFilmController
         matrix.rotateY(MathUtils.toRad(-bodyYaw));
 
         return matrix;
+    }
+
+    private static void renderNameTag(IEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)
+    {
+        boolean sneaking = !entity.isSneaking();
+        float hitboxH = (float) entity.getPickingHitbox().h + 0.5F;
+
+        matrices.push();
+        matrices.translate(0F, hitboxH, 0F);
+        matrices.multiply(MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation());
+        matrices.scale(-0.025F, -0.025F, 0.025F);
+
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+
+        float opacity = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+        int background = (int) (opacity * 255F) << 24;
+        float h = (float) (-textRenderer.getWidth(text) / 2);
+
+        textRenderer.draw(text, h, 0, 0x20ffffff, false, matrix4f, vertexConsumers, sneaking ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL, background, light);
+
+        if (sneaking)
+        {
+            textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
+        }
+
+        matrices.pop();
     }
 
     /* Film controller */
@@ -547,7 +538,7 @@ public abstract class BaseFilmController
 
             /* Apply property */
             Form form1 = entity.getForm();
-            replay.properties.applyProperties(tick + delta, form1);
+            replay.properties.applyProperties(form1, tick + delta);
 
             Map<String, Integer> actors = this.getActors();
 
@@ -562,7 +553,7 @@ public abstract class BaseFilmController
                     if (anEntity instanceof ActorEntity actor)
                     {
                         Form form = actor.getForm();
-                        replay.properties.applyProperties(tick + delta, form);
+                        replay.properties.applyProperties(form, tick + delta);
                     }
                     else if (anEntity instanceof PlayerEntity player)
                     {
@@ -571,7 +562,7 @@ public abstract class BaseFilmController
                         if (morph != null)
                         {
                             Form form = morph.getForm();
-                            replay.properties.applyProperties(tick + delta, form);
+                            replay.properties.applyProperties(form, tick + delta);
                         }
 
                         float yawHead = replay.keyframes.headYaw.interpolate(tick + delta).floatValue();

@@ -9,9 +9,9 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.renderers.FormRenderer;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
-import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -21,7 +21,6 @@ import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.interps.Lerps;
 import mchorse.bbs_mod.utils.joml.Vectors;
-import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Intersectionf;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -30,7 +29,6 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class OrbitFilmCameraController implements ICameraController
@@ -227,9 +225,8 @@ public class OrbitFilmCameraController implements ICameraController
 
             if (form != null)
             {
-                Map<String, Matrix4f> map = new HashMap<>();
-                MatrixStack stack = new MatrixStack();
                 FormRenderer renderer = FormUtilsClient.getRenderer(form);
+                Map<String, Matrix4f> map = renderer.collectMatrices(entity, "", transition);
                 String group = "anchor";
 
                 if (form instanceof ModelForm modelForm)
@@ -244,15 +241,12 @@ public class OrbitFilmCameraController implements ICameraController
                     }
                 }
 
-                renderer.collectMatrices(entity, "", stack, map, "", transition);
-
                 Matrix4f anchor = map.get(group);
 
                 if (anchor != null)
                 {
-                    Anchor v = form.anchor.get();
                     Matrix4f defaultMatrix = BaseFilmController.getMatrixForRenderWithRotation(entity, x, y, z, transition);
-                    Matrix4f matrix = BaseFilmController.getEntityMatrix(this.controller.getEntities(), x, y, z, v.actor, v.attachment, false, false, defaultMatrix, transition);
+                    Matrix4f matrix = BaseFilmController.getEntityMatrix(this.controller.getEntities(), x, y, z, form.anchor.get(), defaultMatrix, transition);
 
                     matrix.mul(anchor);
 

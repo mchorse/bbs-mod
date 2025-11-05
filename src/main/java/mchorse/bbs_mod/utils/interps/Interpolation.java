@@ -2,6 +2,7 @@ package mchorse.bbs_mod.utils.interps;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
+import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.data.types.StringType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -146,15 +147,17 @@ public class Interpolation extends BaseValue implements IInterp
             return new StringType(CollectionUtils.getKey(this.map, this.interp));
         }
 
+        MapType map = new MapType();
         ListType list = new ListType();
 
-        list.addString(CollectionUtils.getKey(this.map, this.interp));
+        map.putString("key", CollectionUtils.getKey(this.map, this.interp));
+        map.put("args", list);
         list.addDouble(this.args.v1);
         list.addDouble(this.args.v2);
         list.addDouble(this.args.v3);
         list.addDouble(this.args.v4);
 
-        return list;
+        return map;
     }
 
     @Override
@@ -176,6 +179,21 @@ public class Interpolation extends BaseValue implements IInterp
                 this.args.v2 = list.getDouble(2);
                 this.args.v3 = list.getDouble(3);
                 this.args.v4 = list.getDouble(4);
+            }
+        }
+        else if (data.isMap())
+        {
+            MapType map = data.asMap();
+            ListType args = map.getList("args");
+
+            this.interp = this.map.getOrDefault(map.getString("key"), Interpolations.LINEAR);
+
+            if (args.size() >= 4)
+            {
+                this.args.v1 = args.getDouble(0);
+                this.args.v2 = args.getDouble(1);
+                this.args.v3 = args.getDouble(2);
+                this.args.v4 = args.getDouble(3);
             }
         }
         else if (data.isString())

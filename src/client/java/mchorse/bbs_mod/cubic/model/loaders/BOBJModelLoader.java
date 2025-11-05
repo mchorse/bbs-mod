@@ -23,7 +23,9 @@ import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class BOBJModelLoader implements IModelLoader
@@ -100,20 +102,35 @@ public class BOBJModelLoader implements IModelLoader
         return null;
     }
 
-    private void loadDefaultAnimations(AssetProvider provider, MolangParser parser)
+    public void loadDefaultAnimations(AssetProvider provider, MolangParser parser)
     {
         this.defaultAnimations = new Animations(parser);
 
-        try (InputStream stream = provider.getAsset(Link.assets("actions.bobj")))
-        {
-            BOBJLoader.BOBJData bobjData = BOBJLoader.readData(stream);
+        List<Link> actionsList = new ArrayList<>();
 
-            this.convertAnimations(bobjData, this.defaultAnimations);
-        }
-        catch (Exception e)
+        actionsList.add(Link.assets("actions.bobj"));
+
+        for (Link link : provider.getLinksFromPath(Link.assets("emotes")))
         {
-            System.err.println("Failed to load Emoticons' actions.bobj!");
-            e.printStackTrace();
+            if (link.path.endsWith(".bobj"))
+            {
+                actionsList.add(link);
+            }
+        }
+
+        for (Link link : actionsList)
+        {
+            try (InputStream stream = provider.getAsset(link))
+            {
+                BOBJLoader.BOBJData bobjData = BOBJLoader.readData(stream);
+
+                this.convertAnimations(bobjData, this.defaultAnimations);
+            }
+            catch (Exception e)
+            {
+                System.err.println("Failed to load Emoticons " + link + "!");
+                e.printStackTrace();
+            }
         }
     }
 
