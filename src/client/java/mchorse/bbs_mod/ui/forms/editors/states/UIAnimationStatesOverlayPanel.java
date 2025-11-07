@@ -30,6 +30,8 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
     public UITrackpad duration;
     public UITrackpad fadeIn;
     public UITrackpad fadeOut;
+    public UIToggle looping;
+    public UITrackpad offset;
 
     protected AnimationStates states;
     protected AnimationState state;
@@ -55,16 +57,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         });
         this.list.background();
 
-        this.main = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_MAIN, (b) ->
-        {
-            /* There can be only one main */
-            for (AnimationState state : this.states.getList())
-            {
-                state.main.set(false);
-            }
-
-            this.state.main.set(b.getValue());
-        });
+        this.main = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_MAIN, (b) -> this.state.main.set(b.getValue()));
         this.keybind = new UIKeybind((keybind) -> this.state.keybind.set(keybind.getMainKey()));
         this.keybind.single();
         this.duration = new UITrackpad((v) -> this.state.duration.set(v.intValue())).integer().limit(0D);
@@ -72,11 +65,15 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.fadeIn.tooltip(UIKeys.CAMERA_PANELS_ENVELOPES_START_D);
         this.fadeOut = new UITrackpad((v) -> this.state.fadeOut.set(v.intValue())).integer().limit(0D);
         this.fadeOut.tooltip(UIKeys.CAMERA_PANELS_ENVELOPES_END_D);
+        this.looping = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_LOOPING, (b) -> this.state.looping.set(b.getValue()));
+        this.offset = new UITrackpad((v) -> this.state.offset.set(v.intValue())).integer().limit(0D);
+        this.offset.tooltip(UIKeys.FORMS_EDITOR_STATES_MANAGER_OFFSET);
 
         this.editor = UI.scrollView(
             this.main, this.keybind,
             UI.label(UIKeys.FORMS_EDITOR_STATES_MANAGER_DURATION).marginTop(6), this.duration,
-            UI.label(IKey.comp(Arrays.asList(UIKeys.CAMERA_PANELS_ENVELOPES_START_D, IKey.constant(" / "), UIKeys.CAMERA_PANELS_ENVELOPES_END_D))).marginTop(6), UI.row(this.fadeIn, this.fadeOut)
+            UI.label(IKey.comp(Arrays.asList(UIKeys.CAMERA_PANELS_ENVELOPES_START_D, IKey.constant(" / "), UIKeys.CAMERA_PANELS_ENVELOPES_END_D))).marginTop(6), UI.row(this.fadeIn, this.fadeOut),
+            this.looping.marginTop(6), this.offset
         );
 
         this.list.relative(this.content).w(120).h(1F);
@@ -145,6 +142,8 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.duration.setValue(state.duration.get());
         this.fadeIn.setValue(state.fadeIn.get());
         this.fadeOut.setValue(state.fadeOut.get());
+        this.looping.setValue(state.looping.get());
+        this.offset.setValue(state.offset.get());
     }
 
     @Override

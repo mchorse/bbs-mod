@@ -13,7 +13,6 @@ import mchorse.bbs_mod.forms.states.AnimationStates;
 import mchorse.bbs_mod.forms.states.StatePlayer;
 import mchorse.bbs_mod.forms.values.ValueAnchor;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
@@ -153,6 +152,26 @@ public abstract class Form extends ValueGroup
 
     /* Animation states */
 
+    public boolean findState(int hotkey, IStateFoundCallback callback)
+    {
+        if (callback == null)
+        {
+            return false;
+        }
+
+        for (AnimationState state : this.states.getAllTyped())
+        {
+            if (state.keybind.get() == hotkey)
+            {
+                callback.acceptState(this, state);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void clearStatePlayers()
     {
         this.statePlayers.clear();
@@ -162,19 +181,32 @@ public abstract class Form extends ValueGroup
     {
         if (state != null)
         {
+            if (state.looping.get())
+            {
+                for (StatePlayer statePlayer : this.statePlayers)
+                {
+                    if (statePlayer.getState() == state)
+                    {
+                        statePlayer.expire();
+
+                        return;
+                    }
+                }
+            }
+
             this.statePlayers.add(new StatePlayer(state));
         }
     }
 
-    public void playState(String triggerId)
+    public void playState(String stateId)
     {
-        this.playState(this.states.getById(triggerId));
+        this.playState(this.states.getById(stateId));
     }
 
     public void playMain()
     {
         this.clearStatePlayers();
-        this.playState(this.states.getMain());
+        this.playState(this.states.getMainRandom());
     }
 
     public void applyStates(float transition)
@@ -190,25 +222,6 @@ public abstract class Form extends ValueGroup
         for (StatePlayer statePlayer : this.statePlayers)
         {
             statePlayer.resetValues(this);
-        }
-    }
-
-    public void resetValues()
-    {
-        for (BaseValue baseValue : this.getAll())
-        {
-            if (baseValue instanceof BaseValueBasic<?> valueBasic)
-            {
-                valueBasic.setRuntimeValue(null);
-            }
-        }
-
-        for (BodyPart part : this.parts.getAllTyped())
-        {
-            if (part.getForm() != null)
-            {
-                part.getForm().resetValues();
-            }
         }
     }
 

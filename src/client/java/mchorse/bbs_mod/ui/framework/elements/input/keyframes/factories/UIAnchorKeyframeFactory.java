@@ -18,11 +18,9 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
-import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -74,11 +72,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
         }
 
         Form form = entity.getForm();
-        Map<String, Matrix4f> map = new HashMap<>();
-        MatrixStack stack = new MatrixStack();
-
-        FormUtilsClient.getRenderer(form).collectMatrices(entity, null, stack, map, "", 0);
-
+        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, 0F);
         List<String> attachments = new ArrayList<>(map.keySet());
 
         attachments.sort(String::compareToIgnoreCase);
@@ -121,7 +115,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
         this.actor = new UIButton(UIKeys.GENERIC_KEYFRAMES_ANCHOR_PICK_ACTOR, (b) -> this.displayActors());
         this.attachment = new UIButton(UIKeys.GENERIC_KEYFRAMES_ANCHOR_PICK_ATTACHMENT, (b) ->
         {
-            displayAttachments(this.getPanel(), this.keyframe.getValue().actor, this.keyframe.getValue().attachment, this::setAttachment);
+            displayAttachments(this.getPanel(), this.keyframe.getValue().replay, this.keyframe.getValue().attachment, this::setAttachment);
         });
         this.translate = new UIToggle(UIKeys.TRANSFORMS_TRANSLATE, (b) -> this.setTranslate(b.getValue()));
         this.translate.setValue(keyframe.getValue().translate);
@@ -135,12 +129,12 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
     {
         UIFilmPanel panel = this.getPanel();
 
-        displayActors(this.getContext(), panel.getController().getEntities(), this.keyframe.getValue().actor, this::setActor);
+        displayActors(this.getContext(), panel.getController().getEntities(), this.keyframe.getValue().replay, this::setActor);
     }
 
     private void setActor(int actor)
     {
-        BaseValue.edit(this.keyframe, (value) -> value.getValue().actor = actor);
+        BaseValue.edit(this.keyframe, (value) -> value.getValue().replay = actor);
     }
 
     private void setAttachment(String attachment)

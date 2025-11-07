@@ -45,6 +45,11 @@ public class Pose implements IMapSerializable
         {
             for (String key : this.transforms.keySet())
             {
+                if (key == null)
+                {
+                    continue;
+                }
+
                 for (Pair<Pattern, String> pair : patterns)
                 {
                     Matcher matcher = pair.a.matcher(key);

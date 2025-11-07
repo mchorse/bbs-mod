@@ -414,7 +414,9 @@ public class UIKeys
     public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.states.manager.context.add");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_REMOVE = L10n.lang("bbs.ui.forms.editor.states.manager.context.remove");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_DURATION = L10n.lang("bbs.ui.forms.editor.states.manager.duration");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_LOOPING = L10n.lang("bbs.ui.forms.editor.states.manager.looping");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_MAIN = L10n.lang("bbs.ui.forms.editor.states.manager.main");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_OFFSET = L10n.lang("bbs.ui.forms.editor.states.manager.offset");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_TITLE = L10n.lang("bbs.ui.forms.editor.states.manager-title");
     public static final IKey FORMS_EDITOR_STATES_OPEN = L10n.lang("bbs.ui.forms.editor.states.open");
     public static final IKey FORMS_EDITOR_STATES_TOGGLE = L10n.lang("bbs.ui.forms.editor.states.toggle");

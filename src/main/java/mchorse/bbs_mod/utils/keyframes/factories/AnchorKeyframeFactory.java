@@ -6,8 +6,6 @@ import mchorse.bbs_mod.utils.interps.IInterp;
 
 public class AnchorKeyframeFactory implements IKeyframeFactory<Anchor>
 {
-    private Anchor i = new Anchor();
-
     @Override
     public Anchor fromData(BaseType data)
     {
@@ -33,16 +31,9 @@ public class AnchorKeyframeFactory implements IKeyframeFactory<Anchor>
     @Override
     public Anchor copy(Anchor value)
     {
-        Anchor anchor = new Anchor();
+        Anchor anchor = value.copy();
 
-        anchor.actor = value.actor;
-        anchor.attachment = value.attachment;
-        anchor.translate = value.translate;
-        anchor.scale = value.scale;
-        anchor.previousActor = value.previousActor;
-        anchor.previousAttachment = value.previousAttachment;
-        anchor.previousTranslate = value.previousTranslate;
-        anchor.previousScale = value.previousScale;
+        anchor.previous = value.previous == null ? null : value.previous.copy();
         anchor.x = value.x;
 
         return anchor;
@@ -51,18 +42,11 @@ public class AnchorKeyframeFactory implements IKeyframeFactory<Anchor>
     @Override
     public Anchor interpolate(Anchor preA, Anchor a, Anchor b, Anchor postB, IInterp interpolation, float x)
     {
-        this.i.actor = b.actor;
-        this.i.attachment = b.attachment;
-        this.i.translate = b.translate;
-        this.i.scale = b.scale;
+        Anchor anchor = b.copy();
 
-        this.i.previousActor = a.actor;
-        this.i.previousAttachment = a.attachment;
-        this.i.previousTranslate = a.translate;
-        this.i.previousScale = a.scale;
+        anchor.previous = a.copy();
+        anchor.x = interpolation.interpolate(0F, 1F, x);
 
-        this.i.x = interpolation.interpolate(0F, 1F, x);
-
-        return this.i;
+        return anchor;
     }
 }

@@ -55,6 +55,7 @@ public class GunProperties extends ModelProperties
 
     /* Zoom */
     public Form zoomForm;
+    public final Transform zoomTransform = new Transform();
     public String cmdZoomOn = "";
     public String cmdZoomOff = "";
     public Interpolation fovInterp = new Interpolation("interp", Interpolations.MAP);
@@ -219,6 +220,7 @@ public class GunProperties extends ModelProperties
         this.collideEntities = data.getBool("collideEntities", true);
 
         this.zoomForm = FormUtils.fromData(data.get("zoomForm"));
+        this.zoomTransform.fromData(data.getMap("zoomTransform"));
         this.cmdZoomOn = data.getString("cmdZoomOn");
         this.cmdZoomOff = data.getString("cmdZoomOff");
         this.fovInterp.fromData(data.get("fovInterp"));
@@ -266,6 +268,7 @@ public class GunProperties extends ModelProperties
         data.putBool("collideEntities", this.collideEntities);
 
         if (this.zoomForm != null) data.put("zoomForm", FormUtils.toData(this.zoomForm));
+        data.put("zoomTransform", this.zoomTransform.toData());
         data.putString("cmdZoomOn", this.cmdZoomOn);
         data.putString("cmdZoomOff", this.cmdZoomOff);
         data.put("fovInterp", this.fovInterp.toData());

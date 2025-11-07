@@ -127,6 +127,11 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
         this.createUI();
     }
 
+    public GunProperties getGunProperties()
+    {
+        return this.gunProperties;
+    }
+
     private void createUI()
     {
         this.sections.clear();
@@ -278,6 +283,7 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
                 gun.zoomForm = FormUtils.copy(f);
                 this.sectionZoom.getChildren(UINestedEdit.class).get(0).setForm(f);
             })).keybinds();
+            UIPropTransform zoomTransform = new UIPropTransform();
             UITextbox cmdZoomOn = new UITextbox(10000, (t) -> gun.cmdZoomOn = t);
             UITextbox cmdZoomOff = new UITextbox(10000, (t) -> gun.cmdZoomOff = t);
             UIIcon fovInterp = new UIIcon(Icons.GRAPH, (b) ->
@@ -288,6 +294,7 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
             UITrackpad fovTarget = new UITrackpad((v) -> gun.fovTarget = v.floatValue());
 
             zoomForm.setForm(gun.zoomForm);
+            zoomTransform.setTransform(gun.zoomTransform);
             cmdZoomOn.setText(gun.cmdZoomOn);
             cmdZoomOff.setText(gun.cmdZoomOff);
             fovDuration.limit(1, 1000, true);
@@ -296,7 +303,7 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
             fovTarget.setValue(gun.fovTarget);
 
             this.sectionZoom = UI.scrollView(5, 10,
-                UI.label(UIKeys.GUN_ZOOM_FORM).background(), zoomForm,
+                UI.label(UIKeys.GUN_ZOOM_FORM).background(), zoomForm, zoomTransform,
                 UI.label(UIKeys.GUN_ZOOM_ON).background().marginTop(6), cmdZoomOn,
                 UI.label(UIKeys.GUN_ZOOM_OFF).background(), cmdZoomOff,
                 UI.label(UIKeys.GUN_ZOOM_FOV_DURATION).background().marginTop(6), UI.row(fovDuration, fovInterp),

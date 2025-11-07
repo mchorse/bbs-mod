@@ -59,7 +59,7 @@ public class UIItemFormPanel extends UIFormPanel<ItemForm>
         super.startEdit(form);
 
         this.color.setColor(form.color.get().getARGBColor());
-        this.setModelTransform(form.modelTransform.get());
+        this.modelTransform.label = IKey.constant(form.modelTransform.get().asString());
         this.itemStackEditor.setStack(form.stack.get());
     }
 }

@@ -42,16 +42,6 @@ public abstract class UIList <T> extends UIElement
     public Consumer<List<T>> callback;
 
     /**
-     * Callback which gets invoked when user dropped a list element (when sorting option is enabled)
-     */
-    public Consumer<UIList<T>> beforeDropCallback;
-
-    /**
-     * Callback which gets invoked when user dropped a list element (when sorting option is enabled)
-     */
-    public Consumer<UIList<T>> afterDropCallback;
-
-    /**
      * Selected elements
      */
     public List<Integer> current = new ArrayList<>();
@@ -106,20 +96,6 @@ public abstract class UIList <T> extends UIElement
     public UIList<T> sorting()
     {
         this.sorting = true;
-
-        return this;
-    }
-
-    public UIList<T> beforeDrop(Consumer<UIList<T>> beforeDropCallback)
-    {
-        this.beforeDropCallback = beforeDropCallback;
-
-        return this;
-    }
-
-    public UIList<T> afterDrop(Consumer<UIList<T>> afterDropCallback)
-    {
-        this.afterDropCallback = afterDropCallback;
 
         return this;
     }
@@ -583,20 +559,7 @@ public abstract class UIList <T> extends UIElement
 
                 if (index != this.dragging && this.exists(index))
                 {
-                    if (this.beforeDropCallback != null)
-                    {
-                        this.beforeDropCallback.accept(this);
-                    }
-
-                    T value = this.list.remove(this.dragging);
-
-                    this.list.add(index, value);
-                    this.setIndex(index);
-
-                    if (this.afterDropCallback != null)
-                    {
-                        this.afterDropCallback.accept(this);
-                    }
+                    this.handleSwap(this.dragging, index);
                 }
             }
 
@@ -606,6 +569,14 @@ public abstract class UIList <T> extends UIElement
         this.scroll.mouseReleased(context);
 
         return super.subMouseReleased(context);
+    }
+
+    protected void handleSwap(int from, int to)
+    {
+        T value = this.list.remove(this.dragging);
+
+        this.list.add(to, value);
+        this.setIndex(to);
     }
 
     @Override
