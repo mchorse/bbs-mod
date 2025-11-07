@@ -46,6 +46,8 @@ public class VirtualBlockRenderView implements BlockRenderView
     private int baseDx = 0;
     private int baseDy = 0;
     private int baseDz = 0;
+    private boolean lightsEnabled = true;
+    private int lightIntensity = 15;
 
     public static class Entry
     {
@@ -169,6 +171,22 @@ public class VirtualBlockRenderView implements BlockRenderView
         return this;
     }
 
+    /** Habilita o deshabilita la contribución de luz de bloques locales. */
+    public VirtualBlockRenderView setLightsEnabled(boolean enabled)
+    {
+        this.lightsEnabled = enabled;
+        return this;
+    }
+
+    /** Establece el tope de intensidad de luz (1-15) para la luz local. */
+    public VirtualBlockRenderView setLightIntensity(int level)
+    {
+        if (level < 1) level = 1;
+        if (level > 15) level = 15;
+        this.lightIntensity = level;
+        return this;
+    }
+
     // BlockView
     @Override
     public BlockEntity getBlockEntity(BlockPos pos)
@@ -192,8 +210,13 @@ public class VirtualBlockRenderView implements BlockRenderView
     @Override
     public int getLuminance(BlockPos pos)
     {
+        if (!this.lightsEnabled)
+        {
+            return 0;
+        }
         BlockState s = getBlockState(pos);
-        return s == null ? 0 : s.getLuminance();
+        int lum = s == null ? 0 : s.getLuminance();
+        return Math.min(lum, this.lightIntensity);
     }
 
     @Override
@@ -261,7 +284,7 @@ public class VirtualBlockRenderView implements BlockRenderView
         // contenidos en esta vista virtual (no presentes en el mundo real).
         if (type == LightType.BLOCK)
         {
-            int local = this.localBlockLight.getOrDefault(pos, 0);
+            int local = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
             return Math.max(worldLevel, local);
         }
 
@@ -280,7 +303,7 @@ public class VirtualBlockRenderView implements BlockRenderView
 
         // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
         // local de bloque para que fuentes virtuales iluminen correctamente.
-        int localBlock = this.localBlockLight.getOrDefault(pos, 0);
+        int localBlock = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
         return Math.max(worldBase, localBlock);
     }
 

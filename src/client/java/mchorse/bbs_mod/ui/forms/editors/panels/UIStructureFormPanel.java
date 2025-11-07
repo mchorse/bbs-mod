@@ -9,6 +9,7 @@ import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.forms.editors.utils.UIStructureOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
+import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
@@ -26,6 +27,8 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
     public UIButton pickBiome;
     public UITextbox structureFile;
     public UIColor color;
+    public UIButton toggleLight;
+    public UITrackpad lightIntensity;
 
     public UIStructureFormPanel(UIForm editor)
     {
@@ -35,11 +38,18 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.structureFile = new UITextbox(100, (s) -> this.form.structureFile.set(s)).path().border();
         this.color = new UIColor((c) -> this.form.color.set(Color.rgba(c))).withAlpha();
         this.pickBiome = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_PICK_BIOME, (b) -> this.pickBiome());
+        this.toggleLight = new UIButton(IKey.EMPTY, (b) -> this.toggleLight());
+        updateLightButtonLabel();
+        this.lightIntensity = new UITrackpad((v) -> this.form.lightIntensity.set(v.intValue()))
+                .integer()
+                .limit(1D, 15D);
 
         /* Quitar etiquetas; mostrar solo los controles */
         this.options.add(this.color);
         this.options.add(this.pickStructure);
         this.options.add(this.pickBiome);
+        this.options.add(this.toggleLight);
+        this.options.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_LIGHT_INTENSITY_LABEL).marginTop(6), this.lightIntensity);
     }
 
     private void pickStructure()
@@ -97,7 +107,21 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         UIOverlay.addOverlay(this.getContext(), overlay, 280, 0.5F);
     }
 
-    
+    private void toggleLight()
+    {
+        boolean current = this.form.emitLight.get();
+        this.form.emitLight.set(!current);
+        updateLightButtonLabel();
+    }
+
+    private void updateLightButtonLabel()
+    {
+        IKey key = (this.form != null && this.form.emitLight.get())
+            ? UIKeys.FORMS_EDITORS_STRUCTURE_LIGHTS_ON
+            : UIKeys.FORMS_EDITORS_STRUCTURE_LIGHTS_OFF;
+
+        this.toggleLight.label = key;
+    }
 
     private void setStructure(Link link)
     {
@@ -114,5 +138,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
         this.structureFile.setText(form.structureFile.get());
         this.color.setColor(form.color.get().getARGBColor());
+        updateLightButtonLabel();
+        this.lightIntensity.setValue((double)form.lightIntensity.get());
     }
 }

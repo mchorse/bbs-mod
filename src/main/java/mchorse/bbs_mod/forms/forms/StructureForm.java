@@ -1,6 +1,8 @@
 package mchorse.bbs_mod.forms.forms;
 
 import mchorse.bbs_mod.settings.values.core.ValueColor;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.colors.Color;
 
@@ -18,6 +20,10 @@ public class StructureForm extends Form
     public final ValueColor color = new ValueColor("color", Color.white());
     /** Bioma seleccionado para coloreo (override). Vacío para usar el del mundo */
     public final ValueString biomeId = new ValueString("biome_id", "");
+    /** Alterna si los bloques de iluminación de la estructura emiten luz */
+    public final ValueBoolean emitLight = new ValueBoolean("emit_light", false);
+    /** Intensidad de luz emitida por los bloques de la estructura (1-15) */
+    public final ValueInt lightIntensity = new ValueInt("light_intensity", 15);
 
     public StructureForm()
     {
@@ -26,6 +32,8 @@ public class StructureForm extends Form
         this.add(this.structureFile);
         this.add(this.color);
         this.add(this.biomeId);
+        this.add(this.emitLight);
+        this.add(this.lightIntensity);
     }
 
     @Override

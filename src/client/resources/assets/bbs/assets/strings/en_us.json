@@ -1173,9 +1173,11 @@
     "bbs.ui.inventory.hotbar": "Hotbar",
     "bbs.ui.inventory.main": "Main inventory",
     "bbs.ui.inventory.full": "Full Inventory",
-    
     "bbs.ui.replays.bone_anchoring.select_bone": "Select bone to anchor",
     "bbs.ui.replays.bone_anchoring.unanchor_bone": "Unanchor bone",
     "bbs.ui.replays.bone_anchoring.select_bone_title": "Select bone",
-    "bbs.ui.replays.bone_anchoring.select_bone_description": "Select the bone you want to anchor to this pose track"
+    "bbs.ui.replays.bone_anchoring.select_bone_description": "Select the bone you want to anchor to this pose track",
+    "bbs.ui.forms.editors.structure.lights.on": "Block lights: ON",
+    "bbs.ui.forms.editors.structure.lights.off": "Block lights: OFF",
+    "bbs.ui.forms.editors.structure.light_intensity": "Light intensity (1-15)"
 }
