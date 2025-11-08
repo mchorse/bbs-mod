@@ -18,8 +18,10 @@ public class AnimationStates extends ValueList<AnimationState>
     {
         for (AnimationState state : this.list)
         {
-            if (state.id.get().equals(triggerId))
-            {
+            if (
+                state.id.get().equals(triggerId) ||
+                state.customId.get().equals(triggerId)
+            ) {
                 return state;
             }
         }

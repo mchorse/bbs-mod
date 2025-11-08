@@ -3,6 +3,7 @@ package mchorse.bbs_mod.settings.values.ui;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.utils.MathUtils;
 
 public class ValueEditorLayout extends BaseValue
 {
@@ -11,6 +12,8 @@ public class ValueEditorLayout extends BaseValue
     private float mainSizeV = 0.66F;
     private float editorSizeH = 0.5F;
     private float editorSizeV = 0.5F;
+    private float stateEditorSizeH = 0.7F;
+    private float stateEditorSizeV = 0.25F;
 
     public ValueEditorLayout(String id)
     {
@@ -42,6 +45,16 @@ public class ValueEditorLayout extends BaseValue
         BaseValue.edit(this, (v) -> this.editorSizeV = editorSizeV);
     }
 
+    public void setStateEditorSizeH(float editorSizeH)
+    {
+        BaseValue.edit(this, (v) -> this.stateEditorSizeH = editorSizeH);
+    }
+
+    public void setStateEditorSizeV(float editorSizeV)
+    {
+        BaseValue.edit(this, (v) -> this.stateEditorSizeV = editorSizeV);
+    }
+
     public boolean isHorizontal()
     {
         return this.horizontal;
@@ -67,6 +80,16 @@ public class ValueEditorLayout extends BaseValue
         return this.editorSizeV;
     }
 
+    public float getStateEditorSizeH()
+    {
+        return MathUtils.clamp(this.stateEditorSizeH, 0.1F, 0.9F);
+    }
+
+    public float getStateEditorSizeV()
+    {
+        return MathUtils.clamp(this.stateEditorSizeV, 0.1F, 0.9F);
+    }
+
     @Override
     public BaseType toData()
     {
@@ -77,6 +100,8 @@ public class ValueEditorLayout extends BaseValue
         data.putFloat("main_size_v", this.mainSizeV);
         data.putFloat("editor_size_h", this.editorSizeH);
         data.putFloat("editor_size_v", this.editorSizeV);
+        data.putFloat("state_editor_size_h", this.stateEditorSizeH);
+        data.putFloat("state_editor_size_v", this.stateEditorSizeV);
 
         return data;
     }
@@ -89,10 +114,12 @@ public class ValueEditorLayout extends BaseValue
             MapType map = data.asMap();
 
             this.horizontal = map.getBool("horizontal");
-            this.mainSizeH = map.getFloat("main_size_h");
-            this.mainSizeV = map.getFloat("main_size_v");
-            this.editorSizeH = map.getFloat("editor_size_h");
-            this.editorSizeV = map.getFloat("editor_size_v");
+            this.mainSizeH = map.getFloat("main_size_h", 0.66F);
+            this.mainSizeV = map.getFloat("main_size_v", 0.66F);
+            this.editorSizeH = map.getFloat("editor_size_h", 0.5F);
+            this.editorSizeV = map.getFloat("editor_size_v", 0.5F);
+            this.stateEditorSizeH = map.getFloat("state_editor_size_h", 0.7F);
+            this.stateEditorSizeV = map.getFloat("state_editor_size_v", 0.25F);
         }
     }
 }

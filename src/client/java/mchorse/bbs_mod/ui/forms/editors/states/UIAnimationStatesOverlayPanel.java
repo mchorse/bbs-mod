@@ -10,12 +10,16 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIKeybind;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
+import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
+import mchorse.bbs_mod.ui.utils.presets.UICopyPasteController;
+import mchorse.bbs_mod.ui.utils.presets.UIPresetContextMenu;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.presets.PresetManager;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -25,6 +29,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
     public UIList<AnimationState> list;
     public UIScrollView editor;
 
+    public UITextbox id;
     public UIToggle main;
     public UIKeybind keybind;
     public UITrackpad duration;
@@ -37,17 +42,45 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
     protected AnimationState state;
 
     private Consumer<AnimationState> callback;
+    private UICopyPasteController copyPasteController;
 
     public UIAnimationStatesOverlayPanel(AnimationStates states, AnimationState current, Consumer<AnimationState> consumer)
     {
         super(UIKeys.FORMS_EDITOR_STATES_MANAGER_TITLE);
 
+        this.copyPasteController = new UICopyPasteController(PresetManager.ANIMATION_STATES, "_CopyAnimationStates")
+            .consumer((data, x, y) ->
+            {
+                AnimationState state = new AnimationState("");
+
+                state.fromData(data);
+
+                this.states.preNotify();
+                this.states.add(state);
+                this.states.sync();
+                this.states.postNotify();
+
+                this.pickItem(state, true);
+                this.list.update();
+            })
+            .supplier(() ->
+            {
+                MapType map = this.list.getCurrentFirst().toData().asMap();
+
+                map.remove("id");
+
+                return map;
+            })
+            .canCopy(() -> !this.list.isDeselected());
+
         this.states = states;
         this.callback = consumer;
 
-        this.list = this.createList();
+        this.list = new UIAnimationStateList((l) -> this.pickItem(l.get(0), false));
         this.list.context((menu) ->
         {
+            menu.custom(new UIPresetContextMenu(this.copyPasteController)
+                .labels(UIKeys.FORMS_EDITOR_STATES_MANAGER_CONTEXT_COPY, UIKeys.FORMS_EDITOR_STATES_MANAGER_CONTEXT_PASTE));
             menu.action(Icons.ADD, UIKeys.FORMS_EDITOR_STATES_MANAGER_CONTEXT_ADD, this::addState);
 
             if (!this.list.getList().isEmpty())
@@ -57,6 +90,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         });
         this.list.background();
 
+        this.id = new UITextbox((t) -> this.state.customId.set(t));
         this.main = new UIToggle(UIKeys.FORMS_EDITOR_STATES_MANAGER_MAIN, (b) -> this.state.main.set(b.getValue()));
         this.keybind = new UIKeybind((keybind) -> this.state.keybind.set(keybind.getMainKey()));
         this.keybind.single();
@@ -70,6 +104,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.offset.tooltip(UIKeys.FORMS_EDITOR_STATES_MANAGER_OFFSET);
 
         this.editor = UI.scrollView(
+            UI.label(UIKeys.FORMS_EDITOR_STATES_MANAGER_ID), this.id,
             this.main, this.keybind,
             UI.label(UIKeys.FORMS_EDITOR_STATES_MANAGER_DURATION).marginTop(6), this.duration,
             UI.label(IKey.comp(Arrays.asList(UIKeys.CAMERA_PANELS_ENVELOPES_START_D, IKey.constant(" / "), UIKeys.CAMERA_PANELS_ENVELOPES_END_D))).marginTop(6), UI.row(this.fadeIn, this.fadeOut),
@@ -84,11 +119,6 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
         this.content.add(this.editor, this.list);
 
         this.pickItem(this.list.getCurrentFirst(), false);
-    }
-
-    protected UIList<AnimationState> createList()
-    {
-        return new UIAnimationStateList((l) -> this.pickItem(l.get(0), false));
     }
 
     protected void addState()
@@ -137,6 +167,7 @@ public class UIAnimationStatesOverlayPanel extends UIOverlayPanel
 
     protected void fillData(AnimationState state)
     {
+        this.id.setText(state.customId.get());
         this.main.setValue(state.main.get());
         this.keybind.setKeyCombo(new KeyCombo(IKey.EMPTY, state.keybind.get()));
         this.duration.setValue(state.duration.get());

@@ -27,7 +27,6 @@ import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
-import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -58,18 +57,21 @@ public class UIAnimationStateEditor extends UIElement
         this.editor = editor;
 
         this.editArea = new UIElement();
-        this.editArea.relative(this).x(0.7F).wTo(this.area, 1F).h(1F);
+        this.editArea.relative(this)
+            .x(BBSSettings.editorLayoutSettings.getStateEditorSizeH())
+            .wTo(this.area, 1F)
+            .h(1F);
 
         UIDraggable draggable = new UIDraggable((context) ->
         {
             float fx = (context.mouseX - this.area.x) / (float) this.area.w;
-            float x = MathUtils.clamp(fx, 0.1F, 0.9F);
-
             float fy = -(context.mouseY - this.getParent().area.ey()) / (float) this.getParent().area.h;
-            float h = MathUtils.clamp(fy, 0.1F, 0.9F);
 
-            this.h(h);
-            this.editArea.x(x);
+            BBSSettings.editorLayoutSettings.setStateEditorSizeV(fy);
+            BBSSettings.editorLayoutSettings.setStateEditorSizeH(fx);
+
+            this.h(BBSSettings.editorLayoutSettings.getStateEditorSizeV());
+            this.editArea.x(BBSSettings.editorLayoutSettings.getStateEditorSizeH());
             this.getParent().resize();
         });
 
@@ -248,7 +250,7 @@ public class UIAnimationStateEditor extends UIElement
 
     public boolean clickViewport(UIContext context, StencilFormFramebuffer stencil)
     {
-        if (stencil.hasPicked())
+        if (stencil.hasPicked() && this.state != null)
         {
             Pair<Form, String> pair = stencil.getPicked();
 

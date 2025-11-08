@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.forms.editors;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.AnchorForm;
@@ -185,7 +186,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.statesEditor.full(this);
         this.statesEditor.setVisible(false);
         this.statesKeyframes = new UIAnimationStateEditor(this);
-        this.statesKeyframes.relative(this.statesEditor).x(20).y(1F).w(1F, -20).h(0.25F).anchorY(1F);
+        this.statesKeyframes.relative(this.statesEditor).x(20).y(1F).w(1F, -20).h(BBSSettings.editorLayoutSettings.getStateEditorSizeV()).anchorY(1F);
 
         this.openStates = new UIIcon(Icons.MORE, (b) ->
         {
@@ -249,6 +250,18 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
         this.keys().register(Keys.UNDO, this::undo);
         this.keys().register(Keys.REDO, this::redo);
+        this.keys().register(Keys.FORMS_OPEN_STATES_EDITOR, () ->
+        {
+            if (!this.statesEditor.isVisible())
+            {
+                this.toggleStateEditor();
+            }
+
+            if (!UIOverlay.has(this.getContext()))
+            {
+                this.openStates.clickItself();
+            }
+        });
         this.plause.keys().register(Keys.PLAUSE, () ->
         {
             this.plause();

@@ -422,8 +422,11 @@ public class UIKeys
     public static final IKey FORMS_EDITOR_SLIM = L10n.lang("bbs.ui.forms.editor.slim");
     public static final IKey FORMS_EDITOR_SLIM_TOOLTIP = L10n.lang("bbs.ui.forms.editor.slim-tooltip");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.states.manager.context.add");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_COPY = L10n.lang("bbs.ui.forms.editor.states.manager.context.copy");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_PASTE = L10n.lang("bbs.ui.forms.editor.states.manager.context.paste");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_CONTEXT_REMOVE = L10n.lang("bbs.ui.forms.editor.states.manager.context.remove");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_DURATION = L10n.lang("bbs.ui.forms.editor.states.manager.duration");
+    public static final IKey FORMS_EDITOR_STATES_MANAGER_ID = L10n.lang("bbs.ui.forms.editor.states.manager.id");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_LOOPING = L10n.lang("bbs.ui.forms.editor.states.manager.looping");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_MAIN = L10n.lang("bbs.ui.forms.editor.states.manager.main");
     public static final IKey FORMS_EDITOR_STATES_MANAGER_OFFSET = L10n.lang("bbs.ui.forms.editor.states.manager.offset");
