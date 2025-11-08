@@ -11,6 +11,7 @@ import java.util.UUID;
 public class AnimationState extends ValueGroup
 {
     public final ValueString id = new ValueString("id", UUID.randomUUID().toString());
+    public final ValueString customId = new ValueString("custom_id", "");
     public final FormProperties properties = new FormProperties("properties");
     public final ValueBoolean main = new ValueBoolean("main", false);
     public final ValueInt keybind = new ValueInt("keybind", 0);
@@ -25,6 +26,7 @@ public class AnimationState extends ValueGroup
         super(id);
 
         this.add(this.id);
+        this.add(this.customId);
         this.add(this.properties);
         this.add(this.main);
         this.add(this.keybind);

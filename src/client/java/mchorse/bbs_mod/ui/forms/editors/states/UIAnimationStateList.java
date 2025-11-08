@@ -19,6 +19,13 @@ public class UIAnimationStateList extends UIList<AnimationState>
     @Override
     protected String elementToString(UIContext context, int i, AnimationState element)
     {
-        return element.getId();
+        String s = element.customId.get();
+
+        if (!s.trim().isEmpty())
+        {
+            return s;
+        }
+
+        return element.id.get();
     }
 }

@@ -68,6 +68,8 @@ public class ServerNetwork
     public static final Identifier CLIENT_GUN_PROPERTIES = new Identifier(BBSMod.MOD_ID, "c13");
     public static final Identifier CLIENT_PAUSE_FILM = new Identifier(BBSMod.MOD_ID, "c14");
     public static final Identifier CLIENT_SELECTED_SLOT = new Identifier(BBSMod.MOD_ID, "c15");
+    public static final Identifier CLIENT_ANIMATION_STATE_MODEL_BLOCK_TRIGGER = new Identifier(BBSMod.MOD_ID, "c16");
+    public static final Identifier CLIENT_REFRESH_MODEL_BLOCKS = new Identifier(BBSMod.MOD_ID, "c17");
 
     public static final Identifier SERVER_MODEL_BLOCK_FORM_PACKET = new Identifier(BBSMod.MOD_ID, "s1");
     public static final Identifier SERVER_MODEL_BLOCK_TRANSFORMS_PACKET = new Identifier(BBSMod.MOD_ID, "s2");
@@ -726,5 +728,24 @@ public class ServerNetwork
         buf.writeInt(slot);
 
         ServerPlayNetworking.send(player, CLIENT_SELECTED_SLOT, buf);
+    }
+
+    public static void sendModelBlockState(ServerPlayerEntity player, BlockPos pos, String trigger)
+    {
+        PacketByteBuf buf = PacketByteBufs.create();
+
+        buf.writeBlockPos(pos);
+        buf.writeString(trigger);
+
+        ServerPlayNetworking.send(player, CLIENT_ANIMATION_STATE_MODEL_BLOCK_TRIGGER, buf);
+    }
+
+    public static void sendReloadModelBlocks(ServerPlayerEntity player, int tickRandom)
+    {
+        PacketByteBuf buf = PacketByteBufs.create();
+
+        buf.writeInt(tickRandom);
+
+        ServerPlayNetworking.send(player, CLIENT_REFRESH_MODEL_BLOCKS, buf);
     }
 }

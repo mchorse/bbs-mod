@@ -4,6 +4,7 @@ import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.actions.ActionState;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
+import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
@@ -80,6 +81,8 @@ public class ClientNetwork
         ClientPlayNetworking.registerGlobalReceiver(ServerNetwork.CLIENT_GUN_PROPERTIES, (client, handler, buf, responseSender) -> handleGunPropertiesPacket(client, buf));
         ClientPlayNetworking.registerGlobalReceiver(ServerNetwork.CLIENT_PAUSE_FILM, (client, handler, buf, responseSender) -> handlePauseFilmPacket(client, buf));
         ClientPlayNetworking.registerGlobalReceiver(ServerNetwork.CLIENT_SELECTED_SLOT, (client, handler, buf, responseSender) -> handleSelectedSlotPacket(client, buf));
+        ClientPlayNetworking.registerGlobalReceiver(ServerNetwork.CLIENT_ANIMATION_STATE_MODEL_BLOCK_TRIGGER, (client, handler, buf, responseSender) -> handleAnimationStateModelBlockPacket(client, buf));
+        ClientPlayNetworking.registerGlobalReceiver(ServerNetwork.CLIENT_REFRESH_MODEL_BLOCKS, (client, handler, buf, responseSender) -> handleRefreshModelBlocksPacket(client, buf));
     }
 
     /* Handlers */
@@ -348,6 +351,48 @@ public class ClientNetwork
         client.execute(() ->
         {
             client.player.getInventory().selectedSlot = slot;
+        });
+    }
+
+    private static void handleAnimationStateModelBlockPacket(MinecraftClient client, PacketByteBuf buf)
+    {
+        BlockPos pos = buf.readBlockPos();
+        String state = buf.readString();
+
+        client.execute(() ->
+        {
+            BlockEntity blockEntity = client.world.getBlockEntity(pos);
+
+            if (blockEntity instanceof ModelBlockEntity block)
+            {
+                if (block.getProperties().getForm() != null)
+                {
+                    block.getProperties().getForm().playState(state);
+                }
+            }
+        });
+    }
+
+    private static void handleRefreshModelBlocksPacket(MinecraftClient client, PacketByteBuf buf)
+    {
+        int range = buf.readInt();
+
+        client.execute(() ->
+        {
+            for (ModelBlockEntity mb : BBSRendering.capturedModelBlocks)
+            {
+                ModelProperties properties = mb.getProperties();
+                int random = (int) (Math.random() * range);
+
+                properties.setForm(FormUtils.copy(properties.getForm()));
+
+                while (random > 0)
+                {
+                    properties.update(mb.getEntity());
+
+                    random -= 1;
+                }
+            }
         });
     }
 
