@@ -4,6 +4,7 @@ import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
 import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.camera.clips.CameraClipContext;
+import mchorse.bbs_mod.camera.clips.modifiers.EntityClip;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.data.types.BaseType;
@@ -11,16 +12,19 @@ import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.replays.Replay;
+import mchorse.bbs_mod.film.replays.Replays;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.AnchorForm;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.math.IExpression;
 import mchorse.bbs_mod.math.MathBuilder;
-import mchorse.bbs_mod.settings.values.core.ValueForm;
+import mchorse.bbs_mod.settings.values.IValueListener;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.settings.values.core.ValueForm;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
@@ -82,7 +86,7 @@ public class UIReplayList extends UIList<Replay>
         this.overlay = overlay;
         this.panel = panel;
 
-        this.multi();
+        this.multi().sorting();
         this.context((menu) ->
         {
             menu.action(Icons.ADD, UIKeys.SCENE_REPLAYS_CONTEXT_ADD, this::addReplay);
@@ -272,6 +276,48 @@ public class UIReplayList extends UIList<Replay>
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+    }
+
+    @Override
+    protected void handleSwap(int from, int to)
+    {
+        Film data = this.panel.getData();
+        Replays replays = data.replays;
+        Replay value = replays.getList().get(from);
+
+        data.preNotify(IValueListener.FLAG_UNMERGEABLE);
+
+        replays.remove(value);
+        replays.add(to, value);
+        replays.sync();
+
+        /* Readjust tracker and anchor indices */
+        for (Replay replay : replays.getList())
+        {
+            if (replay.properties.get("anchor") instanceof KeyframeChannel<?> channel && channel.getFactory() == KeyframeFactories.ANCHOR)
+            {
+                KeyframeChannel<Anchor> keyframeChannel = (KeyframeChannel<Anchor>) channel;
+
+                for (Keyframe<Anchor> keyframe : keyframeChannel.getKeyframes())
+                {
+                    keyframe.getValue().replay = MathUtils.remapIndex(keyframe.getValue().replay, from, to);
+                }
+            }
+        }
+
+        for (Clip clip : data.camera.get())
+        {
+            if (clip instanceof EntityClip entityClip)
+            {
+                entityClip.selector.set(MathUtils.remapIndex(entityClip.selector.get(), from, to));
+            }
+        }
+
+        data.postNotify(IValueListener.FLAG_UNMERGEABLE);
+
+        this.setList(replays.getList());
+        this.updateFilmEditor();
+        this.pick(to);
     }
 
     private void pasteToReplays(MapType data)

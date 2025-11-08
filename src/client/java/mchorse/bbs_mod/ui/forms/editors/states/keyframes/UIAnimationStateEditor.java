@@ -34,11 +34,9 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Matrices;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
-import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -145,6 +143,11 @@ public class UIAnimationStateEditor extends UIElement
 
         sheets.removeIf((v) ->
         {
+            if (v.id.equals("anchor"))
+            {
+                return true;
+            }
+
             for (String s : BBSSettings.disabledSheets.get())
             {
                 if (v.id.equals(s) || v.id.endsWith("/" + s))
@@ -296,10 +299,7 @@ public class UIAnimationStateEditor extends UIElement
         }
 
         Form root = FormUtils.getRoot(this.editor.form);
-        MatrixStack stack = new MatrixStack();
-        Map<String, Matrix4f> map = new HashMap<>();
-
-        FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), bone.b ? null : bone.a, stack, map, "", transition);
+        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), bone.b ? null : bone.a, transition);
 
         Matrix4f matrix = map.get(bone.a);
 

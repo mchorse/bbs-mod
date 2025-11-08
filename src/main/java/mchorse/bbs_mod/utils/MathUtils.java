@@ -169,4 +169,26 @@ public class MathUtils
     {
         return an < bx && bn < ax;
     }
+
+    public static int remapIndex(int old, int from, int to)
+    {
+        if (from == to) return old;
+
+        if (from < to)
+        {
+            /* Moving item down: [from+1..to] shift left by 1 */
+            if (old == from) return to;
+            if (old > from && old <= to) return old - 1;
+
+            return old;
+        }
+        else
+        {
+            /* from > to: moving item up: [to..from-1] shift right by 1 */
+            if (old == from) return to;
+            if (old >= to && old < from) return old + 1;
+
+            return old;
+        }
+    }
 }

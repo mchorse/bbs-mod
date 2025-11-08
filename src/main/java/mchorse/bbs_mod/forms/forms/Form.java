@@ -152,6 +152,26 @@ public abstract class Form extends ValueGroup
 
     /* Animation states */
 
+    public boolean findState(int hotkey, IStateFoundCallback callback)
+    {
+        if (callback == null)
+        {
+            return false;
+        }
+
+        for (AnimationState state : this.states.getAllTyped())
+        {
+            if (state.keybind.get() == hotkey)
+            {
+                callback.acceptState(this, state);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void clearStatePlayers()
     {
         this.statePlayers.clear();
@@ -178,9 +198,9 @@ public abstract class Form extends ValueGroup
         }
     }
 
-    public void playState(String triggerId)
+    public void playState(String stateId)
     {
-        this.playState(this.states.getById(triggerId));
+        this.playState(this.states.getById(stateId));
     }
 
     public void playMain()

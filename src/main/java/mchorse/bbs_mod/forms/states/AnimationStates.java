@@ -54,7 +54,7 @@ public class AnimationStates extends ValueList<AnimationState>
 
         if (!states.isEmpty())
         {
-            int index = (int) (Math.random() * (states.size() + 1));
+            int index = (int) (Math.random() * states.size());
 
             return CollectionUtils.getSafe(states, index);
         }

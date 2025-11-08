@@ -48,6 +48,12 @@ public class ModelManager implements IWatchDogListener
 
         MolangHelper.registerVars(this.parser);
 
+        this.setupLoaders();
+    }
+
+    private void setupLoaders()
+    {
+        this.loaders.clear();
         this.loaders.add(new BOBJModelLoader());
         this.loaders.add(new CubicModelLoader());
         this.loaders.add(new GeoCubicModelLoader());
@@ -158,6 +164,7 @@ public class ModelManager implements IWatchDogListener
         this.models.clear();
         PoseManager.INSTANCE.clear();
         ShapeKeysManager.INSTANCE.clear();
+        this.setupLoaders();
     }
 
     public boolean isRelodable(Link link)

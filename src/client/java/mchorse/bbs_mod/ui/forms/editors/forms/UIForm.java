@@ -18,10 +18,8 @@ import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Matrices;
-import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>>
@@ -55,11 +53,7 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     protected Matrix4f getOrigin(float transition, String path, boolean local)
     {
         Form root = FormUtils.getRoot(this.form);
-        MatrixStack stack = new MatrixStack();
-        Map<String, Matrix4f> map = new HashMap<>();
-
-        FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), local ? null : path, stack, map, "", transition);
-
+        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), local ? null : path, transition);
         Matrix4f matrix = map.get(path);
 
         return matrix == null ? Matrices.EMPTY_4F : matrix;

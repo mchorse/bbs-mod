@@ -63,19 +63,8 @@ public class StatePlayer
 
         if (this.state.looping.get())
         {
-            if (this.first)
-            {
-                blend = Lerps.envelope(t, 0, this.state.fadeIn.get(), duration, duration);
-            }
-            else
-            {
-                blend = 1F;
-            }
-
-            if (this.kill)
-            {
-                blend *= (this.killTimer - transition) / (float) this.state.fadeOut.get();
-            }
+            blend = this.first ? Lerps.envelope(t, 0, this.state.fadeIn.get(), duration, duration) : 1F;
+            blend *= this.kill ? (this.killTimer - transition) / (float) this.state.fadeOut.get() : 1F;
         }
 
         this.state.properties.applyProperties(form, t, blend);

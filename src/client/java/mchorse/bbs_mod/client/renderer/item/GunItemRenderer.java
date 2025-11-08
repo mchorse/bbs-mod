@@ -10,6 +10,8 @@ import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.items.GunProperties;
+import mchorse.bbs_mod.ui.framework.UIScreen;
+import mchorse.bbs_mod.ui.model_blocks.UIModelBlockEditorMenu;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
@@ -54,17 +56,25 @@ public class GunItemRenderer implements BuiltinItemRendererRegistry.DynamicItemR
         {
             GunProperties properties = item.properties;
             Form form = properties.getForm(mode);
+            Transform transform = properties.getTransform(mode);
+            boolean zoom = mode.isFirstPerson() && BBSModClient.getGunZoom() != null && properties.zoomForm != null;
 
-            if (mode.isFirstPerson() && BBSModClient.getGunZoom() != null && properties.zoomForm != null)
+            if (zoom)
             {
                 form = properties.zoomForm;
+                transform = properties.zoomTransform;
+            }
+
+            /* Preview zoom form */
+            if (UIScreen.getCurrentMenu() instanceof UIModelBlockEditorMenu editorMenu && editorMenu.currentSection == editorMenu.sectionZoom)
+            {
+                form = editorMenu.getGunProperties().zoomForm;
+                transform = editorMenu.getGunProperties().zoomTransform;
             }
 
             if (form != null)
             {
                 item.expiration = 20;
-
-                Transform transform = properties.getTransform(mode);
 
                 matrices.push();
                 matrices.translate(0.5F, 0F, 0.5F);

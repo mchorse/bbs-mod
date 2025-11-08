@@ -74,7 +74,7 @@ public class Matrices
 
     public static Matrix4f lerp(Matrix4f a, Matrix4f b, float t)
     {
-        return lerp(a, b, t, TEMP_4F);
+        return lerp(a, b, t, new Matrix4f());
     }
 
     public static Matrix4f lerp(Matrix4f a, Matrix4f b, float t, Matrix4f dest)

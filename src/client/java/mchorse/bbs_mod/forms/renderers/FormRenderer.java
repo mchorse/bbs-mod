@@ -24,6 +24,7 @@ import net.minecraft.util.Hand;
 import org.joml.Matrix4f;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -218,6 +219,16 @@ public abstract class FormRenderer <T extends Form>
         }
 
         context.entity = oldEntity;
+    }
+
+    public Map<String, Matrix4f> collectMatrices(IEntity entity, String target, float transition)
+    {
+        Map<String, Matrix4f> map = new HashMap<>();
+        MatrixStack stack = new MatrixStack();
+
+        this.collectMatrices(entity, target, stack, map, "", transition);
+
+        return map;
     }
 
     public void collectMatrices(IEntity entity, String target, MatrixStack stack, Map<String, Matrix4f> matrices, String prefix, float transition)
