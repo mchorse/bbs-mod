@@ -133,16 +133,20 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         matrices.peek().getNormalMatrix().getScale(Vectors.EMPTY_3F);
         matrices.peek().getNormalMatrix().scale(1F / Vectors.EMPTY_3F.x, -1F / Vectors.EMPTY_3F.y, 1F / Vectors.EMPTY_3F.z);
 
-        // Si Iris (shaders) está activo, usar pipeline de capas vanilla en UI
-        if (this.isShadersActive())
+        boolean optimize = mchorse.bbs_mod.BBSSettings.structureOptimization.get();
+        if (!optimize)
         {
-            net.minecraft.client.render.VertexConsumerProvider consumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+            // Modo BufferBuilder: mejor iluminación, peor rendimiento
+            boolean shaders = this.isShadersActive();
+            net.minecraft.client.render.VertexConsumerProvider consumers = shaders
+                ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
+                : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+
             try
             {
-                // Render con capas de entidad para compatibilidad con shaderpacks, usando vista virtual
                 FormRenderingContext uiContext = new FormRenderingContext()
                     .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
-                renderStructureCulledWorld(uiContext, matrices, consumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, true);
+                renderStructureCulledWorld(uiContext, matrices, consumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, shaders);
                 if (consumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
                 {
                     immediate.draw();
@@ -226,13 +230,32 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         ensureLoaded();
         context.stack.push();
 
-        // Preparar VAO si es necesario
-        if (this.structureVao == null || this.vaoDirty)
+        boolean optimize = mchorse.bbs_mod.BBSSettings.structureOptimization.get();
+        if (optimize && (this.structureVao == null || this.vaoDirty))
         {
             buildStructureVAO();
         }
 
-        if (this.structureVao != null)
+        if (!optimize)
+        {
+            // Modo BufferBuilder: usar pipeline vanilla/culling con mejor iluminación
+            int light = context.isPicking() ? 0 : context.light;
+            boolean shaders = this.isShadersActive();
+            net.minecraft.client.render.VertexConsumerProvider consumers = shaders
+                ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
+                : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+
+            try
+            {
+                renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, shaders);
+                if (consumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
+                {
+                    immediate.draw();
+                }
+            }
+            catch (Throwable ignored) {}
+        }
+        else if (this.structureVao != null)
         {
             Color tint3D = this.form.color.get();
             int light = context.isPicking() ? 0 : context.light;
@@ -251,17 +274,6 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             }
             else
             {
-                if (this.isShadersActive())
-                {
-                    // Bajo Iris, usar RenderLayer vanilla con proveedor de entidad
-                    net.minecraft.client.render.VertexConsumerProvider consumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-                    renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, true);
-                    if (consumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                    {
-                        immediate.draw();
-                    }
-                }
-                else
                 {
                     // VAO en vanilla con shader de modelo propio
                     net.minecraft.client.gl.ShaderProgram shader = BBSShaders.getModel();

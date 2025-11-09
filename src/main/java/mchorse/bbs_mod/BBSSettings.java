@@ -88,6 +88,8 @@ public class BBSSettings
     public static ValueBoolean renderAllModelBlocks;
     public static ValueBoolean clickModelBlocks;
     public static ValueBoolean visualizeStructures;
+    /** Toggle: optimización de estructuras (VAO) vs BufferBuilder (iluminación mejor). */
+    public static ValueBoolean structureOptimization;
 
     public static ValueString entitySelectorsPropertyWhitelist;
 
@@ -223,6 +225,11 @@ public class BBSSettings
 
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);
+
+
+        /* Estructuras: modo de renderizado */
+        builder.category("structures");
+        structureOptimization = builder.getBoolean("structure_optimization", true);
         visualizeStructures = builder.getBoolean("visualize_structures", false);
 
         entitySelectorsPropertyWhitelist = builder.category("entity_selectors").getString("whitelist", "CustomName,Name");
