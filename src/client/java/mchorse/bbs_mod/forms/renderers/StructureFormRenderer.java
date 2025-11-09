@@ -85,6 +85,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
     private IModelVAO structureVao = null;
     private boolean vaoDirty = true;
     private boolean capturingVAO = false;
+    // VAO dedicado para picking (incluye bloques animados y con tinte por bioma)
+    private IModelVAO structureVaoPicking = null;
+    private boolean vaoPickingDirty = true;
+    // Controla si, durante la captura del VAO, se deben incluir bloques especiales
+    private boolean capturingIncludeSpecialBlocks = false;
 
     public StructureFormRenderer(StructureForm form)
     {
@@ -255,12 +260,12 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         if (!optimize)
         {
-            // Si estamos en picking, renderizar con VAO y el shader de picking para obtener la silueta completa
+            // Si estamos en picking, renderizar con VAO (picking) y el shader de picking para obtener la silueta completa
             if (picking)
             {
-                if (this.structureVao == null || this.vaoDirty)
+                if (this.structureVaoPicking == null || this.vaoPickingDirty)
                 {
-                    buildStructureVAO();
+                    buildStructureVAOPicking();
                 }
 
                 Color tint3D = this.form.color.get();
@@ -274,7 +279,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 RenderSystem.setShader(BBSShaders::getPickerModelsProgram);
                 RenderSystem.enableBlend();
                 RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
-                ModelVAORenderer.render(BBSShaders.getPickerModelsProgram(), this.structureVao, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
+                ModelVAORenderer.render(BBSShaders.getPickerModelsProgram(), this.structureVaoPicking, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
 
                 gameRenderer.getLightmapTextureManager().disable();
                 gameRenderer.getOverlayTexture().teardownOverlayColor();
@@ -331,11 +336,15 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
             if (context.isPicking())
             {
+                if (this.structureVaoPicking == null || this.vaoPickingDirty)
+                {
+                    buildStructureVAOPicking();
+                }
                 this.setupTarget(context, BBSShaders.getPickerModelsProgram());
                 RenderSystem.setShader(BBSShaders::getPickerModelsProgram);
                 RenderSystem.enableBlend();
                 RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
-                ModelVAORenderer.render(BBSShaders.getPickerModelsProgram(), this.structureVao, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
+                ModelVAORenderer.render(BBSShaders.getPickerModelsProgram(), this.structureVaoPicking, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
             }
             else
             {
@@ -516,9 +525,10 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             stack.push();
             stack.translate(entry.pos.getX() - cx + parityX, entry.pos.getY() - cy, entry.pos.getZ() - cz + parityZ);
 
-            // Durante la captura del VAO, omitir bloques con texturas animadas
-            // (portal y fluidos) para evitar doble dibujo y parpadeos.
-            if (this.capturingVAO && (isAnimatedTexture(entry.state) || isBiomeTinted(entry.state)))
+            // Durante la captura del VAO normal, omitir bloques con texturas animadas
+            // o tinte por bioma para evitar doble dibujo y parpadeos.
+            // En captura para picking (capturingIncludeSpecialBlocks=true), incluirlos.
+            if (this.capturingVAO && !this.capturingIncludeSpecialBlocks && (isAnimatedTexture(entry.state) || isBiomeTinted(entry.state)))
             {
                 stack.pop();
                 continue;
@@ -975,11 +985,17 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             boundsMax = null;
             lastFile = null;
             vaoDirty = true;
+            vaoPickingDirty = true;
             if (structureVao instanceof ModelVAO)
             {
                 ((ModelVAO) structureVao).delete();
             }
             structureVao = null;
+            if (structureVaoPicking instanceof ModelVAO)
+            {
+                ((ModelVAO) structureVaoPicking).delete();
+            }
+            structureVaoPicking = null;
             return;
         }
 
@@ -998,11 +1014,17 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         boundsMax = null;
         lastFile = file;
         vaoDirty = true;
+        vaoPickingDirty = true;
         if (structureVao instanceof ModelVAO)
         {
             ((ModelVAO) structureVao).delete();
         }
         structureVao = null;
+        if (structureVaoPicking instanceof ModelVAO)
+        {
+            ((ModelVAO) structureVaoPicking).delete();
+        }
+        structureVaoPicking = null;
 
         /* Intentar leer como archivo externo si existe; si no, usar InputStream de assets internos */
         if (nbtFile != null && nbtFile.exists())
@@ -1062,6 +1084,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         boolean useEntityLayers = false; // captura con capas de bloque
         // Evitar renderizar BlockEntities durante la captura para no mezclar atlases.
         this.capturingVAO = true;
+        this.capturingIncludeSpecialBlocks = false; // para VAO normal, omitir animados/bioma
         try
         {
             renderStructureCulledWorld(captureContext, captureStack, provider, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, useEntityLayers);
@@ -1069,6 +1092,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         finally
         {
             this.capturingVAO = false;
+            this.capturingIncludeSpecialBlocks = false;
         }
 
         provider.draw();
@@ -1077,6 +1101,48 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         ModelVAOData data = collector.toData();
         this.structureVao = new ModelVAO(data);
         this.vaoDirty = false;
+    }
+
+    /**
+     * Construye un VAO para picking que incluye bloques animados y con tinte por bioma,
+     * de modo que la silueta de selección cubra toda la estructura.
+     */
+    private void buildStructureVAOPicking()
+    {
+        CustomVertexConsumerProvider provider = FormUtilsClient.getProvider();
+        StructureVAOCollector collector = new StructureVAOCollector();
+        provider.setSubstitute(vc -> collector);
+
+        MatrixStack captureStack = new MatrixStack();
+        FormRenderingContext captureContext = new FormRenderingContext()
+            .set(FormRenderType.PREVIEW, null, captureStack, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
+
+        try
+        {
+            net.minecraft.client.option.GraphicsMode gm = MinecraftClient.getInstance().options.getGraphicsMode().getValue();
+            net.minecraft.client.render.RenderLayers.setFancyGraphicsOrBetter(gm != net.minecraft.client.option.GraphicsMode.FAST);
+        }
+        catch (Throwable ignored) {}
+
+        boolean useEntityLayers = false;
+        this.capturingVAO = true;
+        this.capturingIncludeSpecialBlocks = true; // incluir animados y bioma para picking
+        try
+        {
+            renderStructureCulledWorld(captureContext, captureStack, provider, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, useEntityLayers);
+        }
+        finally
+        {
+            this.capturingVAO = false;
+            this.capturingIncludeSpecialBlocks = false;
+        }
+
+        provider.draw();
+        provider.setSubstitute(null);
+
+        ModelVAOData data = collector.toData();
+        this.structureVaoPicking = new ModelVAO(data);
+        this.vaoPickingDirty = false;
     }
 
     private void parseStructure(NbtCompound root)
