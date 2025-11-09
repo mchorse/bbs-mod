@@ -1063,7 +1063,7 @@
     "bbs.ui.inventory.hotbar": "Barra de acceso rápido",
     "bbs.ui.inventory.main": "Inventario principal",
     "bbs.ui.inventory.full": "Inventario completo",
-    
+    "bbs.ui.forms.editors.structure.light": "Luz",
     "bbs.ui.replays.bone_anchoring.select_bone": "Seleccionar hueso para anclar",
     "bbs.ui.replays.bone_anchoring.unanchor_bone": "Desanclar hueso",
     "bbs.ui.replays.bone_anchoring.select_bone_title": "Seleccionar hueso",

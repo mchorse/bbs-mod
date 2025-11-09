@@ -8,6 +8,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.forms.editors.utils.UIStructureOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
@@ -27,7 +28,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
     public UIButton pickBiome;
     public UITextbox structureFile;
     public UIColor color;
-    public UIButton toggleLight;
+    public UIToggle toggleLight;
     public UITrackpad lightIntensity;
 
     public UIStructureFormPanel(UIForm editor)
@@ -38,8 +39,8 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.structureFile = new UITextbox(100, (s) -> this.form.structureFile.set(s)).path().border();
         this.color = new UIColor((c) -> this.form.color.set(Color.rgba(c))).withAlpha();
         this.pickBiome = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_PICK_BIOME, (b) -> this.pickBiome());
-        this.toggleLight = new UIButton(IKey.EMPTY, (b) -> this.toggleLight());
-        updateLightButtonLabel();
+        // Inicializar con valor por defecto; se sincroniza en startEdit
+        this.toggleLight = new UIToggle(UIKeys.FORMS_EDITORS_STRUCTURE_LIGHT, false, (t) -> this.toggleLight(t));
         this.lightIntensity = new UITrackpad((v) -> this.form.lightIntensity.set(v.intValue()))
                 .integer()
                 .limit(1D, 15D);
@@ -107,20 +108,9 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         UIOverlay.addOverlay(this.getContext(), overlay, 280, 0.5F);
     }
 
-    private void toggleLight()
+    private void toggleLight(UIToggle t)
     {
-        boolean current = this.form.emitLight.get();
-        this.form.emitLight.set(!current);
-        updateLightButtonLabel();
-    }
-
-    private void updateLightButtonLabel()
-    {
-        IKey key = (this.form != null && this.form.emitLight.get())
-            ? UIKeys.FORMS_EDITORS_STRUCTURE_LIGHTS_ON
-            : UIKeys.FORMS_EDITORS_STRUCTURE_LIGHTS_OFF;
-
-        this.toggleLight.label = key;
+        this.form.emitLight.set(t.getValue());
     }
 
 
@@ -139,7 +129,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
         this.structureFile.setText(form.structureFile.get());
         this.color.setColor(form.color.get().getARGBColor());
-        updateLightButtonLabel();
+        this.toggleLight.setValue(form.emitLight.get());
         this.lightIntensity.setValue((double)form.lightIntensity.get());
     }
 }

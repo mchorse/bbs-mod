@@ -403,6 +403,7 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_STRUCTURE_TITLE = L10n.lang("bbs.ui.forms.editors.structure.title");
     public static final IKey FORMS_EDITORS_STRUCTURE_PICK_STRUCTURE = L10n.lang("bbs.ui.forms.editors.structure.pick_structure");
     public static final IKey FORMS_EDITORS_STRUCTURE_PICK_BIOME = L10n.lang("bbs.ui.forms.editors.structure.pick_biome");
+    public static final IKey FORMS_EDITORS_STRUCTURE_LIGHT = L10n.lang("bbs.ui.forms.editors.structure.light");
     public static final IKey FORMS_EDITORS_STRUCTURE_TINT = L10n.lang("bbs.ui.forms.editors.structure.tint");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_ON = L10n.lang("bbs.ui.forms.editors.structure.lights.on");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_OFF = L10n.lang("bbs.ui.forms.editors.structure.lights.off");

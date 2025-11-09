@@ -1188,5 +1188,6 @@
     "bbs.ui.replays.bone_anchoring.select_bone_description": "Select the bone you want to anchor to this pose track",
     "bbs.ui.forms.editors.structure.lights.on": "Block lights: ON",
     "bbs.ui.forms.editors.structure.lights.off": "Block lights: OFF",
-    "bbs.ui.forms.editors.structure.light_intensity": "Light intensity (1-15)"
+    "bbs.ui.forms.editors.structure.light_intensity": "Light intensity (1-15)",
+    "bbs.ui.forms.editors.structure.light": "Light"
 }
