@@ -26,7 +26,9 @@ import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.TexturedRenderLayers;
+import mchorse.bbs_mod.forms.renderers.utils.RecolorVertexConsumer;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.render.VertexConsumer;
@@ -190,28 +192,22 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 // Pase adicional: bloques con tinte por bioma (hojas/grass/vines/lily pad)
                 try
                 {
-                    net.minecraft.client.render.VertexConsumerProvider tintConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+                    net.minecraft.client.render.VertexConsumerProvider.Immediate tintConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
                     FormRenderingContext tintContext = new FormRenderingContext()
                         .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
                     renderBiomeTintedBlocksVanilla(tintContext, matrices, tintConsumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
-                    if (tintConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                    {
-                        immediate.draw();
-                    }
+                    tintConsumers.draw();
                 }
                 catch (Throwable ignored) {}
 
                 // Pase adicional: bloques animados (portal/fluido) con capa moving block
                 try
                 {
-                    net.minecraft.client.render.VertexConsumerProvider animConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+                    net.minecraft.client.render.VertexConsumerProvider.Immediate animConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
                     FormRenderingContext animContext = new FormRenderingContext()
                         .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
                     renderAnimatedBlocksVanilla(animContext, matrices, animConsumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
-                    if (animConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                    {
-                        immediate.draw();
-                    }
+                    animConsumers.draw();
                 }
                 catch (Throwable ignored) {}
 
@@ -290,24 +286,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                     // Pase adicional: bloques con tinte por bioma
                     try
                     {
-                        net.minecraft.client.render.VertexConsumerProvider tintConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+                        net.minecraft.client.render.VertexConsumerProvider.Immediate tintConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
                         renderBiomeTintedBlocksVanilla(context, context.stack, tintConsumers, light, context.overlay);
-                        if (tintConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                        {
-                            immediate.draw();
-                        }
+                        tintConsumers.draw();
                     }
                     catch (Throwable ignored) {}
 
                     // Pase adicional: bloques animados (portal/fluido) con capa moving block
                     try
                     {
-                        net.minecraft.client.render.VertexConsumerProvider animConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+                        net.minecraft.client.render.VertexConsumerProvider.Immediate animConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
                         renderAnimatedBlocksVanilla(context, context.stack, animConsumers, light, context.overlay);
-                        if (animConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                        {
-                            immediate.draw();
-                        }
+                        animConsumers.draw();
                     }
                     catch (Throwable ignored) {}
                 }
@@ -468,9 +458,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             float globalAlpha = this.form.color.get().a;
             if (globalAlpha < 0.999f)
             {
-                layer = useEntityLayers
-                    ? net.minecraft.client.render.TexturedRenderLayers.getEntityTranslucentCull()
-                    : RenderLayer.getTranslucent();
+                layer = RenderLayer.getTranslucent();
             }
 
             VertexConsumer vc = consumers.getBuffer(layer);
@@ -523,6 +511,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
             stack.pop();
         }
+
+        // Importante: si está activo Sodium/Iris, el wrapper de recolor usa
+        // estado estático global (RecolorVertexConsumer.newColor). Asegurar
+        // que se restablece tras este pase para que la UI no herede el tinte.
+        RecolorVertexConsumer.newColor = null;
     }
 
     /**
@@ -616,11 +609,17 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             MinecraftClient.getInstance().getBlockRenderManager().renderBlock(entry.state, entry.pos, view, stack, vc, true, Random.create());
             stack.pop();
         }
+
+        // Reset del estado global de color (Sodium/Iris) tras el pase animado
+        RecolorVertexConsumer.newColor = null;
     }
 
     /** Renderiza bloques que requieren tinte por bioma (hojas, césped, lianas, nenúfar) usando capas vanilla. */
     private void renderBiomeTintedBlocksVanilla(FormRenderingContext context, MatrixStack stack, net.minecraft.client.render.VertexConsumerProvider consumers, int light, int overlay)
     {
+        // Asegurar estado de blending correcto para capas translúcidas
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         // Centrado basado en límites reales (min/max)
         float cx;
         float cy;
@@ -693,6 +692,14 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             // Capa según el estado; hojas suelen ser cutout_mipped, césped/plantas cutout
             RenderLayer layer = RenderLayers.getBlockLayer(entry.state);
 
+            // Si hay opacidad global (<1), forzar capa translúcida para que el alpha
+            // se aplique en materiales originalmente cutout/cull y no "desaparezcan".
+            float globalAlpha = this.form.color.get().a;
+            if (globalAlpha < 0.999f)
+            {
+                layer = RenderLayer.getTranslucent();
+            }
+
             VertexConsumer vc = consumers.getBuffer(layer);
             Color tint = this.form.color.get();
             java.util.function.Function<VertexConsumer, VertexConsumer> recolor = BBSRendering.getColorConsumer(tint);
@@ -704,6 +711,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             MinecraftClient.getInstance().getBlockRenderManager().renderBlock(entry.state, entry.pos, view, stack, vc, true, Random.create());
             stack.pop();
         }
+
+        // Restaurar estado
+        RenderSystem.disableBlend();
+        // Reset del estado global de color (Sodium/Iris) para evitar que la UI se tiña
+        RecolorVertexConsumer.newColor = null;
     }
 
     /** Determina si el bloque requiere animación de textura (portal/agua/lava). */
@@ -829,7 +841,20 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 {
                     @SuppressWarnings({"rawtypes", "unchecked"})
                     net.minecraft.client.render.block.entity.BlockEntityRenderer raw = (net.minecraft.client.render.block.entity.BlockEntityRenderer) renderer;
-                    raw.render(be, 0F, stack, consumers, beLight, overlay);
+
+                    // Aplicar tinte global siempre a Block Entities, aislando el provider
+                    CustomVertexConsumerProvider beProvider = FormUtilsClient.getProvider();
+                    beProvider.setSubstitute(BBSRendering.getColorConsumer(this.form.color.get()));
+                    try
+                    {
+                        raw.render(be, 0F, stack, beProvider, beLight, overlay);
+                    }
+                    finally
+                    {
+                        beProvider.draw();
+                        beProvider.setSubstitute(null);
+                        CustomVertexConsumerProvider.clearRunnables();
+                    }
                 }
             }
 

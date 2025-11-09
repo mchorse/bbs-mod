@@ -123,6 +123,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.toggleLight.label = key;
     }
 
+
     private void setStructure(Link link)
     {
         String path = link == null ? "" : link.path;

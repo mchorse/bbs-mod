@@ -24,6 +24,8 @@ public class StructureForm extends Form
     public final ValueBoolean emitLight = new ValueBoolean("emit_light", false);
     /** Intensidad de luz emitida por los bloques de la estructura (1-15) */
     public final ValueInt lightIntensity = new ValueInt("light_intensity", 15);
+    /** Aplica el tinte global también a Block Entities (cofres, carteles, etc.) */
+    public final ValueBoolean tintBlockEntities = new ValueBoolean("tint_block_entities", false);
 
     public StructureForm()
     {
@@ -34,6 +36,7 @@ public class StructureForm extends Form
         this.add(this.biomeId);
         this.add(this.emitLight);
         this.add(this.lightIntensity);
+        this.add(this.tintBlockEntities);
     }
 
     @Override
