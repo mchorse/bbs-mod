@@ -99,6 +99,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
     @Override
     public void renderInUI(UIContext context, int x1, int y1, int x2, int y2)
     {
+        // Asegurar que el batch de UI actual se vacíe antes de dibujar 3D
         context.batcher.getContext().draw();
 
         ensureLoaded();
@@ -109,6 +110,9 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         matrices.push();
         MatrixStackUtils.multiply(matrices, uiMatrix);
+        // Para dibujar contenido 3D dentro de UI, usar prueba de profundidad estándar
+        // y restaurarla al finalizar para evitar que otros paneles se vean afectados.
+        com.mojang.blaze3d.systems.RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
         /* Autoescala: ajustar para que la estructura quepa en la celda sin recortarse */
         float cellW = x2 - x1;
         float cellH = y2 - y1;
@@ -243,6 +247,8 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         }
 
         matrices.pop();
+        // Restaurar el estado de profundidad esperado por el sistema de UI
+        com.mojang.blaze3d.systems.RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_ALWAYS);
     }
 
     @Override
