@@ -196,22 +196,38 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 // Pase adicional: bloques con tinte por bioma (hojas/grass/vines/lily pad)
                 try
                 {
-                    net.minecraft.client.render.VertexConsumerProvider.Immediate tintConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+                    boolean shadersEnabled = mchorse.bbs_mod.client.BBSRendering.isIrisShadersEnabled() && mchorse.bbs_mod.client.BBSRendering.isRenderingWorld();
+                    net.minecraft.client.render.VertexConsumerProvider consumersTint = shadersEnabled
+                        ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
+                        : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+
                     FormRenderingContext tintContext = new FormRenderingContext()
                         .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
-                    renderBiomeTintedBlocksVanilla(tintContext, matrices, tintConsumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
-                    tintConsumers.draw();
+                    renderBiomeTintedBlocksVanilla(tintContext, matrices, consumersTint, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
+
+                    if (consumersTint instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
+                    {
+                        immediate.draw();
+                    }
                 }
                 catch (Throwable ignored) {}
 
                 // Pase adicional: bloques animados (portal/fluido) con capa moving block
                 try
                 {
-                    net.minecraft.client.render.VertexConsumerProvider.Immediate animConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+                    boolean shadersEnabled = mchorse.bbs_mod.client.BBSRendering.isIrisShadersEnabled() && mchorse.bbs_mod.client.BBSRendering.isRenderingWorld();
+                    net.minecraft.client.render.VertexConsumerProvider consumersAnim = shadersEnabled
+                        ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
+                        : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+
                     FormRenderingContext animContext = new FormRenderingContext()
                         .set(FormRenderType.PREVIEW, null, matrices, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0F);
-                    renderAnimatedBlocksVanilla(animContext, matrices, animConsumers, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
-                    animConsumers.draw();
+                    renderAnimatedBlocksVanilla(animContext, matrices, consumersAnim, LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
+
+                    if (consumersAnim instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
+                    {
+                        immediate.draw();
+                    }
                 }
                 catch (Throwable ignored) {}
 
@@ -274,45 +290,46 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             }
             else
             {
+                // VAO con shader compatible con packs: usar programa de entidad translúcida cuando Iris está activo
+                net.minecraft.client.gl.ShaderProgram shader = (mchorse.bbs_mod.client.BBSRendering.isIrisShadersEnabled() && mchorse.bbs_mod.client.BBSRendering.isRenderingWorld())
+                    ? net.minecraft.client.render.GameRenderer.getRenderTypeEntityTranslucentCullProgram()
+                    : BBSShaders.getModel();
+
+                RenderSystem.setShader(() -> shader);
+                RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                ModelVAORenderer.render(shader, this.structureVao, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
+
+                // Pase de Block Entities tras VAO
+                try
                 {
-                    // VAO en vanilla con shader de modelo propio
-                    net.minecraft.client.gl.ShaderProgram shader = BBSShaders.getModel();
-                    RenderSystem.setShader(() -> shader);
-                    RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
-                    RenderSystem.enableBlend();
-                    RenderSystem.defaultBlendFunc();
-                    ModelVAORenderer.render(shader, this.structureVao, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
-
-                    // Pase de Block Entities tras VAO
-                    try
+                    net.minecraft.client.render.VertexConsumerProvider beConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+                    renderBlockEntitiesOnly(context, context.stack, beConsumers, light, context.overlay);
+                    if (beConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
                     {
-                        net.minecraft.client.render.VertexConsumerProvider beConsumers = net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-                        renderBlockEntitiesOnly(context, context.stack, beConsumers, light, context.overlay);
-                        if (beConsumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
-                        {
-                            immediate.draw();
-                        }
+                        immediate.draw();
                     }
-                    catch (Throwable ignored) {}
-
-                    // Pase adicional: bloques con tinte por bioma
-                    try
-                    {
-                        net.minecraft.client.render.VertexConsumerProvider.Immediate tintConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-                        renderBiomeTintedBlocksVanilla(context, context.stack, tintConsumers, light, context.overlay);
-                        tintConsumers.draw();
-                    }
-                    catch (Throwable ignored) {}
-
-                    // Pase adicional: bloques animados (portal/fluido) con capa moving block
-                    try
-                    {
-                        net.minecraft.client.render.VertexConsumerProvider.Immediate animConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-                        renderAnimatedBlocksVanilla(context, context.stack, animConsumers, light, context.overlay);
-                        animConsumers.draw();
-                    }
-                    catch (Throwable ignored) {}
                 }
+                catch (Throwable ignored) {}
+
+                // Pase adicional: bloques con tinte por bioma
+                try
+                {
+                    net.minecraft.client.render.VertexConsumerProvider.Immediate tintConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+                    renderBiomeTintedBlocksVanilla(context, context.stack, tintConsumers, light, context.overlay);
+                    tintConsumers.draw();
+                }
+                catch (Throwable ignored) {}
+
+                // Pase adicional: bloques animados (portal/fluido) con capa moving block
+                try
+                {
+                    net.minecraft.client.render.VertexConsumerProvider.Immediate animConsumers = net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+                    renderAnimatedBlocksVanilla(context, context.stack, animConsumers, light, context.overlay);
+                    animConsumers.draw();
+                }
+                catch (Throwable ignored) {}
             }
 
             gameRenderer.getLightmapTextureManager().disable();
@@ -606,8 +623,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             stack.push();
             stack.translate(entry.pos.getX() - cx + parityX, entry.pos.getY() - cy, entry.pos.getZ() - cz + parityZ);
 
-            // Forzar capa moving block para animaciones (portal/fluido)
-            RenderLayer layer = RenderLayer.getTranslucentMovingBlock();
+            // Selección de capa: en shaders usar variante de entidad para que el pack procese la animación
+            boolean shadersEnabled = mchorse.bbs_mod.client.BBSRendering.isIrisShadersEnabled() && mchorse.bbs_mod.client.BBSRendering.isRenderingWorld();
+            RenderLayer layer = shadersEnabled
+                ? RenderLayers.getEntityBlockLayer(entry.state, true)
+                : RenderLayer.getTranslucentMovingBlock();
 
             // Aplicar alpha global como recolor
             VertexConsumer vc = consumers.getBuffer(layer);

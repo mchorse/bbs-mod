@@ -103,8 +103,6 @@
   "bbs.config.model_blocks.click-comment": "Whether model blocks can be picked in the model block panel editor by clicking on them",
   "bbs.config.model_blocks.render_all": "Render all",
   "bbs.config.model_blocks.render_all-comment": "Whether all model blocks should be rendered",
-  "bbs.config.model_blocks.visualize_structures": "Visualize structures",
-  "bbs.config.model_blocks.visualize_structures-comment": "Show the Structures category (.nbt assets). Off by default",
   "bbs.config.model_blocks.title": "Model blocks",
     "bbs.config.model_blocks.tooltip": "Options related to model blocks",
     "bbs.config.multiskin.multithreaded": "Multi-threaded processing",
