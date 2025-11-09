@@ -247,6 +247,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         context.stack.push();
 
         boolean optimize = mchorse.bbs_mod.BBSSettings.structureOptimization.get();
+        boolean picking = context.isPicking();
         if (optimize && (this.structureVao == null || this.vaoDirty))
         {
             buildStructureVAO();
@@ -254,22 +255,70 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         if (!optimize)
         {
-            // Modo BufferBuilder: usar pipeline vanilla/culling con mejor iluminación
-            int light = context.isPicking() ? 0 : context.light;
-            boolean shaders = this.isShadersActive();
-            net.minecraft.client.render.VertexConsumerProvider consumers = shaders
-                ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
-                : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-
-            try
+            // Si estamos en picking, renderizar con VAO y el shader de picking para obtener la silueta completa
+            if (picking)
             {
-                renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, shaders);
-                if (consumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
+                if (this.structureVao == null || this.vaoDirty)
                 {
-                    immediate.draw();
+                    buildStructureVAO();
                 }
+
+                Color tint3D = this.form.color.get();
+                int light = 0;
+
+                net.minecraft.client.render.GameRenderer gameRenderer = net.minecraft.client.MinecraftClient.getInstance().gameRenderer;
+                gameRenderer.getLightmapTextureManager().enable();
+                gameRenderer.getOverlayTexture().setupOverlayColor();
+
+                this.setupTarget(context, BBSShaders.getPickerModelsProgram());
+                RenderSystem.setShader(BBSShaders::getPickerModelsProgram);
+                RenderSystem.enableBlend();
+                RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
+                ModelVAORenderer.render(BBSShaders.getPickerModelsProgram(), this.structureVao, context.stack, tint3D.r, tint3D.g, tint3D.b, tint3D.a, light, context.overlay);
+
+                gameRenderer.getLightmapTextureManager().disable();
+                gameRenderer.getOverlayTexture().teardownOverlayColor();
+
+                RenderSystem.disableBlend();
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
             }
-            catch (Throwable ignored) {}
+            else
+            {
+                // Modo BufferBuilder: usar pipeline vanilla/culling con mejor iluminación
+                int light = context.light;
+                boolean shaders = this.isShadersActive();
+                net.minecraft.client.render.VertexConsumerProvider consumers = shaders
+                    ? net.minecraft.client.MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers()
+                    : net.minecraft.client.render.VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+
+                // Alinear el manejo de estados con el camino VAO para evitar fugas
+                // de estado que afectan al primer modelo renderizado después.
+                net.minecraft.client.render.GameRenderer gameRenderer = net.minecraft.client.MinecraftClient.getInstance().gameRenderer;
+                gameRenderer.getLightmapTextureManager().enable();
+                gameRenderer.getOverlayTexture().setupOverlayColor();
+                // Asegurar atlas de bloques activo al iniciar el pase
+                RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
+
+                try
+                {
+                    renderStructureCulledWorld(context, context.stack, consumers, light, context.overlay, shaders);
+                    if (consumers instanceof net.minecraft.client.render.VertexConsumerProvider.Immediate immediate)
+                    {
+                        immediate.draw();
+                    }
+                }
+                catch (Throwable ignored) {}
+
+                // Restaurar estado tras el pase de BufferBuilder para no contaminar
+                // el siguiente render (modelos, UI, etc.)
+                gameRenderer.getLightmapTextureManager().disable();
+                gameRenderer.getOverlayTexture().teardownOverlayColor();
+
+                RenderSystem.disableBlend();
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
+            }
         }
         else if (this.structureVao != null)
         {
