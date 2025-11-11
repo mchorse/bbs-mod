@@ -2,9 +2,13 @@ package mchorse.bbs_mod.forms.forms;
 
 import mchorse.bbs_mod.settings.values.core.ValueColor;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.forms.forms.utils.PivotSettings;
+import mchorse.bbs_mod.settings.values.misc.ValuePivotSettings;
 import mchorse.bbs_mod.utils.colors.Color;
+import org.joml.Vector4f;
 
 /**
  * StructureForm
@@ -26,6 +30,14 @@ public class StructureForm extends Form
     public final ValueInt lightIntensity = new ValueInt("light_intensity", 15);
     /** Aplica el tinte global también a Block Entities (cofres, carteles, etc.) */
     public final ValueBoolean tintBlockEntities = new ValueBoolean("tint_block_entities", false);
+    /** Pivote manual en coordenadas de bloque (permite decimales) */
+    public final ValueFloat pivotX = new ValueFloat("pivot_x", 0f);
+    public final ValueFloat pivotY = new ValueFloat("pivot_y", 0f);
+    public final ValueFloat pivotZ = new ValueFloat("pivot_z", 0f);
+    /** Pista unificada de pivote: auto + X/Y/Z (W sin uso) */
+    public final ValuePivotSettings pivot = new ValuePivotSettings("pivot", new PivotSettings(true, 0f, 0f, 0f));
+    /** Cuando está activo, el renderer calcula el centro automáticamente y omite el pivote manual */
+    public final ValueBoolean autoPivot = new ValueBoolean("auto_pivot", true);
 
     public StructureForm()
     {
@@ -37,6 +49,19 @@ public class StructureForm extends Form
         this.add(this.emitLight);
         this.add(this.lightIntensity);
         this.add(this.tintBlockEntities);
+        /* Ocultar pistas escalares del timeline; se mantienen para UI manual */
+        this.pivotX.invisible();
+        this.pivotY.invisible();
+        this.pivotZ.invisible();
+
+        this.add(this.pivotX);
+        this.add(this.pivotY);
+        this.add(this.pivotZ);
+
+        /* Nueva pista unificada de keyframes y ocultar pista booleana suelta */
+        this.add(this.pivot);
+        this.autoPivot.invisible();
+        this.add(this.autoPivot);
     }
 
     @Override

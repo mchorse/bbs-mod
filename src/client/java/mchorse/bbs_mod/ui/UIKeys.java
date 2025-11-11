@@ -408,6 +408,12 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_ON = L10n.lang("bbs.ui.forms.editors.structure.lights.on");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_OFF = L10n.lang("bbs.ui.forms.editors.structure.lights.off");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHT_INTENSITY_LABEL = L10n.lang("bbs.ui.forms.editors.structure.light_intensity");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_TITLE = L10n.lang("bbs.ui.forms.editors.structure.pivot.title");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_X = L10n.lang("bbs.ui.forms.editors.structure.pivot.x");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_Y = L10n.lang("bbs.ui.forms.editors.structure.pivot.y");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_Z = L10n.lang("bbs.ui.forms.editors.structure.pivot.z");
+    public static final IKey FORMS_EDITORS_STRUCTURE_AUTO_PIVOT = L10n.lang("bbs.ui.forms.editors.structure.pivot.auto");
+    public static final IKey FORMS_EDITORS_STRUCTURE_CALCULATE_CENTER = L10n.lang("bbs.ui.forms.editors.structure.pivot.calculate_center");
     public static final IKey FORMS_EDITOR_BONE = L10n.lang("bbs.ui.forms.editor.bone");
     public static final IKey FORMS_EDITOR_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.context.add");
     public static final IKey FORMS_EDITOR_CONTEXT_COPY = L10n.lang("bbs.ui.forms.editor.context.copy");

@@ -23,6 +23,7 @@ public class KeyframeFactories
     public static final ActionsConfigKeyframeFactory ACTIONS_CONFIG = new ActionsConfigKeyframeFactory();
     public static final ShapeKeysKeyframeFactory SHAPE_KEYS = new ShapeKeysKeyframeFactory();
     public static final ParticleSettingsKeyframeFactory PARTICLE_SETTINGS = new ParticleSettingsKeyframeFactory();
+    public static final PivotSettingsKeyframeFactory PIVOT_SETTINGS = new PivotSettingsKeyframeFactory();
 
     public static boolean isNumeric(IKeyframeFactory factory)
     {
@@ -49,5 +50,6 @@ public class KeyframeFactories
         FACTORIES.put("actions_config", ACTIONS_CONFIG);
         FACTORIES.put("shape_keys", SHAPE_KEYS);
         FACTORIES.put("particle_settings", PARTICLE_SETTINGS);
+        FACTORIES.put("pivot_settings", PIVOT_SETTINGS);
     }
 }
