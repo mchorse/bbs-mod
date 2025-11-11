@@ -703,6 +703,7 @@
     "bbs.ui.importer.success-notification": "Drag&dropped files were successfully processed by %s!",
     "bbs.ui.importer.wav": "WAV",
     "bbs.ui.importer.webp": "WEBP to PNG",
+    "bbs.ui.importer.structure": "Structure (.nbt)",
     "bbs.ui.item_stack.context.hotbar": "Paste from hotbar...",
     "bbs.ui.item_stack.context.paste": "Paste player's main item",
     "bbs.ui.item_stack.context.reset": "Reset item stack",

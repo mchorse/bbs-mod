@@ -538,6 +538,7 @@ public class UIKeys
     public static final IKey IMPORTER_SUCCESS_NOTIFICATION = L10n.lang("bbs.ui.importer.success-notification");
     public static final IKey IMPORTER_WAV = L10n.lang("bbs.ui.importer.wav");
     public static final IKey IMPORTER_WEBP = L10n.lang("bbs.ui.importer.webp");
+    public static final IKey IMPORTER_STRUCTURE_NBT = L10n.lang("bbs.ui.importer.structure");
     public static final IKey INTERPOLATIONS_CONTEXT_COPY = L10n.lang("interpolations.ui.context.copy");
     public static final IKey INTERPOLATIONS_CONTEXT_PASTE = L10n.lang("interpolations.ui.context.paste");
     public static final IKey INTERPOLATIONS_KEY_CATEGORY = L10n.lang("interpolations.key_category");
