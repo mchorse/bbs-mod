@@ -550,10 +550,25 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         {
             entries.add(new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry(be.state, be.pos));
         }
+        // Resolve unified structure light settings with legacy fallback
+        boolean lightsEnabled;
+        int lightIntensity;
+        mchorse.bbs_mod.forms.forms.utils.StructureLightSettings slRuntime = this.form.structureLight.getRuntimeValue();
+        if (slRuntime != null)
+        {
+            lightsEnabled = slRuntime.enabled;
+            lightIntensity = slRuntime.intensity;
+        }
+        else
+        {
+            lightsEnabled = this.form.emitLight.get();
+            lightIntensity = this.form.lightIntensity.get();
+        }
+
         mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView view = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries)
             .setBiomeOverride(this.form.biomeId.get())
-            .setLightsEnabled(this.form.emitLight.get())
-            .setLightIntensity(this.form.lightIntensity.get());
+            .setLightsEnabled(lightsEnabled)
+            .setLightIntensity(lightIntensity);
 
         BlockEntityRenderDispatcher beDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 
@@ -733,10 +748,25 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         {
             entries.add(new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry(be.state, be.pos));
         }
+        // Resolve unified structure light settings with legacy fallback
+        boolean lightsEnabled2;
+        int lightIntensity2;
+        mchorse.bbs_mod.forms.forms.utils.StructureLightSettings slRuntime2 = this.form.structureLight.getRuntimeValue();
+        if (slRuntime2 != null)
+        {
+            lightsEnabled2 = slRuntime2.enabled;
+            lightIntensity2 = slRuntime2.intensity;
+        }
+        else
+        {
+            lightsEnabled2 = this.form.emitLight.get();
+            lightIntensity2 = this.form.lightIntensity.get();
+        }
+
         mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView view = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries)
             .setBiomeOverride(this.form.biomeId.get())
-            .setLightsEnabled(this.form.emitLight.get())
-            .setLightIntensity(this.form.lightIntensity.get());
+            .setLightsEnabled(lightsEnabled2)
+            .setLightIntensity(lightIntensity2);
 
         // Ancla mundial
         net.minecraft.util.math.BlockPos anchor;

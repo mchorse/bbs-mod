@@ -54,7 +54,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.pickBiome = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_PICK_BIOME, (b) -> this.pickBiome());
         // Inicializar con valor por defecto; se sincroniza en startEdit
         this.toggleLight = new UIToggle(UIKeys.FORMS_EDITORS_STRUCTURE_LIGHT, false, (t) -> this.toggleLight(t));
-        this.lightIntensity = new UITrackpad((v) -> this.form.lightIntensity.set(v.intValue()))
+        this.lightIntensity = new UITrackpad((v) -> this.setLightIntensity(v.intValue()))
                 .integer()
                 .limit(1D, 15D);
 
@@ -142,7 +142,18 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
     private void toggleLight(UIToggle t)
     {
-        this.form.emitLight.set(t.getValue());
+        mchorse.bbs_mod.forms.forms.utils.StructureLightSettings s = this.form.structureLight.get();
+        if (s == null) s = new mchorse.bbs_mod.forms.forms.utils.StructureLightSettings(false, 15);
+        s.enabled = t.getValue();
+        this.form.structureLight.set(s);
+    }
+
+    private void setLightIntensity(int v)
+    {
+        mchorse.bbs_mod.forms.forms.utils.StructureLightSettings s = this.form.structureLight.get();
+        if (s == null) s = new mchorse.bbs_mod.forms.forms.utils.StructureLightSettings(false, 15);
+        s.intensity = Math.max(1, Math.min(15, v));
+        this.form.structureLight.set(s);
     }
 
 
@@ -226,8 +237,12 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
         this.structureFile.setText(form.structureFile.get());
         this.color.setColor(form.color.get().getARGBColor());
-        this.toggleLight.setValue(form.emitLight.get());
-        this.lightIntensity.setValue((double)form.lightIntensity.get());
+        mchorse.bbs_mod.forms.forms.utils.StructureLightSettings s = form.structureLight.get();
+        boolean enabled = (s != null) ? s.enabled : form.emitLight.get();
+        int intensity = (s != null) ? s.intensity : form.lightIntensity.get();
+
+        this.toggleLight.setValue(enabled);
+        this.lightIntensity.setValue((double) intensity);
         this.autoPivot.setValue(form.autoPivot.get());
         this.pivotX.setValue((double)form.pivotX.get());
         this.pivotY.setValue((double)form.pivotY.get());

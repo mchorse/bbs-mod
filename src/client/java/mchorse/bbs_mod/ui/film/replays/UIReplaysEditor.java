@@ -129,6 +129,7 @@ public class UIReplaysEditor extends UIElement
         COLORS.put("transform_overlay", 0xaaff00);
         COLORS.put("color", Colors.INACTIVE);
         COLORS.put("lighting", Colors.YELLOW);
+        COLORS.put("structure_light", Colors.YELLOW);
         COLORS.put("shape_keys", Colors.PINK);
         COLORS.put("actions", Colors.MAGENTA);
 
@@ -164,6 +165,7 @@ public class UIReplaysEditor extends UIElement
         ICONS.put("transform", Icons.ALL_DIRECTIONS);
         ICONS.put("color", Icons.BUCKET);
         ICONS.put("lighting", Icons.LIGHT);
+        ICONS.put("structure_light", Icons.LIGHT);
         ICONS.put("actions", Icons.CONVERT);
         ICONS.put("shape_keys", Icons.HEART_ALT);
         ICONS.put("text", Icons.FONT);
@@ -408,6 +410,11 @@ public class UIReplaysEditor extends UIElement
         /* Form properties */
         for (String key : FormUtils.collectPropertyPaths(this.replay.form.get()))
         {
+            /* Ocultar/omitir la pista tint_block_entities */
+            if (key.endsWith("tint_block_entities"))
+            {
+                continue;
+            }
             KeyframeChannel property = this.replay.properties.getOrCreate(this.replay.form.get(), key);
 
             if (property != null)
@@ -425,6 +432,126 @@ public class UIReplaysEditor extends UIElement
                 }
 
                 sheets.add(sheet.icon(getIcon(key)));
+            }
+        }
+
+        /* Reordenar propiedades de StructureForm por grupo de formulario:
+           - Mantener transform/transform_overlay arriba
+           - Colocar las dems debajo en orden: anchor, structure_file, pivot, biome_id, structure_light, color */
+        java.util.Map<Object, java.util.List<Integer>> groupIndices = new java.util.HashMap<>();
+        java.util.Map<Object, java.util.List<UIKeyframeSheet>> groupSheets = new java.util.HashMap<>();
+
+        for (int i = 0; i < sheets.size(); i++)
+        {
+            UIKeyframeSheet sheet = sheets.get(i);
+            Object form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
+
+            if (form instanceof mchorse.bbs_mod.forms.forms.StructureForm)
+            {
+                groupIndices.computeIfAbsent(form, k -> new ArrayList<>()).add(i);
+                groupSheets.computeIfAbsent(form, k -> new ArrayList<>()).add(sheet);
+            }
+        }
+
+        if (!groupSheets.isEmpty())
+        {
+            // Orden no-transform específico para StructureForm
+            java.util.Map<String, Integer> nonTransformOrder = new java.util.HashMap<>();
+            nonTransformOrder.put("anchor", 0);
+            nonTransformOrder.put("structure_file", 1);
+            nonTransformOrder.put("pivot", 2);
+            nonTransformOrder.put("biome_id", 3);
+            nonTransformOrder.put("structure_light", 4);
+            nonTransformOrder.put("color", 5);
+
+            // Orden prioritario arriba del todo
+            java.util.Map<String, Integer> topOrder = new java.util.HashMap<>();
+            topOrder.put("visible", 0);
+            topOrder.put("lighting", 1);
+
+            java.util.function.Function<String, Integer> toIndex = (id) ->
+            {
+                Integer v = nonTransformOrder.get(id);
+                return v == null ? 1000 : v;
+            };
+
+            for (java.util.Map.Entry<Object, java.util.List<UIKeyframeSheet>> entry : groupSheets.entrySet())
+            {
+                Object form = entry.getKey();
+                java.util.List<UIKeyframeSheet> group = entry.getValue();
+                java.util.List<Integer> indices = groupIndices.get(form);
+
+                if (indices == null || indices.isEmpty())
+                {
+                    continue;
+                }
+
+                java.util.List<UIKeyframeSheet> top = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> transforms = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> overlays = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> nonTransforms = new ArrayList<>();
+
+                for (UIKeyframeSheet s : group)
+                {
+                    if ("visible".equals(s.id) || "lighting".equals(s.id))
+                    {
+                        top.add(s);
+                    }
+                    else if ("transform".equals(s.id))
+                    {
+                        transforms.add(s);
+                    }
+                    else if (s.id != null && s.id.startsWith("transform_overlay"))
+                    {
+                        overlays.add(s);
+                    }
+                    else
+                    {
+                        nonTransforms.add(s);
+                    }
+                }
+
+                // Ordenar top: visible, luego lighting
+                top.sort((a, b) -> Integer.compare(
+                    topOrder.getOrDefault(a.id, 1000),
+                    topOrder.getOrDefault(b.id, 1000)
+                ));
+
+                // Ordenar overlays por sufijo numrico (default primero)
+                overlays.sort((a, b) -> {
+                    java.util.function.ToIntFunction<String> parseIndex = (id) ->
+                    {
+                        String suffix = id.substring("transform_overlay".length());
+                        if (suffix.isEmpty()) return -1; // default overlay primero
+                        try { return Integer.parseInt(suffix); } catch (Exception e) { return 999; }
+                    };
+                    return Integer.compare(parseIndex.applyAsInt(a.id), parseIndex.applyAsInt(b.id));
+                });
+
+                // Ordenar no-transform segn mapa
+                nonTransforms.sort((a, b) -> Integer.compare(toIndex.apply(a.id), toIndex.apply(b.id)));
+
+                // Posicin base del grupo y recolocacin contigua
+                int start = indices.stream().min(Integer::compareTo).get();
+
+                // Eliminar en orden descendente para evitar el corrimiento de indices
+                indices.sort(java.util.Collections.reverseOrder());
+                for (int idx : indices)
+                {
+                    sheets.remove(idx);
+                }
+
+                // Insertar: top (visible, lighting), transform, overlays, luego no-transforms
+                java.util.List<UIKeyframeSheet> newGroup = new ArrayList<>();
+                newGroup.addAll(top);
+                newGroup.addAll(transforms);
+                newGroup.addAll(overlays);
+                newGroup.addAll(nonTransforms);
+
+                for (int j = 0; j < newGroup.size(); j++)
+                {
+                    sheets.add(start + j, newGroup.get(j));
+                }
             }
         }
 
