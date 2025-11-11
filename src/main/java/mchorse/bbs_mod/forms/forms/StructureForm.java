@@ -42,6 +42,19 @@ public class StructureForm extends Form
     @Override
     protected String getDefaultDisplayName()
     {
-        return this.structureFile.get();
+        String path = this.structureFile.get();
+
+        if (path == null || path.isEmpty())
+        {
+            return super.getDefaultDisplayName();
+        }
+
+        int slash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        String prefix = slash >= 0 ? path.substring(0, slash + 1) : "";
+        String name = slash >= 0 ? path.substring(slash + 1) : path;
+
+        String base = name.toLowerCase().endsWith(".nbt") ? name.substring(0, name.length() - 4) : name;
+
+        return prefix + base;
     }
 }
