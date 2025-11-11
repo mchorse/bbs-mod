@@ -827,7 +827,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         // Asegurar estado de blending correcto para capas translúcidas
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        // Centrado basado en límites reales (min/max)
+        // Calcular pivote efectivo igual que en renderStructureCulledWorld
         float cx;
         float cy;
         float cz;
@@ -845,14 +845,40 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             cz = size.getZ() / 2f;
         }
 
-        float parityX = 0f;
-        float parityZ = 0f;
-        if (boundsMin != null && boundsMax != null)
+        float pivotX;
+        float pivotY;
+        float pivotZ;
+        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime2 = this.form.pivot.getRuntimeValue();
+        boolean useAuto2 = pivotSettingsRuntime2 != null ? pivotSettingsRuntime2.auto : this.form.autoPivot.get();
+        if (useAuto2)
         {
-            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-            parityX = (widthX % 2 == 1) ? -0.5f : 0f;
-            parityZ = (widthZ % 2 == 1) ? -0.5f : 0f;
+            float parityXAuto = 0f;
+            float parityZAuto = 0f;
+            if (boundsMin != null && boundsMax != null)
+            {
+                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
+                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
+            }
+            pivotX = cx - parityXAuto;
+            pivotY = cy;
+            pivotZ = cz - parityZAuto;
+        }
+        else
+        {
+            if (pivotSettingsRuntime2 != null)
+            {
+                pivotX = pivotSettingsRuntime2.pivot.x;
+                pivotY = pivotSettingsRuntime2.pivot.y;
+                pivotZ = pivotSettingsRuntime2.pivot.z;
+            }
+            else
+            {
+                pivotX = this.form.pivotX.get();
+                pivotY = this.form.pivotY.get();
+                pivotZ = this.form.pivotZ.get();
+            }
         }
 
         // Vista virtual para culling/colores/luz correctos
@@ -881,9 +907,9 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             anchor = net.minecraft.util.math.BlockPos.ORIGIN;
         }
 
-        int baseDx = (int)Math.floor(-cx + parityX);
-        int baseDy = (int)Math.floor(-cy);
-        int baseDz = (int)Math.floor(-cz + parityZ);
+        int baseDx = (int)Math.floor(-pivotX);
+        int baseDy = (int)Math.floor(-pivotY);
+        int baseDz = (int)Math.floor(-pivotZ);
         view.setWorldAnchor(anchor, baseDx, baseDy, baseDz);
 
         for (BlockEntry entry : blocks)
@@ -894,7 +920,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             }
 
             stack.push();
-            stack.translate(entry.pos.getX() - cx + parityX, entry.pos.getY() - cy, entry.pos.getZ() - cz + parityZ);
+            stack.translate(entry.pos.getX() - pivotX, entry.pos.getY() - pivotY, entry.pos.getZ() - pivotZ);
 
             // Capa según el estado; hojas suelen ser cutout_mipped, césped/plantas cutout
             RenderLayer layer = RenderLayers.getBlockLayer(entry.state);
@@ -970,7 +996,7 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
      */
     private void renderBlockEntitiesOnly(FormRenderingContext context, MatrixStack stack, net.minecraft.client.render.VertexConsumerProvider consumers, int light, int overlay)
     {
-        // Centrado basado en límites reales (min/max)
+        // Calcular pivote efectivo igual que en renderStructureCulledWorld
         float cx;
         float cy;
         float cz;
@@ -988,14 +1014,40 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             cz = size.getZ() / 2f;
         }
 
-        float parityX = 0f;
-        float parityZ = 0f;
-        if (boundsMin != null && boundsMax != null)
+        float pivotX;
+        float pivotY;
+        float pivotZ;
+        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime = this.form.pivot.getRuntimeValue();
+        boolean useAuto = pivotSettingsRuntime != null ? pivotSettingsRuntime.auto : this.form.autoPivot.get();
+        if (useAuto)
         {
-            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-            parityX = (widthX % 2 == 1) ? -0.5f : 0f;
-            parityZ = (widthZ % 2 == 1) ? -0.5f : 0f;
+            float parityXAuto = 0f;
+            float parityZAuto = 0f;
+            if (boundsMin != null && boundsMax != null)
+            {
+                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
+                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
+            }
+            pivotX = cx - parityXAuto;
+            pivotY = cy;
+            pivotZ = cz - parityZAuto;
+        }
+        else
+        {
+            if (pivotSettingsRuntime != null)
+            {
+                pivotX = pivotSettingsRuntime.pivot.x;
+                pivotY = pivotSettingsRuntime.pivot.y;
+                pivotZ = pivotSettingsRuntime.pivot.z;
+            }
+            else
+            {
+                pivotX = this.form.pivotX.get();
+                pivotY = this.form.pivotY.get();
+                pivotZ = this.form.pivotZ.get();
+            }
         }
 
         // Ancla mundial
@@ -1024,11 +1076,11 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             }
 
             stack.push();
-            stack.translate(entry.pos.getX() - cx + parityX, entry.pos.getY() - cy, entry.pos.getZ() - cz + parityZ);
+            stack.translate(entry.pos.getX() - pivotX, entry.pos.getY() - pivotY, entry.pos.getZ() - pivotZ);
 
-            int dx = (int)Math.floor(entry.pos.getX() - cx + parityX);
-            int dy = (int)Math.floor(entry.pos.getY() - cy);
-            int dz = (int)Math.floor(entry.pos.getZ() - cz + parityZ);
+            int dx = (int)Math.floor(entry.pos.getX() - pivotX);
+            int dy = (int)Math.floor(entry.pos.getY() - pivotY);
+            int dz = (int)Math.floor(entry.pos.getZ() - pivotZ);
             net.minecraft.util.math.BlockPos worldPos = anchor.add(dx, dy, dz);
 
             BlockEntity be = ((BlockEntityProvider) block).createBlockEntity(worldPos, entry.state);
