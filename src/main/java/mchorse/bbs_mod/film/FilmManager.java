@@ -13,6 +13,7 @@ public class FilmManager extends BaseManager<Film>
     {
         super(folder);
 
+        this.backUps = true;
         this.storage = new CompressedDataStorage();
     }
 

@@ -2,12 +2,15 @@ package mchorse.bbs_mod.utils.manager;
 
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.manager.storage.IDataStorage;
 import mchorse.bbs_mod.utils.manager.storage.JSONLikeStorage;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.function.Supplier;
 
 /**
@@ -17,6 +20,7 @@ import java.util.function.Supplier;
 public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T>
 {
     protected IDataStorage storage = new JSONLikeStorage();
+    protected boolean backUps;
 
     public BaseManager(Supplier<File> folder)
     {
@@ -59,15 +63,19 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
         try
         {
             File file = this.getFile(id);
-            File otherFile = new File(file.getAbsolutePath() + "~");
-            File tmpFile = new File(file.getAbsolutePath() + "~1");
 
-            this.storage.save(otherFile, data);
+            if (this.backUps)
+            {
+                String path = file.getParentFile().getAbsolutePath();
+                String backupFileName = new SimpleDateFormat("yyyy_MM_dd_HH").format(new Date());
+                String filename = StringUtils.fileName(id);
+                File backupFile = new File(path, "_" + StringUtils.removeExtension(filename) + "/" + filename + "." + backupFileName + ".dat");
 
-            if (tmpFile.exists()) Files.delete(tmpFile.toPath());
-            if (file.exists()) Files.move(file.toPath(), tmpFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                backupFile.getParentFile().mkdirs();
+                Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
 
-            Files.move(otherFile.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE);
+            this.storage.save(file, data);
 
             return true;
         }
