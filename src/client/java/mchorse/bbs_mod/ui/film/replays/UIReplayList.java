@@ -79,6 +79,29 @@ public class UIReplayList extends UIList<Replay>
     public UIFilmPanel panel;
     public UIReplaysOverlayPanel overlay;
 
+    /* Modo categorías de grupos */
+    private boolean groupCategoriesEnabled = true;
+    private java.util.Map<String, Boolean> expandedGroups = new java.util.HashMap<>();
+    private java.util.List<Row> groupedRows = new java.util.ArrayList<>();
+    private static final String EMPTY_GROUP_LABEL = "(sin grupo)";
+    /* Estado de arrastre en modo agrupado */
+    private int groupedDragFrom = -1;
+    private long groupedDragTime;
+
+    private static class Row
+    {
+        final boolean header;
+        final String group;
+        final Replay replay; // null si es header
+
+        Row(String group, boolean header, Replay replay)
+        {
+            this.group = group;
+            this.header = header;
+            this.replay = replay;
+        }
+    }
+
     public UIReplayList(Consumer<List<Replay>> callback, UIReplaysOverlayPanel overlay, UIFilmPanel panel)
     {
         super(callback);
@@ -276,6 +299,13 @@ public class UIReplayList extends UIList<Replay>
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+
+        /* inicializar expansión por defecto */
+        for (String g : this.collectGroups())
+        {
+            this.expandedGroups.putIfAbsent(g, true);
+        }
+        this.expandedGroups.putIfAbsent(EMPTY_GROUP_LABEL, true);
     }
 
     @Override
@@ -813,9 +843,54 @@ public class UIReplayList extends UIList<Replay>
     }
 
     @Override
-    public void render(UIContext context)
+    public void renderList(UIContext context)
     {
-        super.render(context);
+        /* En modo filtrado o sin grupos reales, usar comportamiento base */
+        if (this.isFiltering() || !this.hasAnyGroup())
+        {
+            super.renderList(context);
+            return;
+        }
+
+        /* Construir filas agrupadas y dibujar */
+        buildGroupedRows();
+
+        int itemH = this.scroll.scrollItemSize;
+        int start = Math.max(0, (int) (this.scroll.getScroll() / itemH));
+        int visible = Math.max(0, this.area.h / itemH + 2);
+        int end = Math.min(groupedRows.size(), start + visible);
+
+        int y = this.area.y - (int) (this.scroll.getScroll() % itemH);
+
+        for (int i = start; i < end; i++)
+        {
+            Row row = groupedRows.get(i);
+            int x = this.area.x;
+            boolean hover = this.area.isInside(context) && context.mouseY >= y && context.mouseY < y + itemH;
+
+            if (row.header)
+            {
+                /* Encabezado de grupo */
+                context.batcher.textCard(row.group, x + 26, y + 6);
+
+                boolean expanded = this.expandedGroups.getOrDefault(row.group, true);
+                context.batcher.icon(expanded ? Icons.MOVE_DOWN : Icons.MOVE_UP, x + 16, y + (expanded ? 5 : 4), 0.5F, 0F);
+            }
+            else
+            {
+                int indexInList = this.list.indexOf(row.replay);
+                boolean selected = indexInList >= 0 && this.current.contains(indexInList);
+
+                if (selected)
+                {
+                    context.batcher.box(x, y, x + this.area.w, y + itemH, Colors.A50 | mchorse.bbs_mod.BBSSettings.primaryColor.get());
+                }
+
+                this.renderElementPart(context, row.replay, indexInList, x, y, hover, selected);
+            }
+
+            y += itemH;
+        }
     }
 
     @Override
@@ -860,13 +935,236 @@ public class UIReplayList extends UIList<Replay>
         }
     }
 
+    @Override
+    public boolean subMouseClicked(UIContext context)
+    {
+        /* En modo categorías, manejar clicks para expandir/collapse y selección.
+         * No consumir botón derecho para que funcione el menú contextual. */
+        if (!this.isFiltering() && this.hasAnyGroup() && this.area.isInside(context))
+        {
+            if (context.mouseButton != 0)
+            {
+                return super.subMouseClicked(context);
+            }
+
+            int itemH = this.scroll.scrollItemSize;
+            int localY = context.mouseY - this.area.y + (int) this.scroll.getScroll();
+            int rowIndex = localY / itemH;
+
+            buildGroupedRows();
+
+            if (rowIndex >= 0 && rowIndex < this.groupedRows.size())
+            {
+                Row row = this.groupedRows.get(rowIndex);
+
+                if (row.header)
+                {
+                    boolean expanded = this.expandedGroups.getOrDefault(row.group, true);
+                    this.expandedGroups.put(row.group, !expanded);
+                    this.update();
+                    return true;
+                }
+                else if (row.replay != null)
+                {
+                    int indexInList = this.list.indexOf(row.replay);
+                    if (indexInList >= 0)
+                    {
+                        /* Selección múltiple: Alt (alias de Ctrl) y rango con Shift */
+                        if (Window.isAltPressed())
+                        {
+                            this.toggleIndex(indexInList);
+                        }
+                        else if (this.multi && Window.isShiftPressed() && this.isSelected())
+                        {
+                            int first = this.current.get(0);
+                            int increment = first > indexInList ? -1 : 1;
+
+                            for (int i = first + increment; i != indexInList + increment; i += increment)
+                            {
+                                this.addIndex(i);
+                            }
+                        }
+                        else
+                        {
+                            this.setIndex(indexInList);
+                        }
+
+                        if (this.callback != null)
+                        {
+                            this.callback.accept(this.getCurrent());
+                        }
+
+                        /* Iniciar arrastre propio en modo agrupado */
+                        if (this.sorting && this.current.size() == 1)
+                        {
+                            this.groupedDragFrom = indexInList;
+                            this.groupedDragTime = System.currentTimeMillis();
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return super.subMouseClicked(context);
+    }
+
+    @Override
+    public boolean subMouseReleased(UIContext context)
+    {
+        if (!this.isFiltering() && this.hasAnyGroup() && this.sorting && this.isGroupedDragging())
+        {
+            int to = this.listIndexFromMouse(context);
+
+            if (to == -2)
+            {
+                to = this.getList().size() - 1;
+            }
+
+            if (to >= 0 && to < this.getList().size() && to != this.groupedDragFrom)
+            {
+                this.handleSwap(this.groupedDragFrom, to);
+            }
+
+            this.groupedDragFrom = -1;
+            return true;
+        }
+
+        return super.subMouseReleased(context);
+    }
+
+    private int listIndexFromMouse(UIContext context)
+    {
+        int itemH = this.scroll.scrollItemSize;
+        int localY = context.mouseY - this.area.y + (int) this.scroll.getScroll();
+        int rowIndex = localY / itemH;
+
+        if (rowIndex < 0)
+        {
+            return -1;
+        }
+
+        buildGroupedRows();
+
+        if (rowIndex >= this.groupedRows.size())
+        {
+            return -2; /* debajo del último elemento */
+        }
+
+        Row row = this.groupedRows.get(rowIndex);
+
+        if (row.replay != null)
+        {
+            return this.list.indexOf(row.replay);
+        }
+
+        /* Si es encabezado, colocamos al final de ese grupo */
+        return this.lastIndexOfGroup(row.group);
+    }
+
+    private int lastIndexOfGroup(String group)
+    {
+        int last = -1;
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            Replay r = this.list.get(i);
+            String g = r.group.get();
+            if (g != null && g.equals(group))
+            {
+                last = i;
+            }
+        }
+        return last == -1 ? this.list.size() - 1 : last;
+    }
+
+    private boolean isGroupedDragging()
+    {
+        return this.groupedDragFrom >= 0 && System.currentTimeMillis() - this.groupedDragTime > 100;
+    }
+
+    private void buildGroupedRows()
+    {
+        this.groupedRows.clear();
+
+        /* Construir mapa grupo->replays */
+        java.util.Map<String, java.util.List<Replay>> byGroup = new java.util.HashMap<>();
+        for (Replay r : this.list)
+        {
+            String g = r.group.get();
+            String key = (g == null || g.isEmpty()) ? EMPTY_GROUP_LABEL : g;
+            byGroup.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(r);
+            this.expandedGroups.putIfAbsent(key, true);
+        }
+
+        java.util.List<String> groups = new java.util.ArrayList<>(byGroup.keySet());
+        groups.sort(String::compareToIgnoreCase);
+
+        for (String g : groups)
+        {
+            this.groupedRows.add(new Row(g, true, null));
+            if (this.expandedGroups.getOrDefault(g, true))
+            {
+                for (Replay r : byGroup.get(g))
+                {
+                    this.groupedRows.add(new Row(g, false, r));
+                }
+            }
+        }
+
+        /* Ajustar tamaño del scroll basado en filas visibles */
+        int total = this.groupedRows.size();
+        this.scroll.setSize(total);
+    }
+
+    @Override
+    public void update()
+    {
+        /* Usar la lógica base. Ajustar el scroll únicamente cuando el modo
+         * agrupado esté activo (hay grupos reales y no hay filtro). */
+        super.update();
+
+        if (!this.isFiltering() && this.hasAnyGroup())
+        {
+            buildGroupedRows();
+            this.scroll.setSize(this.groupedRows.size());
+            this.scroll.clamp();
+        }
+    }
+
+    /** Determina si existen grupos reales en la lista */
+    private boolean hasAnyGroup()
+    {
+        for (Replay r : this.list)
+        {
+            String g = r.group.get();
+            if (g != null && !g.isEmpty())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /* =====================
      * Helpers de grupos
      * ===================== */
     private List<String> collectGroups()
     {
         List<String> groups = new ArrayList<>();
-        List<Replay> list = this.panel.getData().replays.getList();
+        /* Evitar NPE si el panel o sus datos aún no están disponibles */
+        if (this.panel == null || this.panel.getData() == null)
+        {
+            return groups;
+        }
+
+        Replays replays = this.panel.getData().replays;
+        if (replays == null)
+        {
+            return groups;
+        }
+
+        List<Replay> list = replays.getList();
         for (Replay r : list)
         {
             String g = r.group.get();
@@ -908,6 +1206,7 @@ public class UIReplayList extends UIList<Replay>
     private void renameGroup(String oldName, String newName)
     {
         if (oldName == null || oldName.isEmpty()) { return; }
+        if (this.panel == null || this.panel.getData() == null || this.panel.getData().replays == null) { return; }
         List<Replay> list = this.panel.getData().replays.getList();
         for (Replay r : list)
         {
@@ -922,6 +1221,7 @@ public class UIReplayList extends UIList<Replay>
     private void deleteGroupOnly(String group)
     {
         if (group == null || group.isEmpty()) { return; }
+        if (this.panel == null || this.panel.getData() == null || this.panel.getData().replays == null) { return; }
         List<Replay> list = this.panel.getData().replays.getList();
         for (Replay r : list)
         {
@@ -936,6 +1236,7 @@ public class UIReplayList extends UIList<Replay>
     private void deleteGroupWithReplays(String group)
     {
         if (group == null || group.isEmpty()) { return; }
+        if (this.panel == null || this.panel.getData() == null || this.panel.getData().replays == null) { return; }
         Film film = this.panel.getData();
         List<Replay> list = new ArrayList<>(film.replays.getList());
         for (Replay r : list)
