@@ -284,6 +284,7 @@ public class VirtualBlockRenderView implements BlockRenderView
         // contenidos en esta vista virtual (no presentes en el mundo real).
         if (type == LightType.BLOCK)
         {
+            // Solo contribución local de emisores virtuales; evitar "fullbright" global.
             int local = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
             return Math.max(worldLevel, local);
         }
@@ -304,6 +305,7 @@ public class VirtualBlockRenderView implements BlockRenderView
         // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
         // local de bloque para que fuentes virtuales iluminen correctamente.
         int localBlock = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
+        // Quitar luz global uniforme para preservar iluminación por emisores.
         return Math.max(worldBase, localBlock);
     }
 

@@ -670,9 +670,12 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
                     // Render del BE directamente con el renderer para evitar traducciones internas
                     // basadas en cámara/posición mundial que desalinean el dibujo respecto a la matriz local.
-                    int beLight = (MinecraftClient.getInstance().world != null)
-                        ? net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(MinecraftClient.getInstance().world, worldPos)
-                        : light;
+                    // Luz del BE: usar la vista virtual para incorporar luz artificial
+                    // del buffer, combinando cielo y bloque como en el pipeline vanilla.
+                    int skyLight = view.getLightLevel(net.minecraft.world.LightType.SKY, entry.pos);
+                    int blockLight = view.getLightLevel(net.minecraft.world.LightType.BLOCK, entry.pos);
+                    // LightmapTextureManager.pack espera primero luz de bloque y luego luz de cielo.
+                    int beLight = net.minecraft.client.render.LightmapTextureManager.pack(blockLight, skyLight);
 
                     if (renderer != null)
                     {
@@ -1103,9 +1106,36 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 }
 
                 net.minecraft.client.render.block.entity.BlockEntityRenderer<?> renderer = beDispatcher.get(be);
-                int beLight = (net.minecraft.client.MinecraftClient.getInstance().world != null)
-                    ? net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(net.minecraft.client.MinecraftClient.getInstance().world, worldPos)
-                    : light;
+                // Cuando se renderiza BE sobre VAO, calcular luz con una vista virtual
+                // para aplicar la misma iluminación artificial.
+                java.util.ArrayList<mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry> entries = new java.util.ArrayList<>();
+                for (BlockEntry beEntry : blocks)
+                {
+                    entries.add(new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry(beEntry.state, beEntry.pos));
+                }
+                boolean lightsEnabledBE;
+                int lightIntensityBE;
+                mchorse.bbs_mod.forms.forms.utils.StructureLightSettings slRuntimeBE = this.form.structureLight.getRuntimeValue();
+                if (slRuntimeBE != null)
+                {
+                    lightsEnabledBE = slRuntimeBE.enabled;
+                    lightIntensityBE = slRuntimeBE.intensity;
+                }
+                else
+                {
+                    lightsEnabledBE = this.form.emitLight.get();
+                    lightIntensityBE = this.form.lightIntensity.get();
+                }
+                mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView beView = new mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView(entries)
+                    .setBiomeOverride(this.form.biomeId.get())
+                    .setLightsEnabled(lightsEnabledBE)
+                    .setLightIntensity(lightIntensityBE)
+                    .setWorldAnchor(anchor, (int)Math.floor(-pivotX), (int)Math.floor(-pivotY), (int)Math.floor(-pivotZ));
+
+                int skyLight = beView.getLightLevel(net.minecraft.world.LightType.SKY, entry.pos);
+                int blockLight = beView.getLightLevel(net.minecraft.world.LightType.BLOCK, entry.pos);
+                // LightmapTextureManager.pack espera primero luz de bloque y luego luz de cielo.
+                int beLight = net.minecraft.client.render.LightmapTextureManager.pack(blockLight, skyLight);
 
                 if (renderer != null)
                 {
