@@ -87,6 +87,8 @@ public class UIReplayList extends UIList<Replay>
     /* Estado de arrastre en modo agrupado */
     private int groupedDragFrom = -1;
     private long groupedDragTime;
+    private int groupedDragStartX;
+    private int groupedDragStartY;
 
     private static class Row
     {
@@ -878,7 +880,7 @@ public class UIReplayList extends UIList<Replay>
             }
             else
             {
-                int indexInList = this.list.indexOf(row.replay);
+                int indexInList = this.identityIndex(row.replay);
                 boolean selected = indexInList >= 0 && this.current.contains(indexInList);
 
                 if (selected)
@@ -894,12 +896,32 @@ public class UIReplayList extends UIList<Replay>
     }
 
     @Override
+    public void render(UIContext context)
+    {
+        /* Mantener render base */
+        super.render(context);
+
+        /* Dibujar ghost de arrastre cuando estamos en modo agrupado */
+        if (this.isGroupedDragging(context) && this.exists(this.groupedDragFrom))
+        {
+            this.renderListElement(
+                context,
+                this.list.get(this.groupedDragFrom),
+                this.groupedDragFrom,
+                context.mouseX + 6,
+                context.mouseY - this.scroll.scrollItemSize / 2,
+                true,
+                true
+            );
+        }
+    }
+
+    @Override
     protected String elementToString(UIContext context, int i, Replay element)
     {
-        String g = element.group.get();
         String name = element.getName();
-        String label = (g != null && !g.isEmpty()) ? (g + "/" + name) : name;
-        return context.batcher.getFont().limitToWidth(label, this.area.w - 20);
+        /* Ocultar visualmente el nombre de grupo: mostrar solo el nombre del replay */
+        return context.batcher.getFont().limitToWidth(name, this.area.w - 20);
     }
 
     @Override
@@ -966,11 +988,11 @@ public class UIReplayList extends UIList<Replay>
                 }
                 else if (row.replay != null)
                 {
-                    int indexInList = this.list.indexOf(row.replay);
+                    int indexInList = this.identityIndex(row.replay);
                     if (indexInList >= 0)
                     {
-                        /* Selección múltiple: Alt (alias de Ctrl) y rango con Shift */
-                        if (Window.isAltPressed())
+                        /* Selección múltiple: Ctrl para toggle y Shift para rango */
+                        if (Window.isCtrlPressed())
                         {
                             this.toggleIndex(indexInList);
                         }
@@ -999,6 +1021,8 @@ public class UIReplayList extends UIList<Replay>
                         {
                             this.groupedDragFrom = indexInList;
                             this.groupedDragTime = System.currentTimeMillis();
+                            this.groupedDragStartX = context.mouseX;
+                            this.groupedDragStartY = context.mouseY;
                         }
 
                         return true;
@@ -1013,13 +1037,58 @@ public class UIReplayList extends UIList<Replay>
     @Override
     public boolean subMouseReleased(UIContext context)
     {
-        if (!this.isFiltering() && this.hasAnyGroup() && this.sorting && this.isGroupedDragging())
+        if (!this.isFiltering() && this.hasAnyGroup() && this.sorting && this.isGroupedDragging(context))
         {
+            /* Determinar fila destino para saber si es encabezado o elemento */
+            int itemH = this.scroll.scrollItemSize;
+            int localY = context.mouseY - this.area.y + (int) this.scroll.getScroll();
+            int rowIndex = localY / itemH;
+
+            buildGroupedRows();
+
             int to = this.listIndexFromMouse(context);
+            boolean changeGroup = false;
+            String targetGroup = null;
+
+            /* Si la fila es válida, comprobamos si es encabezado o elemento */
+            if (rowIndex >= 0 && rowIndex < this.groupedRows.size())
+            {
+                Row targetRow = this.groupedRows.get(rowIndex);
+                if (targetRow.header)
+                {
+                    targetGroup = EMPTY_GROUP_LABEL.equals(targetRow.group) ? "" : targetRow.group;
+                    changeGroup = true;
+                    /* Soltar sobre encabezado: insertar al final del grupo destino */
+                    to = this.lastIndexOfGroup(targetRow.group);
+                }
+                else if (targetRow.replay != null)
+                {
+                    targetGroup = EMPTY_GROUP_LABEL.equals(targetRow.group) ? "" : targetRow.group;
+                    /* Si suelto sobre un elemento, mover cerca de ese índice y ajustar grupo */
+                    changeGroup = true;
+                    to = this.identityIndex(targetRow.replay);
+                }
+            }
 
             if (to == -2)
             {
                 to = this.getList().size() - 1;
+            }
+            else if (to == -1)
+            {
+                to = 0;
+            }
+
+            /* Ajustar grupo si es necesario antes de reordenar */
+            if (changeGroup && this.groupedDragFrom >= 0 && this.groupedDragFrom < this.list.size())
+            {
+                Replay moved = this.list.get(this.groupedDragFrom);
+                String currentGroup = moved.group.get();
+                currentGroup = currentGroup == null ? "" : currentGroup;
+                if (targetGroup != null && !currentGroup.equals(targetGroup))
+                {
+                    moved.group.set(targetGroup);
+                }
             }
 
             if (to >= 0 && to < this.getList().size() && to != this.groupedDragFrom)
@@ -1056,11 +1125,79 @@ public class UIReplayList extends UIList<Replay>
 
         if (row.replay != null)
         {
-            return this.list.indexOf(row.replay);
+            return this.identityIndex(row.replay);
         }
 
-        /* Si es encabezado, colocamos al final de ese grupo */
-        return this.lastIndexOfGroup(row.group);
+        /* Si es encabezado, colocar al INICIO de ese grupo para arrastre libre */
+        return this.firstIndexOfGroup(row.group);
+    }
+
+    /**
+     * Devuelve el índice del replay comparando por identidad (==),
+     * para evitar colisiones cuando equals() considera nombre/propiedades.
+     */
+    private int identityIndex(Replay r)
+    {
+        if (r == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            if (this.list.get(i) == r)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /* Selección por identidad para evitar colisiones por equals() */
+    @Override
+    public void setCurrentScroll(Replay element)
+    {
+        this.setCurrent(element);
+
+        if (!this.current.isEmpty())
+        {
+            this.scroll.setScroll(this.current.get(0) * this.scroll.scrollItemSize);
+        }
+    }
+
+    @Override
+    public void setCurrent(Replay element)
+    {
+        this.current.clear();
+
+        int index = this.identityIndex(element);
+
+        if (this.exists(index))
+        {
+            this.current.add(index);
+        }
+    }
+
+    /* Selección múltiple por identidad para List<Replay> */
+    @Override
+    public void setCurrent(java.util.List<Replay> elements)
+    {
+        this.current.clear();
+
+        if (elements == null || elements.isEmpty())
+        {
+            return;
+        }
+
+        for (Replay r : elements)
+        {
+            int idx = this.identityIndex(r);
+            if (this.exists(idx))
+            {
+                this.current.add(idx);
+            }
+        }
     }
 
     private int lastIndexOfGroup(String group)
@@ -1078,9 +1215,39 @@ public class UIReplayList extends UIList<Replay>
         return last == -1 ? this.list.size() - 1 : last;
     }
 
-    private boolean isGroupedDragging()
+    /**
+     * Devuelve el primer índice de un grupo dado.
+     * Si no hay elementos de ese grupo, se devuelve 0 para permitir inserción al principio.
+     */
+    private int firstIndexOfGroup(String group)
     {
-        return this.groupedDragFrom >= 0 && System.currentTimeMillis() - this.groupedDragTime > 100;
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            Replay r = this.list.get(i);
+            String g = r.group.get();
+            if (g != null && g.equals(group))
+            {
+                return i;
+            }
+        }
+
+        /* Si el grupo está vacío (caso raro), insertar al principio */
+        return 0;
+    }
+
+    private boolean isGroupedDragging(UIContext context)
+    {
+        /* Arrastre diferido con umbral de movimiento para evitar falsos positivos */
+        if (this.groupedDragFrom < 0)
+        {
+            return false;
+        }
+
+        long elapsed = System.currentTimeMillis() - this.groupedDragTime;
+        int dx = Math.abs(context.mouseX - this.groupedDragStartX);
+        int dy = Math.abs(context.mouseY - this.groupedDragStartY);
+
+        return elapsed >= 150 && (dx >= 3 || dy >= 3);
     }
 
     private void buildGroupedRows()
