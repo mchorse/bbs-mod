@@ -108,7 +108,7 @@ public class FormUtilsClient
         return customVertexConsumerProvider;
     }
 
-    private static <T extends Form> void register(Class<T> clazz, IFormRendererFactory<T> function)
+    public static <T extends Form> void register(Class<T> clazz, IFormRendererFactory<T> function)
     {
         map.put(clazz, function);
     }

@@ -462,16 +462,27 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
             }
             else
             {
+                float min = Float.MAX_VALUE;
+
+                for (UIKeyframeSheet sheet : sheets)
+                {
+                    List<Keyframe> selected = sheet.selection.getSelected();
+
+                    for (Keyframe keyframe : selected)
+                    {
+                        min = Math.min(min, keyframe.getTick());
+                    }
+                }
+
                 for (UIKeyframeSheet sheet : sheets)
                 {
                     List<Keyframe> selected = sheet.selection.getSelected();
 
                     for (int i = 0; i < selected.size(); i++)
                     {
-                        Keyframe first = selected.get(0);
                         Keyframe keyframe = selected.get(i);
 
-                        this.renderPreviewKeyframe(context, sheet, Math.round(this.keyframes.fromGraphX(context.mouseX)) + (keyframe.getTick() - first.getTick()), Colors.YELLOW);
+                        this.renderPreviewKeyframe(context, sheet, Math.round(this.keyframes.fromGraphX(context.mouseX)) + (keyframe.getTick() - min), Colors.YELLOW);
                     }
                 }
             }
