@@ -146,6 +146,9 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         if (s == null) s = new mchorse.bbs_mod.forms.forms.utils.StructureLightSettings(false, 15);
         s.enabled = t.getValue();
         this.form.structureLight.set(s);
+        // Mantener sincronizados los valores legados usados como fallback cuando
+        // no hay pista activa: emit_light y light_intensity
+        this.form.emitLight.set(s.enabled);
     }
 
     private void setLightIntensity(int v)
@@ -154,6 +157,8 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         if (s == null) s = new mchorse.bbs_mod.forms.forms.utils.StructureLightSettings(false, 15);
         s.intensity = Math.max(1, Math.min(15, v));
         this.form.structureLight.set(s);
+        // Mantener sincronizado el valor legado de intensidad
+        this.form.lightIntensity.set(s.intensity);
     }
 
 

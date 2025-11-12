@@ -144,6 +144,17 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         matrices.peek().getNormalMatrix().scale(1F / Vectors.EMPTY_3F.x, -1F / Vectors.EMPTY_3F.y, 1F / Vectors.EMPTY_3F.z);
 
         boolean optimize = mchorse.bbs_mod.BBSSettings.structureOptimization.get();
+        // Si la luz de la estructura está habilitada, forzar el camino BufferBuilder
+        // para que el cálculo de luz dinámico mediante VirtualBlockRenderView aplique.
+        // Esto evita que el VAO (iluminación más simple) ignore el panel de luz.
+        {
+            mchorse.bbs_mod.forms.forms.utils.StructureLightSettings sl = this.form.structureLight.getRuntimeValue();
+            boolean lightsEnabled = (sl != null) ? sl.enabled : this.form.emitLight.get();
+            if (lightsEnabled)
+            {
+                optimize = false;
+            }
+        }
         if (!optimize)
         {
             // Modo BufferBuilder: mejor iluminación, peor rendimiento
