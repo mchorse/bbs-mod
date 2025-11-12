@@ -146,7 +146,7 @@ public abstract class FolderManager <T extends ValueGroup> implements IManager<T
             {
                 set.add(prefix + name.substring(0, name.lastIndexOf(".")));
             }
-            else if (file.isDirectory())
+            else if (file.isDirectory() && !file.getName().startsWith("_"))
             {
                 File[] files = file.listFiles();
 

@@ -120,6 +120,11 @@ public class GunProjectileEntity extends ProjectileEntity implements IEntityForm
     public void setForm(Form form)
     {
         this.form = form;
+
+        if (this.form != null)
+        {
+            this.form.playMain();
+        }
     }
 
     public IEntity getEntity()
