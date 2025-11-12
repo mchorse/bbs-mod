@@ -89,6 +89,8 @@ public class UIReplayList extends UIList<Replay>
     private long groupedDragTime;
     private int groupedDragStartX;
     private int groupedDragStartY;
+    /* Verdadero mientras el botón izquierdo está sostenido desde el click inicial */
+    private boolean groupedDragHolding;
 
     private static class Row
     {
@@ -198,13 +200,7 @@ public class UIReplayList extends UIList<Replay>
                             }
                         });
 
-                        // 3. Buscar grupo (antes "Seleccionar grupo")
-                        submenu.action(Icons.SEARCH, UIKeys.SCENE_REPLAYS_GROUP_SEARCH, () ->
-                        {
-                            this.openGroupPickerPanel(UIKeys.SCENE_REPLAYS_GROUP_PICK_TITLE, (g) -> this.filter(g + "/"));
-                        });
-                        // 3.1 Quitar filtro de grupo
-                        submenu.action(Icons.CLOSE, UIKeys.SCENE_REPLAYS_GROUP_CLEAR_FILTER, () -> this.filter(""));
+                        // (Eliminado) Buscar grupo y Quitar filtro de grupo
 
                         // 4. Desvincular reproducciones seleccionadas del grupo
                         submenu.action(Icons.X, UIKeys.SCENE_REPLAYS_GROUP_UNLINK, () ->
@@ -1023,6 +1019,7 @@ public class UIReplayList extends UIList<Replay>
                             this.groupedDragTime = System.currentTimeMillis();
                             this.groupedDragStartX = context.mouseX;
                             this.groupedDragStartY = context.mouseY;
+                            this.groupedDragHolding = true;
                         }
 
                         return true;
@@ -1097,9 +1094,13 @@ public class UIReplayList extends UIList<Replay>
             }
 
             this.groupedDragFrom = -1;
+            this.groupedDragHolding = false;
             return true;
         }
 
+        /* Si no hubo arrastre efectivo, limpiar estado y delegar a la lógica base */
+        this.groupedDragHolding = false;
+        this.groupedDragFrom = -1;
         return super.subMouseReleased(context);
     }
 
@@ -1238,7 +1239,7 @@ public class UIReplayList extends UIList<Replay>
     private boolean isGroupedDragging(UIContext context)
     {
         /* Arrastre diferido con umbral de movimiento para evitar falsos positivos */
-        if (this.groupedDragFrom < 0)
+        if (this.groupedDragFrom < 0 || !this.groupedDragHolding)
         {
             return false;
         }
