@@ -87,6 +87,8 @@ public class BBSSettings
 
     public static ValueBoolean renderAllModelBlocks;
     public static ValueBoolean clickModelBlocks;
+    /** Habilitar gizmos 3D para edición de transformaciones en bloques de modelo */
+    public static ValueBoolean modelBlockGizmosEnabled;
     public static ValueBoolean visualizeStructures;
     /** Toggle: optimización de estructuras (VAO) vs BufferBuilder (iluminación mejor). */
     public static ValueBoolean structureOptimization;
@@ -225,6 +227,8 @@ public class BBSSettings
 
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);
+        /* Enable gizmos by default to make them visible in editor */
+        modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", true);
 
 
         /* Estructuras: modo de renderizado */

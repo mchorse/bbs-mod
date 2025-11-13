@@ -365,6 +365,8 @@ public class UIModelBlockPanel extends UIDashboardPanel implements IFlightSuppor
 
         context.batcher.textCard(label, x, y, Colors.WHITE, Colors.A50);
         super.render(context);
+
+        /* Gizmo removido del panel de bloque de modelo */
     }
 
     @Override

@@ -4,14 +4,17 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.FormUtilsClient;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
+import mchorse.bbs_mod.ui.forms.editors.forms.UIModelForm;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -93,6 +96,13 @@ public class UIPickableFormRenderer extends UIFormRenderer
             return true;
         }
 
+        /* Si el usuario hace click (izq o der) sobre el gizmo, evitamos que el
+         * renderer de modelo empiece a arrastrar la cámara. */
+        if (this.area.isInside(context) && (context.mouseButton == 0 || context.mouseButton == 2) && BoneGizmoSystem.get().isHoveringHandle())
+        {
+            return true; /* Consumimos el evento */
+        }
+
         return super.subMouseClicked(context);
     }
 
@@ -122,6 +132,24 @@ public class UIPickableFormRenderer extends UIFormRenderer
         }
 
         this.renderAxes(context);
+
+        /* Gizmo en el editor de modelos: posicionar en el pivote del hueso seleccionado */
+        Matrix4f origin = this.formEditor.getOrigin(context.getTransition());
+        UIPropTransform activeTransform = null;
+
+        if (this.formEditor.editor instanceof UIModelForm uiModelForm)
+        {
+            activeTransform = uiModelForm.modelPanel.poseEditor.transform;
+        }
+
+        /* La vista usada para renderizar el modelo aplica rotación y luego traslada
+         * por la posición de la cámara en el MatrixStack. Para alinear el gizmo con
+         * lo que se ve en pantalla, debemos incorporar también esa traslación en la
+         * matriz de vista que pasamos al gizmo. */
+        Matrix4f viewWithTranslation = new Matrix4f(this.camera.view)
+            .translate(-(float) this.camera.position.x, -(float) this.camera.position.y, -(float) this.camera.position.z);
+
+        BoneGizmoSystem.get().update(context, this.area, origin, this.camera.projection, viewWithTranslation, activeTransform);
 
         if (this.area.isInside(context))
         {
@@ -196,6 +224,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
     public void render(UIContext context)
     {
         super.render(context);
+
+        /* Render overlay del gizmo al final para que siempre quede por encima
+         * de cualquier overlay de previsualización del picker. */
+        BoneGizmoSystem.get().renderOverlay(context.render, this.area);
 
         if (!this.stencil.hasPicked())
         {
