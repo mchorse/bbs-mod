@@ -386,7 +386,7 @@ public class BoneGizmoSystem
 
                 org.joml.Vector4f dx = new org.joml.Vector4f(axisLen, 0, 0, useLocal ? 0 : 0);
                 org.joml.Vector4f dy = new org.joml.Vector4f(0, axisLen, 0, useLocal ? 0 : 0);
-                org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
+        org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
 
                 if (useLocal)
                 {
@@ -405,7 +405,7 @@ public class BoneGizmoSystem
                     // Global: sumar los ejes del mundo al origen
                     dx.x = p0World.x + axisLen; dx.y = p0World.y;            dx.z = p0World.z;            dx.w = 1;
                     dy.x = p0World.x;            dy.y = p0World.y + axisLen; dy.z = p0World.z;            dy.w = 1;
-                    dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
+        dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
                 }
 
                 // Proyectar a pantalla
@@ -653,6 +653,7 @@ public class BoneGizmoSystem
         // Resultado: X=rojo, Y=verde, Z=azul
         Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
         Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
+        // Z: mantener la barra donde estaba (lado original positivo)
         Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z -> azul
 
         // Manejadores en los extremos según el modo
