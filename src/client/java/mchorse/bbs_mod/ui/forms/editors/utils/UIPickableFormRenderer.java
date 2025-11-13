@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
@@ -98,7 +99,12 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
         /* Si el usuario hace click (izq o der) sobre el gizmo, evitamos que el
          * renderer de modelo empiece a arrastrar la cámara. */
-        if (this.area.isInside(context) && (context.mouseButton == 0 || context.mouseButton == 2) && BoneGizmoSystem.get().isHoveringHandle())
+        if (
+            BBSSettings.modelBlockGizmosEnabled.get() &&
+            this.area.isInside(context) &&
+            (context.mouseButton == 0 || context.mouseButton == 2) &&
+            BoneGizmoSystem.get().isHoveringHandle()
+        )
         {
             return true; /* Consumimos el evento */
         }
@@ -149,7 +155,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Matrix4f viewWithTranslation = new Matrix4f(this.camera.view)
             .translate(-(float) this.camera.position.x, -(float) this.camera.position.y, -(float) this.camera.position.z);
 
-        BoneGizmoSystem.get().update(context, this.area, origin, this.camera.projection, viewWithTranslation, activeTransform);
+        if (BBSSettings.modelBlockGizmosEnabled.get())
+        {
+            BoneGizmoSystem.get().update(context, this.area, origin, this.camera.projection, viewWithTranslation, activeTransform);
+        }
 
         if (this.area.isInside(context))
         {
@@ -227,7 +236,10 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
         /* Render overlay del gizmo al final para que siempre quede por encima
          * de cualquier overlay de previsualización del picker. */
-        BoneGizmoSystem.get().renderOverlay(context.render, this.area);
+        if (BBSSettings.modelBlockGizmosEnabled.get())
+        {
+            BoneGizmoSystem.get().renderOverlay(context.render, this.area);
+        }
 
         if (!this.stencil.hasPicked())
         {

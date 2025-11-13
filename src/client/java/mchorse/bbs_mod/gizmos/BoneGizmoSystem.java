@@ -68,6 +68,12 @@ public class BoneGizmoSystem
         return INSTANCE;
     }
 
+    /** Establece el modo del gizmo directamente (T/R/S) */
+    public void setMode(Mode mode)
+    {
+        this.mode = mode;
+    }
+
     public void update(UIContext input, Area viewport, UIPropTransform target)
     {
         this.target = target;
@@ -110,13 +116,16 @@ public class BoneGizmoSystem
         /* Durante arrastre: aplicar delta */
         if (this.dragging && this.target != null && this.target.getTransform() != null)
         {
-            /* Implementar bucle horizontal del cursor como en el panel de transform */
+            /* Implementar bucle horizontal y vertical del cursor */
             GLFW.glfwGetCursorPos(Window.getWindow(), CURSOR_X, CURSOR_Y);
             MinecraftClient mc = MinecraftClient.getInstance();
             int w = mc.getWindow().getWidth();
+            int h = mc.getWindow().getHeight();
 
             double rawX = CURSOR_X[0];
+            double rawY = CURSOR_Y[0];
             double fx = Math.ceil(w / (double) input.menu.width);
+            double fy = Math.ceil(h / (double) input.menu.height);
             int border = 5;
             int borderPadding = border + 1;
 
@@ -130,6 +139,19 @@ public class BoneGizmoSystem
             {
                 Window.moveCursor(borderPadding, (int) mc.mouse.getY());
                 this.lastX = (int) (borderPadding / fx);
+                this.wrapChecker.mark();
+            }
+
+            if (rawY <= border)
+            {
+                Window.moveCursor((int) mc.mouse.getX(), h - borderPadding);
+                this.lastY = input.menu.height - (int) (borderPadding / fy);
+                this.wrapChecker.mark();
+            }
+            else if (rawY >= h - border)
+            {
+                Window.moveCursor((int) mc.mouse.getX(), borderPadding);
+                this.lastY = (int) (borderPadding / fy);
                 this.wrapChecker.mark();
             }
 
@@ -334,6 +356,10 @@ public class BoneGizmoSystem
             this.activeAxis = this.hoveredAxis;
             this.dragStartX = input.mouseX;
             this.dragStartY = input.mouseY;
+            this.lastX = input.mouseX;
+            this.lastY = input.mouseY;
+            this.accumDx = 0F;
+            this.accumDy = 0F;
             if (this.target != null && this.target.getTransform() != null)
             {
                 this.dragStart.copy(this.target.getTransform());
@@ -347,11 +373,70 @@ public class BoneGizmoSystem
             this.activeAxis = null;
         }
 
-        /* Durante arrastre: aplicar delta */
+        /* Durante arrastre: aplicar delta con bucle de mouse como en UIPropTransform */
         if (this.dragging && this.target != null && this.target.getTransform() != null)
         {
-            int dx = input.mouseX - this.dragStartX;
-            int dy = input.mouseY - this.dragStartY;
+            boolean warped = false;
+
+            if (this.wrapChecker.isTime())
+            {
+                GLFW.glfwGetCursorPos(Window.getWindow(), CURSOR_X, CURSOR_Y);
+                MinecraftClient mc = MinecraftClient.getInstance();
+                int w = mc.getWindow().getWidth();
+                int h = mc.getWindow().getHeight();
+
+                double rawX = CURSOR_X[0];
+                double rawY = CURSOR_Y[0];
+                double fx = Math.ceil(w / (double) input.menu.width);
+                double fy = Math.ceil(h / (double) input.menu.height);
+                int border = 5;
+                int borderPadding = border + 1;
+
+                if (rawX <= border)
+                {
+                    Window.moveCursor(w - borderPadding, (int) mc.mouse.getY());
+
+                    this.lastX = input.menu.width - (int) (borderPadding / fx);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+                else if (rawX >= w - border)
+                {
+                    Window.moveCursor(borderPadding, (int) mc.mouse.getY());
+
+                    this.lastX = (int) (borderPadding / fx);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+
+                if (rawY <= border)
+                {
+                    Window.moveCursor((int) mc.mouse.getX(), h - borderPadding);
+
+                    this.lastY = input.menu.height - (int) (borderPadding / fy);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+                else if (rawY >= h - border)
+                {
+                    Window.moveCursor((int) mc.mouse.getX(), borderPadding);
+
+                    this.lastY = (int) (borderPadding / fy);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+            }
+
+            if (!warped)
+            {
+                int stepX = input.mouseX - this.lastX;
+                int stepY = input.mouseY - this.lastY;
+                this.accumDx += stepX;
+                this.accumDy += stepY;
+                this.lastX = input.mouseX;
+                this.lastY = input.mouseY;
+            }
+
             float factor = switch (this.mode)
             {
                 case TRANSLATE -> 0.02F;
@@ -359,7 +444,7 @@ public class BoneGizmoSystem
                 case ROTATE -> 0.3F;
             };
 
-            float delta = dx * factor; /* Usamos movimiento horizontal para consistencia */
+            float delta = this.accumDx * factor; /* Usamos movimiento horizontal para consistencia */
 
             Transform t = this.target.getTransform();
 
@@ -370,7 +455,7 @@ public class BoneGizmoSystem
                 float z = t.translate.z;
 
                 if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
-                if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - dy * factor; /* Y hacia arriba */
+                if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor; /* Y hacia arriba */
                 if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
 
                 this.target.setT(null, x, y, z);
