@@ -37,21 +37,7 @@ public class SubtitleClip extends CameraClip
 
     public static List<Subtitle> getSubtitles(ClipContext context)
     {
-        Object object = context.clipData.get("subtitles");
-        List<Subtitle> subtitles;
-
-        if (object instanceof List)
-        {
-            subtitles = (List<Subtitle>) object;
-        }
-        else
-        {
-            subtitles = new ArrayList<>();
-
-            context.clipData.put("subtitles", subtitles);
-        }
-
-        return subtitles;
+        return context.clipData.get("subtitles", ArrayList::new);
     }
 
     public SubtitleClip()

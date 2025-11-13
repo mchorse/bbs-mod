@@ -72,7 +72,11 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
                 File backupFile = new File(path, "_" + StringUtils.removeExtension(filename) + "/" + filename + "." + backupFileName + ".dat");
 
                 backupFile.getParentFile().mkdirs();
-                Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                if (file.exists())
+                {
+                    Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
             }
 
             this.storage.save(file, data);
