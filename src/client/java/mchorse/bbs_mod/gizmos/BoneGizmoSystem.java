@@ -1,5 +1,8 @@
 package mchorse.bbs_mod.gizmos;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import mchorse.bbs_mod.graphics.Draw;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.UIRenderingContext;
@@ -9,6 +12,13 @@ import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.pose.Transform;
 import mchorse.bbs_mod.utils.Timer;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.MinecraftClient;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
@@ -54,9 +64,14 @@ public class BoneGizmoSystem
     /* Layout del gizmo 2D */
     private int centerX;
     private int centerY;
-    private int handleLen = 60;
-    private int handleThickness = 3;
-    private int hitRadius = 6;
+    private int handleLen = 100;
+    private int handleThickness = 5;
+    private int hitRadius = 10;
+
+    /* Radios para anillos de rotación (esferas lineales) */
+    private int ringRX = 50; /* rojo */
+    private int ringRY = 70; /* verde */
+    private int ringRZ = 90; /* azul */
 
     /* Endpoints proyectados en pantalla para cada eje */
     private int endXx, endXy;
@@ -498,12 +513,135 @@ public class BoneGizmoSystem
         return Math.max(0.001F, v);
     }
 
+    /**
+     * Renderizado 3D básico del gizmo directamente en el espacio del modelo.
+     *
+     * Se dibujan barras por eje y manejadores en los extremos:
+     * - TRANSLATE: barras + pequeños cubos en extremos
+     * - SCALE: barras + cubos más grandes en extremos
+     * - ROTATE: tres anillos (XY, YZ, ZX) alrededor del pivote
+     *
+     * Nota: este método asume que el MatrixStack ya está multiplicado por
+     * la matriz de origen del hueso/objeto.
+     */
+    public void render3D(MatrixStack stack)
+    {
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+        float length = 0.25F;     // longitud de cada eje
+        float thickness = 0.01F;  // grosor de las barras
+
+        // Barras por eje
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, length, 0, 0, thickness, 1F, 0F, 0F, 1F); // X
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length, 0, thickness, 0F, 1F, 0F, 1F); // Y
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length, thickness, 0F, 0F, 1F, 1F); // Z
+
+        // Manejadores en los extremos según el modo
+        float cubeSmall = 0.03F;
+        float cubeBig = 0.045F;
+
+        if (this.mode == Mode.TRANSLATE)
+        {
+            drawEndCube(builder, stack, length, 0, 0, cubeSmall, 1F, 0F, 0F);
+            drawEndCube(builder, stack, 0, length, 0, cubeSmall, 0F, 1F, 0F);
+            drawEndCube(builder, stack, 0, 0, length, cubeSmall, 0F, 0F, 1F);
+        }
+        else if (this.mode == Mode.SCALE)
+        {
+            drawEndCube(builder, stack, length, 0, 0, cubeBig, 1F, 0F, 0F);
+            drawEndCube(builder, stack, 0, length, 0, cubeBig, 0F, 1F, 0F);
+            drawEndCube(builder, stack, 0, 0, length, cubeBig, 0F, 0F, 1F);
+            // Cubo central (para dar referencia de pivote)
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+        }
+        else if (this.mode == Mode.ROTATE)
+        {
+            float radius = 0.22F;
+            drawRing3D(builder, stack, 'Z', radius, thickness, 1F, 0F, 0F); // XY
+            drawRing3D(builder, stack, 'X', radius, thickness, 0F, 1F, 0F); // YZ
+            drawRing3D(builder, stack, 'Y', radius, thickness, 0F, 0F, 1F); // ZX
+        }
+
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.disableDepthTest();
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderSystem.enableDepthTest();
+    }
+
+    private void drawEndCube(BufferBuilder builder, MatrixStack stack, float x, float y, float z, float s, float r, float g, float b)
+    {
+        stack.push();
+        stack.translate(x, y, z);
+        Draw.fillBox(builder, stack, -s, -s, -s, s, s, s, r, g, b, 1F);
+        stack.pop();
+    }
+
+    /**
+     * Dibuja un anillo formado por pequeños prismas a lo largo de un círculo.
+     * axis: 'X' (plano YZ), 'Y' (plano ZX), 'Z' (plano XY)
+     */
+    private void drawRing3D(BufferBuilder builder, MatrixStack stack, char axis, float radius, float thickness, float r, float g, float b)
+    {
+        int segments = 64;
+        double step = Math.PI * 2.0 / segments;
+
+        float px1 = 0, py1 = 0, pz1 = 0;
+        // punto inicial por eje
+        switch (axis)
+        {
+            case 'Z':
+                px1 = radius; py1 = 0; pz1 = 0; break;
+            case 'X':
+                px1 = 0; py1 = radius; pz1 = 0; break;
+            case 'Y':
+                px1 = radius; py1 = 0; pz1 = 0; break;
+        }
+
+        for (int i = 1; i <= segments; i++)
+        {
+            double ang = step * i;
+
+            float px2, py2, pz2;
+            if (axis == 'Z')
+            {
+                px2 = (float) (Math.cos(ang) * radius);
+                py2 = (float) (Math.sin(ang) * radius);
+                pz2 = 0F;
+            }
+            else if (axis == 'X')
+            {
+                px2 = 0F;
+                py2 = (float) (Math.cos(ang) * radius);
+                pz2 = (float) (Math.sin(ang) * radius);
+            }
+            else // 'Y'
+            {
+                px2 = (float) (Math.cos(ang) * radius);
+                py2 = 0F;
+                pz2 = (float) (Math.sin(ang) * radius);
+            }
+
+            Draw.fillBoxTo(builder, stack, px1, py1, pz1, px2, py2, pz2, thickness, r, g, b, 1F);
+
+            px1 = px2; py1 = py2; pz1 = pz2;
+        }
+    }
+
     public void renderOverlay(UIRenderingContext context, Area viewport)
     {
         if (viewport == null)
         {
             return;
         }
+
+        /* Asegurar que el overlay 2D no quede oculto por el depth buffer */
+        RenderSystem.disableDepthTest();
+        /* Evitar que un scissor activo recorte el overlay del gizmo */
+        com.mojang.blaze3d.platform.GlStateManager._disableScissorTest();
+        /* Forzar blending estándar para colores con alpha */
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
 
         /* Indicador de estado */
         String label = switch (this.mode)
@@ -517,35 +655,90 @@ public class BoneGizmoSystem
         int ly = viewport.y + 10;
         context.batcher.textCard(label, lx, ly, Colors.WHITE, Colors.A50);
 
-        /* Renderizar ejes 2D en el centro */
+        /* Depuración: dibujar un borde visible alrededor del viewport para confirmar overlay */
+        int dbgColor = Colors.A50 | Colors.HIGHLIGHT;
+        context.batcher.outline(viewport.x + 1, viewport.y + 1, viewport.ex() - 1, viewport.ey() - 1, dbgColor, 2);
+
+        /* Si el gizmo 3D está habilitado, evitamos dibujar los manejadores 2D
+         * para no crear inconsistencias visuales (las barras/cubos 3D son la
+         * referencia principal). Mantengo etiqueta y borde de depuración. */
+        if (BBSSettings.modelBlockGizmosEnabled.get())
+        {
+            // Centro del pivote como referencia mínima
+            int cx3 = this.centerX;
+            int cy3 = this.centerY;
+            context.batcher.box(cx3 - 3, cy3 - 3, cx3 + 3, cy3 + 3, Colors.A50 | Colors.WHITE);
+
+            RenderSystem.enableDepthTest();
+            context.batcher.flush();
+            return;
+        }
+
+        /* Render dependiendo del modo activo (modo 2D clásico) */
         int cx = this.centerX;
         int cy = this.centerY;
-
-        // Grosor de línea en px (escala UI)
         float thickness = this.handleThickness;
 
-        // X rojo
-        int xColor = (this.hoveredAxis == Axis.X || this.activeAxis == Axis.X) ? (Colors.A100 | Colors.RED) : (Colors.A75 | Colors.RED);
-        context.batcher.line(cx, cy, this.endXx, this.endXy, thickness, xColor);
-        context.batcher.box(this.endXx - 4, this.endXy - 4, this.endXx + 4, this.endXy + 4, xColor);
+        if (this.mode == Mode.TRANSLATE)
+        {
+            /* Líneas al pivote + píxeles en extremos para selección */
+            int xColor = (Colors.A100 | Colors.RED);
+            int yColor = (Colors.A100 | Colors.GREEN);
+            int zColor = (Colors.A100 | Colors.BLUE);
 
-        // Y verde
-        int yColor = (this.hoveredAxis == Axis.Y || this.activeAxis == Axis.Y) ? (Colors.A100 | Colors.GREEN) : (Colors.A75 | Colors.GREEN);
-        context.batcher.line(cx, cy, this.endYx, this.endYy, thickness, yColor);
-        context.batcher.box(this.endYx - 4, this.endYy - 4, this.endYx + 4, this.endYy + 4, yColor);
+            context.batcher.line(cx, cy, this.endXx, this.endXy, thickness, xColor);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, thickness, yColor);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, thickness, zColor);
+            /* cabezas de flecha en cada handle */
+            drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor);
+            drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor);
+            drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
+        }
+        else if (this.mode == Mode.SCALE)
+        {
+            /* Líneas al pivote + cubos en extremos (squares con borde) */
+            int xColor = (Colors.A100 | Colors.RED);
+            int yColor = (Colors.A100 | Colors.GREEN);
+            int zColor = (Colors.A100 | Colors.BLUE);
 
-        // Z azul
-        int zColor = (this.hoveredAxis == Axis.Z || this.activeAxis == Axis.Z) ? (Colors.A100 | Colors.BLUE) : (Colors.A75 | Colors.BLUE);
-        context.batcher.line(cx, cy, this.endZx, this.endZy, thickness, zColor);
-        context.batcher.box(this.endZx - 4, this.endZy - 4, this.endZx + 4, this.endZy + 4, zColor);
+            context.batcher.line(cx, cy, this.endXx, this.endXy, thickness, xColor);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, thickness, yColor);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, thickness, zColor);
 
-        // Centro
+            /* cubos: cuadrados 8x8 con borde más claro */
+            drawCubeHandle(context, this.endXx, this.endXy, xColor);
+            drawCubeHandle(context, this.endYx, this.endYy, yColor);
+            drawCubeHandle(context, this.endZx, this.endZy, zColor);
+        }
+        else if (this.mode == Mode.ROTATE)
+        {
+            /* Esferas lineales: tres anillos concéntricos alrededor del pivote */
+            int xColor = (Colors.A100 | Colors.RED);
+            int yColor = (Colors.A100 | Colors.GREEN);
+            int zColor = (Colors.A100 | Colors.BLUE);
+
+            drawRing(context, cx, cy, this.ringRX, thickness, xColor);
+            drawRing(context, cx, cy, this.ringRY, thickness, yColor);
+            drawRing(context, cx, cy, this.ringRZ, thickness, zColor);
+        }
+
+        /* Centro del pivote */
         context.batcher.box(cx - 3, cy - 3, cx + 3, cy + 3, Colors.A50 | Colors.WHITE);
 
         /* Consejos */
-        String tip = "Click izquierdo en eje para arrastrar; T/R/S cambia modo.";
+        String tip = switch (this.mode)
+        {
+            case TRANSLATE -> "Click izquierdo en eje para mover; T/R/S cambia modo.";
+            case SCALE -> "Click en cubo para escalar; T/R/S cambia modo.";
+            case ROTATE -> "Click en anillo para rotar; T/R/S cambia modo.";
+        };
         int tw = context.batcher.getFont().getWidth(tip);
         context.batcher.textCard(tip, viewport.ex() - tw - 10, viewport.ey() - context.batcher.getFont().getHeight() - 10, Colors.WHITE, Colors.A50);
+
+        /* Restaurar el depth test tras dibujar el overlay */
+        RenderSystem.enableDepthTest();
+        /* Hacer flush explícito en caso de estar fuera del ciclo normal de UI */
+        context.batcher.flush();
     }
 
     /** Indica si el mouse está sobre algún handle del gizmo */
@@ -556,15 +749,88 @@ public class BoneGizmoSystem
 
     private Axis detectHoveredAxis(int mx, int my)
     {
-        /* Regiones de hit simples alrededor de cada handle */
-        // X handle
+        if (this.mode == Mode.ROTATE)
+        {
+            /* Picking por distancia al anillo (radio +/- tolerancia) */
+            int cx = this.centerX;
+            int cy = this.centerY;
+            double dx = mx - cx;
+            double dy = my - cy;
+            double d = Math.sqrt(dx * dx + dy * dy);
+            int tol = Math.max(6, this.handleThickness * 2);
+
+            if (Math.abs(d - this.ringRX) <= tol) return Axis.X;
+            if (Math.abs(d - this.ringRY) <= tol) return Axis.Y;
+            if (Math.abs(d - this.ringRZ) <= tol) return Axis.Z;
+            return null;
+        }
+
+        /* Mover/Escalar: picking por proximidad a los endpoints */
         if (isNear(mx, my, endXx, endXy, hitRadius)) return Axis.X;
-        // Y handle
         if (isNear(mx, my, endYx, endYy, hitRadius)) return Axis.Y;
-        // Z handle
         if (isNear(mx, my, endZx, endZy, hitRadius)) return Axis.Z;
 
         return null;
+    }
+
+    private void drawRing(UIRenderingContext context, int cx, int cy, int radius, float thickness, int color)
+    {
+        int segments = 64;
+        double step = Math.PI * 2.0 / segments;
+
+        float x1 = cx + radius;
+        float y1 = cy;
+        for (int i = 1; i <= segments; i++)
+        {
+            double ang = step * i;
+            float x2 = (float) (cx + Math.cos(ang) * radius);
+            float y2 = (float) (cy + Math.sin(ang) * radius);
+            context.batcher.line(x1, y1, x2, y2, thickness, color);
+            x1 = x2;
+            y1 = y2;
+        }
+    }
+
+    private void drawCubeHandle(UIRenderingContext context, int x, int y, int color)
+    {
+        int size = 12;
+        int half = size / 2;
+        int fill = Colors.mulRGB(color, 0.8F);
+        int border = Colors.setA(Colors.WHITE, 0.75F);
+
+        context.batcher.box(x - half, y - half, x + half, y + half, fill);
+        context.batcher.outline(x - half, y - half, x + half, y + half, border, 1);
+    }
+
+    /** Dibuja una cabeza de flecha orientada hacia el endpoint del eje */
+    private void drawArrowHandle(UIRenderingContext context, int cx, int cy, int ex, int ey, int color)
+    {
+        float dx = ex - cx;
+        float dy = ey - cy;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+        if (len < 0.0001F) return;
+
+        float ndx = dx / len;
+        float ndy = dy / len;
+
+        /* Tamaño de la flecha: un poco mayor que el grosor de línea */
+        float headLen = 16F;
+        float headWidth = 12F;
+
+        float bx = ex - ndx * headLen;
+        float by = ey - ndy * headLen;
+
+        /* Perpendicular para los lados de la flecha */
+        float px = -ndy;
+        float py = ndx;
+
+        float lx = bx + px * (headWidth / 2F);
+        float ly = by + py * (headWidth / 2F);
+        float rx = bx - px * (headWidth / 2F);
+        float ry = by - py * (headWidth / 2F);
+
+        context.batcher.line(ex, ey, lx, ly, this.handleThickness + 1, color);
+        context.batcher.line(ex, ey, rx, ry, this.handleThickness + 1, color);
     }
 
     private boolean isNear(int mx, int my, int x, int y, int r)

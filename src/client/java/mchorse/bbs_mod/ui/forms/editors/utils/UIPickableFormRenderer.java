@@ -201,6 +201,12 @@ public class UIPickableFormRenderer extends UIFormRenderer
             RenderSystem.enableDepthTest();
         }
 
+        /* Render gizmos 3D en el origen del modelo cuando están habilitados */
+        if (BBSSettings.modelBlockGizmosEnabled.get())
+        {
+            BoneGizmoSystem.get().render3D(stack);
+        }
+
         stack.pop();
     }
 
