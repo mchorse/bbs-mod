@@ -645,55 +645,129 @@ public class BoneGizmoSystem
         // evitar gaps en perspectiva o por redondeos.
         float cubeSmall = 0.03F;
         float cubeBig = 0.045F;
-        float endCubeSize = (this.mode == Mode.SCALE) ? cubeBig : cubeSmall;
-        float connectFudge = endCubeSize + thickness;
+        // Ajuste por modo: en TRANSLATE conectamos a la base de la flecha;
+        // en SCALE nos internamos en el cubo para evitar gaps visuales.
+        float connectFudge = (this.mode == Mode.TRANSLATE) ? 0.03F : (cubeBig + thickness);
 
-        // Barras por eje
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z
+        // Barras por eje (transformación de color: rojo→verde, verde→azul, azul→rojo)
+        // Resultado: X=rojo, Y=verde, Z=azul
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
+        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z -> azul
 
         // Manejadores en los extremos según el modo
 
         if (this.mode == Mode.TRANSLATE)
         {
-            drawEndCube(builder, stack, length, 0, 0, cubeSmall, 1F, 0F, 0F);
-            drawEndCube(builder, stack, 0, length, 0, cubeSmall, 0F, 1F, 0F);
-            drawEndCube(builder, stack, 0, 0, length, cubeSmall, 0F, 0F, 1F);
-
-            // Puntas tipo flecha en cada eje
+            // Puntas tipo flecha en cada eje (sin cubos en los extremos)
             float headLen = 0.06F;
             float headWidth = 0.04F;
-            drawArrowHead3D(builder, stack, 'X', length, headLen, headWidth, thickness, 1F, 0F, 0F);
-            drawArrowHead3D(builder, stack, 'Y', length, headLen, headWidth, thickness, 0F, 1F, 0F);
-            drawArrowHead3D(builder, stack, 'Z', length, headLen, headWidth, thickness, 0F, 0F, 1F);
-        }
-        else if (this.mode == Mode.SCALE)
-        {
-            drawEndCube(builder, stack, length, 0, 0, cubeBig, 1F, 0F, 0F);
-            drawEndCube(builder, stack, 0, length, 0, cubeBig, 0F, 1F, 0F);
-            drawEndCube(builder, stack, 0, 0, length, cubeBig, 0F, 0F, 1F);
-            // Cubo central (para dar referencia de pivote)
-            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
-        }
-        else if (this.mode == Mode.ROTATE)
-        {
-            float radius = 0.22F;
-            // Arcos con huecos para estilo de gizmo de rotación
-            // Ángulos en grados
-            float sweep = 260F; // longitud del arco
-            // offsets distintos para que los huecos no se alineen
-            float offZ = -40F;
-            float offX = 20F;
-            float offY = 140F;
+
+            // Las barras deben llegar hasta la base de la flecha
+            float barEnd = length - headLen + thickness * 0.5F;
 
             boolean hx = (this.hoveredAxis == Axis.X);
             boolean hy = (this.hoveredAxis == Axis.Y);
             boolean hz = (this.hoveredAxis == Axis.Z);
 
-            drawRingArc3D(builder, stack, 'Z', radius, thickness, 1F, 0F, 0F, offZ, sweep, hz); // XY
-            drawRingArc3D(builder, stack, 'X', radius, thickness, 0F, 1F, 0F, offX, sweep, hx); // YZ
-            drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 0F, 1F, offY, sweep, hy); // ZX
+            float txX = hx ? thickness * 1.5F : thickness;
+            float txY = hy ? thickness * 1.5F : thickness;
+            float txZ = hz ? thickness * 1.5F : thickness;
+
+            // Barras por eje (X rojo, Y verde, Z azul) hasta base de la flecha
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, txZ, 0F, 0F, 1F, 1F); // Z -> azul
+
+            // Puntas tipo flecha
+            drawArrowHead3D(builder, stack, 'X', length, headLen, headWidth, txX, 1F, 0F, 0F, 1F);
+            drawArrowHead3D(builder, stack, 'Y', length, headLen, headWidth, txY, 0F, 1F, 0F, 1F);
+            drawArrowHead3D(builder, stack, 'Z', length, headLen, headWidth, txZ, 0F, 0F, 1F, 1F);
+
+            // Halo suave en el eje hovered
+            if (hx)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
+                drawArrowHead3D(builder, stack, 'X', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+            }
+            if (hy)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
+                drawArrowHead3D(builder, stack, 'Y', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+            }
+            if (hz)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, thickness * 2F, 1F, 1F, 1F, 0.25F);
+                drawArrowHead3D(builder, stack, 'Z', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+            }
+        }
+        else if (this.mode == Mode.SCALE)
+        {
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+
+            // Refuerzo visual: si está hovered, engrosar la barra con un overlay
+            if (hx)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
+            }
+            if (hy)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
+            }
+            if (hz)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
+            }
+
+            // Cubos de extremo en cada eje
+            drawEndCube(builder, stack, length, 0, 0, cubeBig, 1F, 0F, 0F); // X rojo
+            drawEndCube(builder, stack, 0, length, 0, cubeBig, 0F, 1F, 0F); // Y verde
+            drawEndCube(builder, stack, 0, 0, length, cubeBig, 0F, 0F, 1F); // Z azul
+
+            // Halo blanco suave alrededor del cubo hovered
+            if (hx)
+            {
+                stack.push();
+                stack.translate(length, 0, 0);
+                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                stack.pop();
+            }
+            if (hy)
+            {
+                stack.push();
+                stack.translate(0, length, 0);
+                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                stack.pop();
+            }
+            if (hz)
+            {
+                stack.push();
+                stack.translate(0, 0, length);
+                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                stack.pop();
+            }
+
+            // Cubo central (referencia de pivote)
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+        }
+        else if (this.mode == Mode.ROTATE)
+        {
+            float radius = 0.22F;
+            // Círculos completos 360° con nuevo mapeo de colores
+            float sweep = 360F;
+            float offZ = 0F;
+            float offX = 0F;
+            float offY = 0F;
+
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+
+            drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz); // Z -> azul
+            drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx); // X -> rojo
+            drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy); // Y -> verde
         }
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -785,22 +859,22 @@ public class BoneGizmoSystem
      * Puntas tipo flecha usando dos prismas inclinados que forman una "V".
      * Se dibujan en el plano perpendicular a cada eje.
      */
-    private void drawArrowHead3D(BufferBuilder builder, MatrixStack stack, char axis, float baseLen, float headLen, float headWidth, float thickness, float r, float g, float b)
+    private void drawArrowHead3D(BufferBuilder builder, MatrixStack stack, char axis, float baseLen, float headLen, float headWidth, float thickness, float r, float g, float b, float a)
     {
         if (axis == 'X')
         {
-            Draw.fillBoxTo(builder, stack, baseLen, 0, 0, baseLen - headLen, +headWidth / 2F, 0, thickness + 0.004F, r, g, b, 1F);
-            Draw.fillBoxTo(builder, stack, baseLen, 0, 0, baseLen - headLen, -headWidth / 2F, 0, thickness + 0.004F, r, g, b, 1F);
+            Draw.fillBoxTo(builder, stack, baseLen, 0, 0, baseLen - headLen, +headWidth / 2F, 0, thickness + 0.004F, r, g, b, a);
+            Draw.fillBoxTo(builder, stack, baseLen, 0, 0, baseLen - headLen, -headWidth / 2F, 0, thickness + 0.004F, r, g, b, a);
         }
         else if (axis == 'Y')
         {
-            Draw.fillBoxTo(builder, stack, 0, baseLen, 0, +headWidth / 2F, baseLen - headLen, 0, thickness + 0.004F, r, g, b, 1F);
-            Draw.fillBoxTo(builder, stack, 0, baseLen, 0, -headWidth / 2F, baseLen - headLen, 0, thickness + 0.004F, r, g, b, 1F);
+            Draw.fillBoxTo(builder, stack, 0, baseLen, 0, +headWidth / 2F, baseLen - headLen, 0, thickness + 0.004F, r, g, b, a);
+            Draw.fillBoxTo(builder, stack, 0, baseLen, 0, -headWidth / 2F, baseLen - headLen, 0, thickness + 0.004F, r, g, b, a);
         }
         else // 'Z'
         {
-            Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, +headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, 1F);
-            Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, -headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, 1F);
+            Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, +headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, a);
+            Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, -headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, a);
         }
     }
 
@@ -842,8 +916,9 @@ public class BoneGizmoSystem
 
         // Definir AABB por eje (mover/escalar)
         float length = 0.25F;
-        float thickness = 0.015F; // usar un poco más de grosor para picking
-        float fudge = 0.02F;
+        // En escala el cubo del extremo es más grande; ampliamos sección transversal del AABB
+        float thickness = (this.mode == Mode.SCALE) ? 0.045F : 0.015F;
+        float fudge = (this.mode == Mode.TRANSLATE) ? 0.06F : ((this.mode == Mode.SCALE) ? 0.045F : 0.02F);
 
         float[] tx = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -thickness/2F, -thickness/2F), new Vector3f(length + fudge, thickness/2F, thickness/2F));
         float[] ty = rayBoxIntersect(rayO, rayD, new Vector3f(-thickness/2F, 0F, -thickness/2F), new Vector3f(thickness/2F, length + fudge, thickness/2F));
@@ -921,6 +996,7 @@ public class BoneGizmoSystem
 
     private boolean angleInArc(float angDeg, float startDeg, float sweepDeg)
     {
+        if (sweepDeg >= 359.9F) return true; // círculo completo
         float a = normalizeDeg(angDeg);
         float s = normalizeDeg(startDeg);
         float e = normalizeDeg(startDeg + sweepDeg);
@@ -1018,13 +1094,35 @@ public class BoneGizmoSystem
             int yColor = (Colors.A100 | Colors.GREEN);
             int zColor = (Colors.A100 | Colors.BLUE);
 
-            context.batcher.line(cx, cy, this.endXx, this.endXy, thickness, xColor);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, thickness, yColor);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, thickness, zColor);
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+            float txX = hx ? (thickness + 2F) : thickness;
+            float txY = hy ? (thickness + 2F) : thickness;
+            float txZ = hz ? (thickness + 2F) : thickness;
+
+            context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
             /* cabezas de flecha en cada handle */
             drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor);
             drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor);
             drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
+
+            // Halo blanco suave en el eje hovered
+            int halo = Colors.A100 | Colors.WHITE;
+            if (hx)
+            {
+                context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
+            }
+            if (hy)
+            {
+                context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);
+            }
+            if (hz)
+            {
+                context.batcher.line(cx, cy, this.endZx, this.endZy, thickness + 4F, halo);
+            }
         }
         else if (this.mode == Mode.SCALE)
         {
@@ -1033,14 +1131,41 @@ public class BoneGizmoSystem
             int yColor = (Colors.A100 | Colors.GREEN);
             int zColor = (Colors.A100 | Colors.BLUE);
 
-            context.batcher.line(cx, cy, this.endXx, this.endXy, thickness, xColor);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, thickness, yColor);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, thickness, zColor);
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+            float txX = hx ? (thickness + 2F) : thickness;
+            float txY = hy ? (thickness + 2F) : thickness;
+            float txZ = hz ? (thickness + 2F) : thickness;
 
-            /* cubos: cuadrados 8x8 con borde más claro */
+            context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
+
+            /* cubos: cuadrados con borde; resaltamos con halo blanco si está hovered */
             drawCubeHandle(context, this.endXx, this.endXy, xColor);
             drawCubeHandle(context, this.endYx, this.endYy, yColor);
             drawCubeHandle(context, this.endZx, this.endZy, zColor);
+
+            int halo = Colors.A100 | Colors.WHITE;
+            if (hx)
+            {
+                int size = 12; int half = size / 2 + 3;
+                context.batcher.box(this.endXx - half, this.endXy - half, this.endXx + half, this.endXy + half, halo);
+                context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
+            }
+            if (hy)
+            {
+                int size = 12; int half = size / 2 + 3;
+                context.batcher.box(this.endYx - half, this.endYy - half, this.endYx + half, this.endYy + half, halo);
+                context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);
+            }
+            if (hz)
+            {
+                int size = 12; int half = size / 2 + 3;
+                context.batcher.box(this.endZx - half, this.endZy - half, this.endZx + half, this.endZy + half, halo);
+                context.batcher.line(cx, cy, this.endZx, this.endZy, thickness + 4F, halo);
+            }
         }
         else if (this.mode == Mode.ROTATE)
         {
@@ -1097,10 +1222,13 @@ public class BoneGizmoSystem
             return null;
         }
 
-        /* Mover/Escalar: picking por proximidad a los endpoints */
-        if (isNear(mx, my, endXx, endXy, hitRadius)) return Axis.X;
-        if (isNear(mx, my, endYx, endYy, hitRadius)) return Axis.Y;
-        if (isNear(mx, my, endZx, endZy, hitRadius)) return Axis.Z;
+        /* Mover/Escalar: picking por proximidad a las líneas completas y a los endpoints */
+        int cx = this.centerX;
+        int cy = this.centerY;
+        int tol = Math.max(6, this.handleThickness + 4);
+        if (isNearLine(mx, my, cx, cy, endXx, endXy, tol) || isNear(mx, my, endXx, endXy, hitRadius)) return Axis.X;
+        if (isNearLine(mx, my, cx, cy, endYx, endYy, tol) || isNear(mx, my, endYx, endYy, hitRadius)) return Axis.Y;
+        if (isNearLine(mx, my, cx, cy, endZx, endZy, tol) || isNear(mx, my, endZx, endZy, hitRadius)) return Axis.Z;
 
         return null;
     }
@@ -1163,6 +1291,24 @@ public class BoneGizmoSystem
 
         context.batcher.line(ex, ey, lx, ly, this.handleThickness + 1, color);
         context.batcher.line(ex, ey, rx, ry, this.handleThickness + 1, color);
+    }
+
+    /** Distancia punto-segmento en pantalla para hitbox a lo largo de las líneas */
+    private boolean isNearLine(int mx, int my, int x1, int y1, int x2, int y2, int tol)
+    {
+        double vx = x2 - x1;
+        double vy = y2 - y1;
+        double wx = mx - x1;
+        double wy = my - y1;
+        double c1 = vx * wx + vy * wy;
+        double c2 = vx * vx + vy * vy;
+        double t = (c2 > 0) ? Math.max(0, Math.min(1, c1 / c2)) : 0;
+        double px = x1 + t * vx;
+        double py = y1 + t * vy;
+        double dx = mx - px;
+        double dy = my - py;
+        double d = Math.sqrt(dx * dx + dy * dy);
+        return d <= tol;
     }
 
     private boolean isNear(int mx, int my, int x, int y, int r)
