@@ -160,10 +160,13 @@ public abstract class BaseFilmController
             {
                 stack.push();
                 MatrixStackUtils.multiply(stack, matrix);
-                Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
                 if (BBSSettings.modelBlockGizmosEnabled.get())
                 {
                     BoneGizmoSystem.get().render3D(stack);
+                }
+                else
+                {
+                    Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
                 }
                 RenderSystem.enableDepthTest();
                 stack.pop();

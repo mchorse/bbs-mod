@@ -644,7 +644,8 @@ public class BoneGizmoSystem
         builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
         float length = 0.25F;     // longitud de cada eje
-        float thickness = 0.01F;  // grosor de las barras
+        float thickness = 0.02F;  // grosor de las barras (similar a coolerAxes)
+        float outlinePad = 0.01F; // pad para contorno negro tipo coolerAxes
         float slabThick = 0.018F; // grosor de las losas de escala (a lo largo del eje)
 
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
@@ -664,6 +665,10 @@ public class BoneGizmoSystem
         if (this.mode == Mode.SCALE)
         {
             // Resultado: X=rojo, Y=verde, Z=azul
+            // Contorno negro detrás (ligeramente más grueso) para simular borde
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // X outline
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // Y outline
+            Draw.fillBox(builder, stack, -(thickness + outlinePad) / 2F, -(thickness + outlinePad) / 2F, 0F, (thickness + outlinePad) / 2F, (thickness + outlinePad) / 2F, length + connectFudge, 0F, 0F, 0F, 1F); // Z outline
             Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
             // Z -> azul (usar caja alineada para evitar inversión/offset)
@@ -675,12 +680,14 @@ public class BoneGizmoSystem
         if (this.mode == Mode.TRANSLATE)
         {
             // Conos en las puntas de cada eje (estilo DCCs)
-            float headLen = 0.06F;       // altura del cono
-            float headWidth = 0.04F;     // diámetro aproximado de la base
+            float headLen = 0.08F;       // altura del cono (más grueso)
+            float headWidth = 0.06F;     // diámetro aproximado de la base (más grueso)
             float headRadius = headWidth * 0.5F;
 
-            // Las barras deben llegar hasta la base del cono
-            float barEnd = length - headLen - 0.002F; // pequeño margen para no atravesar el cono
+            // Igualar longitud visual de barras con ESCALAR y ajustar conos al nuevo extremo
+            float lengthBar = length + connectFudge;   // mismo alcance visual que SCALE
+            // Las barras deben llegar hasta la base del cono, dejando un pequeño margen
+            float barEnd = lengthBar - headLen - 0.002F;
 
             boolean hx = (this.hoveredAxis == Axis.X);
             boolean hy = (this.hoveredAxis == Axis.Y);
@@ -690,35 +697,44 @@ public class BoneGizmoSystem
             float txY = hy ? thickness * 1.5F : thickness;
             float txZ = hz ? thickness * 1.5F : thickness;
 
+            // Contorno negro detrás de cada barra (ligeramente más grueso)
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F); // X outline
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY + outlinePad, 0F, 0F, 0F, 1F); // Y outline
+            Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, barEnd, 0F, 0F, 0F, 1F); // Z outline
+
             // Barras por eje (X rojo, Y verde, Z azul) hasta base del cono
             Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
             // Z -> azul (usar caja alineada para evitar inversión del eje)
             Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, barEnd, 0F, 0F, 1F, 1F);
 
-            // Conos en las puntas
-            drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 0F, 0F, 1F);
-            drawCone3D(builder, stack, 'Y', length, headLen, headRadius, 0F, 1F, 0F, 1F);
-            drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 0F, 0F, 1F, 1F);
+            // Conos en las puntas (con contorno negro ligeramente más grande)
+            drawCone3D(builder, stack, 'X', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+            drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
+            drawCone3D(builder, stack, 'Y', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+            drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
+            drawCone3D(builder, stack, 'Z', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+            drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
 
-            // Cubo de pivote en el origen como referencia
+            // Cubo de pivote en el origen como referencia (con contorno negro)
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
             // Halo suave en el eje hovered
             if (hx)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
             if (hy)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                drawCone3D(builder, stack, 'Y', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
             if (hz)
             {
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
-                drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
         }
         else if (this.mode == Mode.SCALE)
@@ -731,16 +747,22 @@ public class BoneGizmoSystem
             // X (rojo)
             stack.push();
             stack.translate(length, 0F, 0F);
+            // contorno negro (ligeramente más grande)
+            Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
             Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 1F);
             stack.pop();
             // Y (verde)
             stack.push();
             stack.translate(0F, length, 0F);
+            // contorno negro (ligeramente más grande)
+            Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
             Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 1F);
             stack.pop();
             // Z (azul)
             stack.push();
             stack.translate(0F, 0F, length);
+            // contorno negro (ligeramente más grande)
+            Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
             Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 1F);
             stack.pop();
 
@@ -773,7 +795,8 @@ public class BoneGizmoSystem
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, length + connectFudge, 1F, 1F, 1F, 0.25F);
             }
 
-            // Cubo central (referencia de pivote)
+            // Cubo central (referencia de pivote) con contorno negro
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
         }
         else if (this.mode == Mode.ROTATE)
@@ -791,10 +814,15 @@ public class BoneGizmoSystem
             /* Asegurar visibilidad por ambos lados del anillo: desactivar culling temporalmente */
             RenderSystem.disableCull();
 
-            /* Cubo de pivote en el origen para referencia visual en rotación */
+            /* Cubo de pivote con contorno negro */
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
             // Restaurar anillos completos alrededor del pivote (Z, X, Y)
+            // Contorno negro detrás
+            drawRingArc3D(builder, stack, 'Z', radius, thickness + outlinePad, 0F, 0F, 0F, offZ, sweep, false);
+            drawRingArc3D(builder, stack, 'X', radius, thickness + outlinePad, 0F, 0F, 0F, offX, sweep, false);
+            drawRingArc3D(builder, stack, 'Y', radius, thickness + outlinePad, 0F, 0F, 0F, offY, sweep, false);
             drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz);
             drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx);
             drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy);
@@ -1238,6 +1266,11 @@ public class BoneGizmoSystem
             float txY = hy ? (thickness + 2F) : thickness;
             float txZ = hz ? (thickness + 2F) : thickness;
 
+            // Contorno negro detrás de cada línea
+            int black = Colors.A100;
+            context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
             context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
             context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
             context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
@@ -1275,6 +1308,11 @@ public class BoneGizmoSystem
             float txY = hy ? (thickness + 2F) : thickness;
             float txZ = hz ? (thickness + 2F) : thickness;
 
+            // Contorno negro detrás de cada línea
+            int black = Colors.A100;
+            context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
+            context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
+            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
             context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
             context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
             context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
@@ -1373,6 +1411,8 @@ public class BoneGizmoSystem
             double ang = step * i;
             float x2 = (float) (cx + Math.cos(ang) * radius);
             float y2 = (float) (cy + Math.sin(ang) * radius);
+            // contorno negro detrás
+            context.batcher.line(x1, y1, x2, y2, thickness + 2F, Colors.A100);
             context.batcher.line(x1, y1, x2, y2, thickness, color);
             x1 = x2;
             y1 = y2;
@@ -1386,6 +1426,9 @@ public class BoneGizmoSystem
         int fill = Colors.mulRGB(color, 0.8F);
         int border = Colors.setA(Colors.WHITE, 0.75F);
 
+        // contorno negro detrás
+        int pad = 3;
+        context.batcher.box(x - half - pad, y - half - pad, x + half + pad, y + half + pad, Colors.A100);
         context.batcher.box(x - half, y - half, x + half, y + half, fill);
         context.batcher.outline(x - half, y - half, x + half, y + half, border, 1);
     }
@@ -1417,6 +1460,9 @@ public class BoneGizmoSystem
         float rx = bx - px * (headWidth / 2F);
         float ry = by - py * (headWidth / 2F);
 
+        // contorno negro detrás
+        context.batcher.line(ex, ey, lx, ly, this.handleThickness + 4, Colors.A100);
+        context.batcher.line(ex, ey, rx, ry, this.handleThickness + 4, Colors.A100);
         context.batcher.line(ex, ey, lx, ly, this.handleThickness + 1, color);
         context.batcher.line(ex, ey, rx, ry, this.handleThickness + 1, color);
     }

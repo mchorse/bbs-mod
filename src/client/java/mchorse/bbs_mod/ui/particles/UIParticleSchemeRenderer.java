@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.particles;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.graphics.Draw;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.particles.ParticleScheme;
 import mchorse.bbs_mod.particles.components.expiration.ParticleComponentKillPlane;
 import mchorse.bbs_mod.particles.emitter.ParticleEmitter;
@@ -143,7 +144,7 @@ public class UIParticleSchemeRenderer extends UIModelRenderer
     {
         super.renderGrid(context);
 
-        if (UIBaseMenu.renderAxes)
+        if (UIBaseMenu.renderAxes && !BBSSettings.modelBlockGizmosEnabled.get())
         {
             Draw.coolerAxes(context.batcher.getContext().getMatrices(), 1F, 0.01F, 1.01F, 0.02F);
         }

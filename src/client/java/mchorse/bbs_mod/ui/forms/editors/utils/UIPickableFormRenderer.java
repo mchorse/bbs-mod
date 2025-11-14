@@ -209,8 +209,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
             MatrixStackUtils.multiply(stack, matrix);
         }
 
-        /* Draw axes */
-        if (UIBaseMenu.renderAxes)
+        /* Draw axes (desactivar cuando el gizmo nuevo está activo) */
+        if (UIBaseMenu.renderAxes && !BBSSettings.modelBlockGizmosEnabled.get())
         {
             RenderSystem.disableDepthTest();
             Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
