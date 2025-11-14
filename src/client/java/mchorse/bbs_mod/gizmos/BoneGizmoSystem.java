@@ -651,7 +651,7 @@ public class BoneGizmoSystem
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
         // Usamos el tamaño del cubo del extremo + el grosor de la barra para
         // evitar gaps en perspectiva o por redondeos.
-        float cubeSmall = 0.03F;
+        float cubeSmall = 0.022F;
         float cubeBig = 0.045F;
         // Ajuste por modo: en TRANSLATE conectamos a la base de la flecha;
         // en SCALE nos internamos en el cubo para evitar gaps visuales.
@@ -856,14 +856,14 @@ public class BoneGizmoSystem
     private void drawRingArc3D(BufferBuilder builder, MatrixStack stack, char axis, float radius, float thickness, float r, float g, float b, float startDeg, float sweepDeg, boolean highlight)
     {
         // Renderizar un toro (tubo) alrededor del pivote en el plano correspondiente.
-        // radius: radio mayor del anillo, thickness: radio del tubo.
+        // radius: radio mayor del anillo, thickness: ancho visual equivalente al de barras.
         int segU = 96;           // segmentos a lo largo del anillo
         int segV = 24;           // segmentos alrededor de la sección del tubo
         double u0 = Math.toRadians(startDeg);
         double uStep = Math.toRadians(sweepDeg / (double) segU);
         double vStep = Math.PI * 2.0 / (double) segV;
 
-        float tubeR = thickness; // usar grosor como radio del tubo
+        float tubeR = thickness * 0.5F; // usar la mitad como radio del tubo para igualar barras
         Matrix4f mat = stack.peek().getPositionMatrix();
 
         // Dibujar superficie del toro mediante quads triangulados
@@ -1200,7 +1200,7 @@ public class BoneGizmoSystem
     private Axis detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
     {
         float radius = 0.22F;
-        float thickness = 0.02F;        // igualar grosor del tubo de render
+        float thickness = 0.01F;        // radio del tubo (mitad del grosor de barras)
         float band = thickness * 0.95F; // tolerancia radial cercana al radio del tubo
 
         class Hit { Axis a; float t; }
@@ -1209,24 +1209,72 @@ public class BoneGizmoSystem
         // Comprobación auxiliar
         java.util.function.BiFunction<Vector3f, Character, Hit> check = (n, c) -> {
             float denom = n.x * rayD.x + n.y * rayD.y + n.z * rayD.z;
-            if (Math.abs(denom) < 1e-5) return null; // paralelo al plano
-            // t para intersección con plano en origen (d=0)
-            float t = - (n.x * rayO.x + n.y * rayO.y + n.z * rayO.z) / denom;
-            if (t < 0) return null;
-            float ix = rayO.x + rayD.x * t;
-            float iy = rayO.y + rayD.y * t;
-            float iz = rayO.z + rayD.z * t;
+            float t;
+            float ix, iy, iz;
+
+            if (Math.abs(denom) < 1e-5)
+            {
+                // Fallback: el rayo es casi paralelo al plano. Buscamos el punto
+                // sobre el rayo que minimiza la distancia radial en el par de ejes
+                // correspondiente al anillo.
+                if (c == 'Z')
+                {
+                    float d2 = rayD.x * rayD.x + rayD.y * rayD.y;
+                    if (d2 > 1e-8)
+                    {
+                        t = - (rayO.x * rayD.x + rayO.y * rayD.y) / d2;
+                        if (t < 0) t = 0; // limitar a frente del rayo
+                    }
+                    else
+                    {
+                        t = 0; // dirección sin componente XY, usar origen
+                    }
+                    ix = rayO.x + rayD.x * t;
+                    iy = rayO.y + rayD.y * t;
+                    iz = rayO.z + rayD.z * t;
+                }
+                else if (c == 'X')
+                {
+                    float d2 = rayD.y * rayD.y + rayD.z * rayD.z;
+                    if (d2 > 1e-8)
+                    {
+                        t = - (rayO.y * rayD.y + rayO.z * rayD.z) / d2;
+                        if (t < 0) t = 0;
+                    }
+                    else { t = 0; }
+                    ix = rayO.x + rayD.x * t;
+                    iy = rayO.y + rayD.y * t;
+                    iz = rayO.z + rayD.z * t;
+                }
+                else // 'Y'
+                {
+                    float d2 = rayD.x * rayD.x + rayD.z * rayD.z;
+                    if (d2 > 1e-8)
+                    {
+                        t = - (rayO.x * rayD.x + rayO.z * rayD.z) / d2;
+                        if (t < 0) t = 0;
+                    }
+                    else { t = 0; }
+                    ix = rayO.x + rayD.x * t;
+                    iy = rayO.y + rayD.y * t;
+                    iz = rayO.z + rayD.z * t;
+                }
+            }
+            else
+            {
+                // Intersección clásica rayo-plano (plano pasa por origen)
+                t = - (n.x * rayO.x + n.y * rayO.y + n.z * rayO.z) / denom;
+                if (t < 0) return null;
+                ix = rayO.x + rayD.x * t;
+                iy = rayO.y + rayD.y * t;
+                iz = rayO.z + rayD.z * t;
+            }
 
             // distancia radial en el plano correspondiente
             float radial;
             if (c == 'Z') { radial = (float) Math.sqrt(ix * ix + iy * iy); }
             else if (c == 'X') { radial = (float) Math.sqrt(iy * iy + iz * iz); }
             else { radial = (float) Math.sqrt(ix * ix + iz * iz); }
-
-            // cobertura completa de 360°: sin restricción por arco
-            // mantenemos el cálculo del ángulo por si se necesita en el futuro
-            // pero no filtramos por sectores; los anillos son completos
-            // float angDeg = ... (no usado)
 
             if (radial >= (radius - band) && radial <= (radius + band))
             {
