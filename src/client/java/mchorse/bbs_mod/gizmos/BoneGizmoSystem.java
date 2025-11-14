@@ -634,6 +634,12 @@ public class BoneGizmoSystem
      */
     public void render3D(MatrixStack stack)
     {
+        // Importante: el stack que llega aquí ya está multiplicado por la
+        // matriz de origen del hueso (sin escala). Esa matriz incluye la rotación
+        // acumulada del hueso respecto a sus padres; por lo tanto, NO aplicamos
+        // rotación adicional del transform local aquí para evitar invertir o
+        // duplicar la orientación del gizmo.
+
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
@@ -802,6 +808,9 @@ public class BoneGizmoSystem
             RenderSystem.enableCull();
         }
         RenderSystem.enableDepthTest();
+
+        // No se modifica el stack adicionalmente: la orientación del gizmo
+        // depende únicamente de la matriz de origen aplicada antes de esta llamada.
     }
 
     private void drawEndCube(BufferBuilder builder, MatrixStack stack, float x, float y, float z, float s, float r, float g, float b)
@@ -1053,6 +1062,9 @@ public class BoneGizmoSystem
         Vector3f rayF = new Vector3f(farLocal4.x, farLocal4.y, farLocal4.z);
         Vector3f rayD = rayF.sub(rayO, new Vector3f());
         rayD.normalize();
+        // Importante: el rayo ya está en el espacio local del origen (incluye
+        // la rotación acumulada del hueso). No aplicamos rotaciones adicionales
+        // del transform local para evitar discrepancias entre render y picking.
 
         // Si estamos en rotación, delegar al método de picking por anillo
         if (this.mode == Mode.ROTATE)
@@ -1192,22 +1204,6 @@ public class BoneGizmoSystem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        /* Indicador de estado */
-        String label = switch (this.mode)
-        {
-            case TRANSLATE -> "Mover (T)";
-            case ROTATE -> "Rotar (R)";
-            case SCALE -> "Escalar (S)";
-        };
-
-        int lx = viewport.x + 10;
-        int ly = viewport.y + 10;
-        context.batcher.textCard(label, lx, ly, Colors.WHITE, Colors.A50);
-
-        /* Depuración: dibujar un borde visible alrededor del viewport para confirmar overlay */
-        int dbgColor = Colors.A50 | Colors.HIGHLIGHT;
-        context.batcher.outline(viewport.x + 1, viewport.y + 1, viewport.ex() - 1, viewport.ey() - 1, dbgColor, 2);
-
         /* Si el gizmo 3D está habilitado, evitamos dibujar los manejadores 2D
          * para no crear inconsistencias visuales (las barras/cubos 3D son la
          * referencia principal). Mantengo etiqueta y borde de depuración. */
@@ -1323,16 +1319,6 @@ public class BoneGizmoSystem
         /* Centro del pivote: dibujar un cuadrado más visible */
         int half = 5; // tamaño total 10px
         context.batcher.box(cx - half, cy - half, cx + half, cy + half, Colors.A100 | Colors.WHITE);
-
-        /* Consejos */
-        String tip = switch (this.mode)
-        {
-            case TRANSLATE -> "Click izquierdo en eje para mover; T/R/S cambia modo.";
-            case SCALE -> "Click en cubo para escalar; T/R/S cambia modo.";
-            case ROTATE -> "Click en anillo para rotar; T/R/S cambia modo.";
-        };
-        int tw = context.batcher.getFont().getWidth(tip);
-        context.batcher.textCard(tip, viewport.ex() - tw - 10, viewport.ey() - context.batcher.getFont().getHeight() - 10, Colors.WHITE, Colors.A50);
 
         /* Restaurar el depth test tras dibujar el overlay */
         RenderSystem.enableDepthTest();

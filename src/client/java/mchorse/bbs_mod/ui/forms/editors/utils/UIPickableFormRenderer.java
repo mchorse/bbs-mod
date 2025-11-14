@@ -9,6 +9,7 @@ import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
@@ -148,8 +149,17 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Matrix4f origin = originRaw != null ? MatrixStackUtils.stripScale(originRaw) : null;
         UIPropTransform activeTransform = null;
 
-        if (this.formEditor.editor instanceof UIModelForm uiModelForm)
+        /* Priorizar el transform del editor de estados cuando está visible y la pista es de pose/pose_overlay */
+        if (this.formEditor.statesEditor.isVisible()
+            && this.formEditor.statesKeyframes != null
+            && this.formEditor.statesKeyframes.keyframeEditor != null
+            && this.formEditor.statesKeyframes.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
         {
+            activeTransform = poseFactory.poseEditor.transform;
+        }
+        else if (this.formEditor.editor instanceof UIModelForm uiModelForm)
+        {
+            /* Fallback al transform del editor de modelo cuando no está el de estados */
             activeTransform = uiModelForm.modelPanel.poseEditor.transform;
         }
 

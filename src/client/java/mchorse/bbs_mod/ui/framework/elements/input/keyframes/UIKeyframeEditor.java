@@ -140,10 +140,27 @@ public class UIKeyframeEditor extends UIElement
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
             String currentFirst = pose.poseEditor.groups.getCurrentFirst();
 
-            if (sheet != null && sheet.id.endsWith("pose"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
-                local = pose.poseEditor.transform.isLocal();
+                boolean isPose = sheet.id.endsWith("pose") || sheet.id.contains("pose_overlay");
+
+                if (isPose)
+                {
+                    String targetBone = sheet.anchoredBone != null && !sheet.anchoredBone.isEmpty() ? sheet.anchoredBone : currentFirst;
+
+                    /* Si el id incluye una ruta de propiedad (p.ej. formPath/pose o formPath/pose_overlayX),
+                     * mantener el prefijo del formulario para ubicar correctamente el hueso en el renderer. */
+                    if (sheet.id.contains("/pose") || sheet.id.contains("/pose_overlay"))
+                    {
+                        bone = sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + targetBone;
+                    }
+                    else
+                    {
+                        bone = targetBone;
+                    }
+
+                    local = pose.poseEditor.transform.isLocal();
+                }
             }
         }
         else if (editor instanceof UITransformKeyframeFactory)
