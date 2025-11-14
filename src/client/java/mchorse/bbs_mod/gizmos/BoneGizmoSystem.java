@@ -659,6 +659,11 @@ public class BoneGizmoSystem
             ? 0.03F
             : (this.mode == Mode.SCALE ? slabThick : (cubeBig + thickness));
 
+        /* Mostrar solo el eje activo durante el arrastre, como en DCCs */
+        boolean showX = !this.dragging || this.activeAxis == Axis.X;
+        boolean showY = !this.dragging || this.activeAxis == Axis.Y;
+        boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
+
         // Barras base por eje SOLO para ESCALAR
         // En TRASLADAR dibujamos barras específicas que llegan a los conos,
         // para evitar que sobrepasen.
@@ -666,13 +671,22 @@ public class BoneGizmoSystem
         {
             // Resultado: X=rojo, Y=verde, Z=azul
             // Contorno negro detrás (ligeramente más grueso) para simular borde
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // X outline
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // Y outline
-            Draw.fillBox(builder, stack, -(thickness + outlinePad) / 2F, -(thickness + outlinePad) / 2F, 0F, (thickness + outlinePad) / 2F, (thickness + outlinePad) / 2F, length + connectFudge, 0F, 0F, 0F, 1F); // Z outline
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
-            // Z -> azul (usar caja alineada para evitar inversión/offset)
-            Draw.fillBox(builder, stack, -thickness / 2F, -thickness / 2F, 0F, thickness / 2F, thickness / 2F, length + connectFudge, 0F, 0F, 1F, 1F);
+            if (showX)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // X outline
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
+            }
+            if (showY)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness + outlinePad, 0F, 0F, 0F, 1F); // Y outline
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
+            }
+            if (showZ)
+            {
+                // Z -> azul (usar caja alineada para evitar inversión/offset)
+                Draw.fillBox(builder, stack, -(thickness + outlinePad) / 2F, -(thickness + outlinePad) / 2F, 0F, (thickness + outlinePad) / 2F, (thickness + outlinePad) / 2F, length + connectFudge, 0F, 0F, 0F, 1F); // Z outline
+                Draw.fillBox(builder, stack, -thickness / 2F, -thickness / 2F, 0F, thickness / 2F, thickness / 2F, length + connectFudge, 0F, 0F, 1F, 1F);
+            }
         }
 
         // Manejadores en los extremos según el modo
@@ -698,40 +712,56 @@ public class BoneGizmoSystem
             float txZ = hz ? thickness * 1.5F : thickness;
 
             // Contorno negro detrás de cada barra (ligeramente más grueso)
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F); // X outline
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY + outlinePad, 0F, 0F, 0F, 1F); // Y outline
-            Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, barEnd, 0F, 0F, 0F, 1F); // Z outline
-
-            // Barras por eje (X rojo, Y verde, Z azul) hasta base del cono
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
-            // Z -> azul (usar caja alineada para evitar inversión del eje)
-            Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, barEnd, 0F, 0F, 1F, 1F);
+            if (showX)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F); // X outline
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
+            }
+            if (showY)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY + outlinePad, 0F, 0F, 0F, 1F); // Y outline
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
+            }
+            if (showZ)
+            {
+                Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, barEnd, 0F, 0F, 0F, 1F); // Z outline
+                // Z -> azul (usar caja alineada para evitar inversión del eje)
+                Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, barEnd, 0F, 0F, 1F, 1F);
+            }
 
             // Conos en las puntas (con contorno negro ligeramente más grande)
-            drawCone3D(builder, stack, 'X', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
-            drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
-            drawCone3D(builder, stack, 'Y', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
-            drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
-            drawCone3D(builder, stack, 'Z', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
-            drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
+            if (showX)
+            {
+                drawCone3D(builder, stack, 'X', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+                drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
+            }
+            if (showY)
+            {
+                drawCone3D(builder, stack, 'Y', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+                drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
+            }
+            if (showZ)
+            {
+                drawCone3D(builder, stack, 'Z', lengthBar, headLen + outlinePad * 0.5F, headRadius + outlinePad, 0F, 0F, 0F, 1F); // contorno
+                drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
+            }
 
             // Cubo de pivote en el origen como referencia (con contorno negro)
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
             // Halo suave en el eje hovered
-            if (hx)
+            if (hx && showX)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
-            if (hy)
+            if (hy && showY)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
-            if (hz)
+            if (hz && showZ)
             {
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
@@ -745,29 +775,38 @@ public class BoneGizmoSystem
             // Barras base ya están dibujadas arriba para SCALE.
             // Losas de extremo en cada eje (planos perpendiculares al eje)
             // X (rojo)
-            stack.push();
-            stack.translate(length, 0F, 0F);
-            // contorno negro (ligeramente más grande)
-            Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 1F);
-            stack.pop();
+            if (showX)
+            {
+                stack.push();
+                stack.translate(length, 0F, 0F);
+                // contorno negro (ligeramente más grande)
+                Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 1F);
+                stack.pop();
+            }
             // Y (verde)
-            stack.push();
-            stack.translate(0F, length, 0F);
-            // contorno negro (ligeramente más grande)
-            Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 1F);
-            stack.pop();
+            if (showY)
+            {
+                stack.push();
+                stack.translate(0F, length, 0F);
+                // contorno negro (ligeramente más grande)
+                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 1F);
+                stack.pop();
+            }
             // Z (azul)
-            stack.push();
-            stack.translate(0F, 0F, length);
-            // contorno negro (ligeramente más grande)
-            Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 1F);
-            stack.pop();
+            if (showZ)
+            {
+                stack.push();
+                stack.translate(0F, 0F, length);
+                // contorno negro (ligeramente más grande)
+                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 1F);
+                stack.pop();
+            }
 
             // Halo suave alrededor de la losa hovered (ligeramente más grande)
-            if (hx)
+            if (hx && showX)
             {
                 stack.push();
                 stack.translate(length, 0, 0);
@@ -776,7 +815,7 @@ public class BoneGizmoSystem
                 // Resaltar también la barra X
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
             }
-            if (hy)
+            if (hy && showY)
             {
                 stack.push();
                 stack.translate(0, length, 0);
@@ -785,7 +824,7 @@ public class BoneGizmoSystem
                 // Resaltar también la barra Y
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
             }
-            if (hz)
+            if (hz && showZ)
             {
                 stack.push();
                 stack.translate(0, 0, length);
@@ -818,14 +857,22 @@ public class BoneGizmoSystem
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
-            // Restaurar anillos completos alrededor del pivote (Z, X, Y)
-            // Contorno negro detrás
-            drawRingArc3D(builder, stack, 'Z', radius, thickness + outlinePad, 0F, 0F, 0F, offZ, sweep, false);
-            drawRingArc3D(builder, stack, 'X', radius, thickness + outlinePad, 0F, 0F, 0F, offX, sweep, false);
-            drawRingArc3D(builder, stack, 'Y', radius, thickness + outlinePad, 0F, 0F, 0F, offY, sweep, false);
-            drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz);
-            drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx);
-            drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy);
+            // Anillos alrededor del pivote (Z, X, Y), ocultando los no activos durante arrastre
+            if (showZ)
+            {
+                drawRingArc3D(builder, stack, 'Z', radius, thickness + outlinePad, 0F, 0F, 0F, offZ, sweep, false);
+                drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz);
+            }
+            if (showX)
+            {
+                drawRingArc3D(builder, stack, 'X', radius, thickness + outlinePad, 0F, 0F, 0F, offX, sweep, false);
+                drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx);
+            }
+            if (showY)
+            {
+                drawRingArc3D(builder, stack, 'Y', radius, thickness + outlinePad, 0F, 0F, 0F, offY, sweep, false);
+                drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy);
+            }
         }
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -1378,6 +1425,10 @@ public class BoneGizmoSystem
 
         if (this.mode == Mode.TRANSLATE)
         {
+            /* Ocultar ejes no activos durante arrastre */
+            boolean showX = !this.dragging || this.activeAxis == Axis.X;
+            boolean showY = !this.dragging || this.activeAxis == Axis.Y;
+            boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
             /* Líneas al pivote + píxeles en extremos para selección */
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
@@ -1392,34 +1443,46 @@ public class BoneGizmoSystem
 
             // Contorno negro detrás de cada línea
             int black = Colors.A100;
-            context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
-            context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
-            /* cabezas de flecha en cada handle */
-            drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor);
-            drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor);
-            drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
+            if (showX)
+            {
+                context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
+                context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
+                /* cabeza de flecha */
+                drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor);
+            }
+            if (showY)
+            {
+                context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
+                context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
+                drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor);
+            }
+            if (showZ)
+            {
+                context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
+                context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
+                drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
+            }
 
             // Halo blanco suave en el eje hovered
             int halo = Colors.A100 | Colors.WHITE;
-            if (hx)
+            if (hx && showX)
             {
                 context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
             }
-            if (hy)
+            if (hy && showY)
             {
                 context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);
             }
-            if (hz)
+            if (hz && showZ)
             {
                 context.batcher.line(cx, cy, this.endZx, this.endZy, thickness + 4F, halo);
             }
         }
         else if (this.mode == Mode.SCALE)
         {
+            boolean showX = !this.dragging || this.activeAxis == Axis.X;
+            boolean showY = !this.dragging || this.activeAxis == Axis.Y;
+            boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
             /* Líneas al pivote + cubos en extremos (squares con borde) */
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
@@ -1434,32 +1497,39 @@ public class BoneGizmoSystem
 
             // Contorno negro detrás de cada línea
             int black = Colors.A100;
-            context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
-            context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
-            context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
-            context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
-
-            /* cubos: cuadrados con borde; resaltamos con halo blanco si está hovered */
-            drawCubeHandle(context, this.endXx, this.endXy, xColor);
-            drawCubeHandle(context, this.endYx, this.endYy, yColor);
-            drawCubeHandle(context, this.endZx, this.endZy, zColor);
+            if (showX)
+            {
+                context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black);
+                context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor);
+                drawCubeHandle(context, this.endXx, this.endXy, xColor);
+            }
+            if (showY)
+            {
+                context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black);
+                context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor);
+                drawCubeHandle(context, this.endYx, this.endYy, yColor);
+            }
+            if (showZ)
+            {
+                context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black);
+                context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor);
+                drawCubeHandle(context, this.endZx, this.endZy, zColor);
+            }
 
             int halo = Colors.A100 | Colors.WHITE;
-            if (hx)
+            if (hx && showX)
             {
                 int size = 12; int half = size / 2 + 3;
                 context.batcher.box(this.endXx - half, this.endXy - half, this.endXx + half, this.endXy + half, halo);
                 context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
             }
-            if (hy)
+            if (hy && showY)
             {
                 int size = 12; int half = size / 2 + 3;
                 context.batcher.box(this.endYx - half, this.endYy - half, this.endYx + half, this.endYy + half, halo);
                 context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);
             }
-            if (hz)
+            if (hz && showZ)
             {
                 int size = 12; int half = size / 2 + 3;
                 context.batcher.box(this.endZx - half, this.endZy - half, this.endZx + half, this.endZy + half, halo);
@@ -1468,14 +1538,16 @@ public class BoneGizmoSystem
         }
         else if (this.mode == Mode.ROTATE)
         {
+            boolean showX = !this.dragging || this.activeAxis == Axis.X;
+            boolean showY = !this.dragging || this.activeAxis == Axis.Y;
+            boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
             /* Restaurar: tres anillos concéntricos alrededor del pivote (sin líneas radiales) */
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
             int zColor = (Colors.A100 | Colors.BLUE);
-
-            drawRing(context, cx, cy, this.ringRX, thickness, xColor);
-            drawRing(context, cx, cy, this.ringRY, thickness, yColor);
-            drawRing(context, cx, cy, this.ringRZ, thickness, zColor);
+            if (showX) drawRing(context, cx, cy, this.ringRX, thickness, xColor);
+            if (showY) drawRing(context, cx, cy, this.ringRY, thickness, yColor);
+            if (showZ) drawRing(context, cx, cy, this.ringRZ, thickness, zColor);
         }
 
         /* Centro del pivote: dibujar un cuadrado más visible */
