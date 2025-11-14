@@ -140,7 +140,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
         this.renderAxes(context);
 
         /* Gizmo en el editor de modelos: posicionar en el pivote del hueso seleccionado */
-        Matrix4f origin = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f originRaw = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f origin = originRaw != null ? MatrixStackUtils.stripScale(originRaw) : null;
         UIPropTransform activeTransform = null;
 
         if (this.formEditor.editor instanceof UIModelForm uiModelForm)
@@ -183,7 +184,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
     private void renderAxes(UIContext context)
     {
-        Matrix4f matrix = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f matrixRaw = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f matrix = matrixRaw != null ? MatrixStackUtils.stripScale(matrixRaw) : null;
         MatrixStack stack = context.render.batcher.getContext().getMatrices();
 
         stack.push();

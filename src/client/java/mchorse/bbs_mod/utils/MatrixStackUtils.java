@@ -102,4 +102,43 @@ public class MatrixStackUtils
         position.m12(position.m12() / max);
         position.m22(position.m22() / max);
     }
+
+    /**
+     * Devuelve una copia de la matriz con la escala normalizada a 1 en cada eje
+     * (X, Y, Z), preservando la traslación y la rotación.
+     *
+     * Útil para renderizar/pickear gizmos que no deben deformarse con la
+     * escala del hueso/parte.
+     */
+    public static Matrix4f stripScale(Matrix4f matrix)
+    {
+        Matrix4f out = new Matrix4f(matrix);
+
+        float sx = (float) Math.sqrt(out.m00() * out.m00() + out.m10() * out.m10() + out.m20() * out.m20());
+        float sy = (float) Math.sqrt(out.m01() * out.m01() + out.m11() * out.m11() + out.m21() * out.m21());
+        float sz = (float) Math.sqrt(out.m02() * out.m02() + out.m12() * out.m12() + out.m22() * out.m22());
+
+        if (sx != 0F)
+        {
+            out.m00(out.m00() / sx);
+            out.m10(out.m10() / sx);
+            out.m20(out.m20() / sx);
+        }
+
+        if (sy != 0F)
+        {
+            out.m01(out.m01() / sy);
+            out.m11(out.m11() / sy);
+            out.m21(out.m21() / sy);
+        }
+
+        if (sz != 0F)
+        {
+            out.m02(out.m02() / sz);
+            out.m12(out.m12() / sz);
+            out.m22(out.m22() / sz);
+        }
+
+        return out;
+    }
 }

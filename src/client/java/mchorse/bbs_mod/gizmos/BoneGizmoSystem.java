@@ -660,11 +660,12 @@ public class BoneGizmoSystem
 
         if (this.mode == Mode.TRANSLATE)
         {
-            // Puntas tipo flecha en cada eje (sin cubos en los extremos)
-            float headLen = 0.06F;
-            float headWidth = 0.04F;
+            // Conos en las puntas de cada eje (estilo DCCs)
+            float headLen = 0.06F;       // altura del cono
+            float headWidth = 0.04F;     // diámetro aproximado de la base
+            float headRadius = headWidth * 0.5F;
 
-            // Las barras deben llegar hasta la base de la flecha
+            // Las barras deben llegar hasta la base del cono
             float barEnd = length - headLen + thickness * 0.5F;
 
             boolean hx = (this.hoveredAxis == Axis.X);
@@ -675,31 +676,31 @@ public class BoneGizmoSystem
             float txY = hy ? thickness * 1.5F : thickness;
             float txZ = hz ? thickness * 1.5F : thickness;
 
-            // Barras por eje (X rojo, Y verde, Z azul) hasta base de la flecha
+            // Barras por eje (X rojo, Y verde, Z azul) hasta base del cono
             Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, txZ, 0F, 0F, 1F, 1F); // Z -> azul
 
-            // Puntas tipo flecha
-            drawArrowHead3D(builder, stack, 'X', length, headLen, headWidth, txX, 1F, 0F, 0F, 1F);
-            drawArrowHead3D(builder, stack, 'Y', length, headLen, headWidth, txY, 0F, 1F, 0F, 1F);
-            drawArrowHead3D(builder, stack, 'Z', length, headLen, headWidth, txZ, 0F, 0F, 1F, 1F);
+            // Conos en las puntas
+            drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 0F, 0F, 1F);
+            drawCone3D(builder, stack, 'Y', length, headLen, headRadius, 0F, 1F, 0F, 1F);
+            drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 0F, 0F, 1F, 1F);
 
             // Halo suave en el eje hovered
             if (hx)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                drawArrowHead3D(builder, stack, 'X', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
             if (hy)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                drawArrowHead3D(builder, stack, 'Y', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'Y', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
             if (hz)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                drawArrowHead3D(builder, stack, 'Z', length, headLen, headWidth, thickness * 1.6F, 1F, 1F, 1F, 0.35F);
+                drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
         }
         else if (this.mode == Mode.SCALE)
@@ -756,7 +757,6 @@ public class BoneGizmoSystem
         else if (this.mode == Mode.ROTATE)
         {
             float radius = 0.22F;
-            // Círculos completos 360° con nuevo mapeo de colores
             float sweep = 360F;
             float offZ = 0F;
             float offX = 0F;
@@ -766,14 +766,25 @@ public class BoneGizmoSystem
             boolean hy = (this.hoveredAxis == Axis.Y);
             boolean hz = (this.hoveredAxis == Axis.Z);
 
-            drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz); // Z -> azul
-            drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx); // X -> rojo
-            drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy); // Y -> verde
+            /* Asegurar visibilidad por ambos lados del anillo: desactivar culling temporalmente */
+            RenderSystem.disableCull();
+
+            /* Cubo de pivote en el origen para referencia visual en rotación */
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+
+            // Restaurar anillos completos alrededor del pivote (Z, X, Y)
+            drawRingArc3D(builder, stack, 'Z', radius, thickness, 0F, 0F, 1F, offZ, sweep, hz);
+            drawRingArc3D(builder, stack, 'X', radius, thickness, 1F, 0F, 0F, offX, sweep, hx);
+            drawRingArc3D(builder, stack, 'Y', radius, thickness, 0F, 1F, 0F, offY, sweep, hy);
         }
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         RenderSystem.disableDepthTest();
+        /* En rotación, reactivar culling después de dibujar */
         BufferRenderer.drawWithGlobalProgram(builder.end());
+        if (this.mode == Mode.ROTATE) {
+            RenderSystem.enableCull();
+        }
         RenderSystem.enableDepthTest();
     }
 
@@ -796,25 +807,45 @@ public class BoneGizmoSystem
 
         float th = highlight ? thickness * 1.8F : thickness;
 
-        // Halo suave cuando está en hover
+        // Halo suave cuando está en hover (usando tira de quads en el plano)
         if (highlight)
         {
-            double angH = Math.toRadians(startDeg);
+            double angH0 = Math.toRadians(startDeg);
             float px1h = 0, py1h = 0, pz1h = 0;
             switch (axis)
             {
-                case 'Z': px1h = (float) (Math.cos(angH) * (radius + 0.008F)); py1h = (float) (Math.sin(angH) * (radius + 0.008F)); pz1h = 0F; break;
-                case 'X': px1h = 0F; py1h = (float) (Math.cos(angH) * (radius + 0.008F)); pz1h = (float) (Math.sin(angH) * (radius + 0.008F)); break;
-                case 'Y': px1h = (float) (Math.cos(angH) * (radius + 0.008F)); py1h = 0F; pz1h = (float) (Math.sin(angH) * (radius + 0.008F)); break;
+                case 'Z': px1h = (float) (Math.cos(angH0) * (radius + 0.008F)); py1h = (float) (Math.sin(angH0) * (radius + 0.008F)); pz1h = 0F; break;
+                case 'X': px1h = 0F; py1h = (float) (Math.cos(angH0) * (radius + 0.008F)); pz1h = (float) (Math.sin(angH0) * (radius + 0.008F)); break;
+                case 'Y': px1h = (float) (Math.cos(angH0) * (radius + 0.008F)); py1h = 0F; pz1h = (float) (Math.sin(angH0) * (radius + 0.008F)); break;
             }
             for (int i = 1; i <= segments; i++)
             {
-                double ang = Math.toRadians(startDeg) + step * i;
+                double ang = angH0 + step * i;
                 float px2h, py2h, pz2h;
                 if (axis == 'Z') { px2h = (float) (Math.cos(ang) * (radius + 0.008F)); py2h = (float) (Math.sin(ang) * (radius + 0.008F)); pz2h = 0F; }
                 else if (axis == 'X') { px2h = 0F; py2h = (float) (Math.cos(ang) * (radius + 0.008F)); pz2h = (float) (Math.sin(ang) * (radius + 0.008F)); }
                 else { px2h = (float) (Math.cos(ang) * (radius + 0.008F)); py2h = 0F; pz2h = (float) (Math.sin(ang) * (radius + 0.008F)); }
-                Draw.fillBoxTo(builder, stack, px1h, py1h, pz1h, px2h, py2h, pz2h, thickness * 0.6F, 1F, 1F, 1F, 0.9F);
+
+                // Perpendicular en el plano del anillo
+                float dx = px2h - px1h;
+                float dy = py2h - py1h;
+                float dz = pz2h - pz1h;
+                float len = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
+                if (len < 1e-6f) len = 1f;
+
+                float ux=0, uy=0, uz=0; // vector perpendicular dentro del plano
+                if (axis == 'Z') { ux = -dy/len; uy = dx/len; uz = 0; }
+                else if (axis == 'X') { ux = 0; uy = -dz/len; uz = dy/len; }
+                else { ux = dz/len; uy = 0; uz = -dx/len; }
+
+                float hw = thickness * 0.3F; // halo más fino
+                float x1a = px1h + ux * hw, y1a = py1h + uy * hw, z1a = pz1h + uz * hw;
+                float x1b = px1h - ux * hw, y1b = py1h - uy * hw, z1b = pz1h - uz * hw;
+                float x2a = px2h + ux * hw, y2a = py2h + uy * hw, z2a = pz2h + uz * hw;
+                float x2b = px2h - ux * hw, y2b = py2h - uy * hw, z2b = pz2h - uz * hw;
+
+                Draw.fillQuad(builder, stack, x1a,y1a,z1a, x1b,y1b,z1b, x2b,y2b,z2b, x2a,y2a,z2a, 1F,1F,1F,0.9F);
+
                 px1h = px2h; py1h = py2h; pz1h = pz2h;
             }
         }
@@ -851,7 +882,25 @@ public class BoneGizmoSystem
                 pz2 = (float) (Math.sin(ang) * radius);
             }
 
-            Draw.fillBoxTo(builder, stack, px1, py1, pz1, px2, py2, pz2, th, r, g, b, 1F);
+            // Dibujar el segmento como un rectángulo en el plano correspondiente
+            float dx = px2 - px1;
+            float dy = py2 - py1;
+            float dz = pz2 - pz1;
+            float len = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (len < 1e-6f) len = 1f;
+
+            float ux=0, uy=0, uz=0; // perpendicular dentro del plano
+            if (axis == 'Z') { ux = -dy/len; uy = dx/len; uz = 0; }
+            else if (axis == 'X') { ux = 0; uy = -dz/len; uz = dy/len; }
+            else { ux = dz/len; uy = 0; uz = -dx/len; }
+
+            float hw = th * 0.5F;
+            float x1a = px1 + ux * hw, y1a = py1 + uy * hw, z1a = pz1 + uz * hw;
+            float x1b = px1 - ux * hw, y1b = py1 - uy * hw, z1b = pz1 - uz * hw;
+            float x2a = px2 + ux * hw, y2a = py2 + uy * hw, z2a = pz2 + uz * hw;
+            float x2b = px2 - ux * hw, y2b = py2 - uy * hw, z2b = pz2 - uz * hw;
+
+            Draw.fillQuad(builder, stack, x1a,y1a,z1a, x1b,y1b,z1b, x2b,y2b,z2b, x2a,y2a,z2a, r,g,b,1F);
             px1 = px2; py1 = py2; pz1 = pz2;
         }
     }
@@ -876,6 +925,86 @@ public class BoneGizmoSystem
         {
             Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, +headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, a);
             Draw.fillBoxTo(builder, stack, 0, 0, baseLen, 0, -headWidth / 2F, baseLen - headLen, thickness + 0.004F, r, g, b, a);
+        }
+    }
+
+    /**
+     * Cono 3D orientado a lo largo de un eje positivo.
+     * baseLen: posición de la punta; headLen: altura del cono; radius: radio de la base.
+     */
+    private void drawCone3D(BufferBuilder builder, MatrixStack stack, char axis, float baseLen, float headLen, float radius, float r, float g, float b, float a)
+    {
+        Matrix4f mat = stack.peek().getPositionMatrix();
+        int segments = 20;
+
+        float ax, ay, az; // ápice
+        float bx, by, bz; // centro de la base
+
+        if (axis == 'X')
+        {
+            ax = baseLen; ay = 0F; az = 0F;
+            bx = baseLen - headLen; by = 0F; bz = 0F;
+        }
+        else if (axis == 'Y')
+        {
+            ax = 0F; ay = baseLen; az = 0F;
+            bx = 0F; by = baseLen - headLen; bz = 0F;
+        }
+        else // 'Z'
+        {
+            ax = 0F; ay = 0F; az = baseLen;
+            bx = 0F; by = 0F; bz = baseLen - headLen;
+        }
+
+        for (int i = 0; i < segments; i++)
+        {
+            double a1 = (Math.PI * 2.0) * (double) i / (double) segments;
+            double a2 = (Math.PI * 2.0) * (double) (i + 1) / (double) segments;
+
+            float x1, y1, z1;
+            float x2, y2, z2;
+
+            if (axis == 'X')
+            {
+                x1 = bx;
+                y1 = (float) (Math.cos(a1) * radius);
+                z1 = (float) (Math.sin(a1) * radius);
+
+                x2 = bx;
+                y2 = (float) (Math.cos(a2) * radius);
+                z2 = (float) (Math.sin(a2) * radius);
+            }
+            else if (axis == 'Y')
+            {
+                x1 = (float) (Math.cos(a1) * radius);
+                y1 = by;
+                z1 = (float) (Math.sin(a1) * radius);
+
+                x2 = (float) (Math.cos(a2) * radius);
+                y2 = by;
+                z2 = (float) (Math.sin(a2) * radius);
+            }
+            else // 'Z'
+            {
+                x1 = (float) (Math.cos(a1) * radius);
+                y1 = (float) (Math.sin(a1) * radius);
+                z1 = bz;
+
+                x2 = (float) (Math.cos(a2) * radius);
+                y2 = (float) (Math.sin(a2) * radius);
+                z2 = bz;
+            }
+
+            // Cara lateral: ápice -> p1 -> p2
+            builder.vertex(mat, ax, ay, az).color(r, g, b, a).next();
+            builder.vertex(mat, x1, y1, z1).color(r, g, b, a).next();
+            builder.vertex(mat, x2, y2, z2).color(r, g, b, a).next();
+
+            // Disco de base (opcional, ligeramente más transparente)
+            float aa = Math.max(0F, a - 0.2F);
+            builder.vertex(mat, bx, by, bz).color(r, g, b, aa).next();
+            builder.vertex(mat, x2, y2, z2).color(r, g, b, aa).next();
+            builder.vertex(mat, x1, y1, z1).color(r, g, b, aa).next();
         }
     }
 
@@ -1170,7 +1299,7 @@ public class BoneGizmoSystem
         }
         else if (this.mode == Mode.ROTATE)
         {
-            /* Esferas lineales: tres anillos concéntricos alrededor del pivote */
+            /* Restaurar: tres anillos concéntricos alrededor del pivote (sin líneas radiales) */
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
             int zColor = (Colors.A100 | Colors.BLUE);
@@ -1180,8 +1309,9 @@ public class BoneGizmoSystem
             drawRing(context, cx, cy, this.ringRZ, thickness, zColor);
         }
 
-        /* Centro del pivote */
-        context.batcher.box(cx - 3, cy - 3, cx + 3, cy + 3, Colors.A50 | Colors.WHITE);
+        /* Centro del pivote: dibujar un cuadrado más visible */
+        int half = 5; // tamaño total 10px
+        context.batcher.box(cx - half, cy - half, cx + half, cy + half, Colors.A100 | Colors.WHITE);
 
         /* Consejos */
         String tip = switch (this.mode)
