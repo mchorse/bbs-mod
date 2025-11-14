@@ -20,7 +20,7 @@ public class AudioClientClip extends AudioClip
 
     public static Map<Link, Float> getPlayback(ClipContext context)
     {
-        return (Map<Link, Float>) context.clipData.computeIfAbsent("audio", (v) -> new ConcurrentHashMap<>());
+        return context.clipData.get("audio", ConcurrentHashMap::new);
     }
 
     public static void manageSounds(ClipContext context)

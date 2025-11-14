@@ -21,16 +21,7 @@ public class CurveClip extends CameraClip
 
     public static Map<String, Double> getValues(ClipContext context)
     {
-        if (context.clipData.containsKey("curve_data"))
-        {
-            return (Map<String, Double>) context.clipData.get("curve_data");
-        }
-
-        Map<String, Double> data = new HashMap<>();
-
-        context.clipData.put("curve_data", data);
-
-        return data;
+        return context.clipData.get("curve_data", HashMap::new);
     }
 
     public CurveClip()
