@@ -392,7 +392,7 @@ public class BBSRendering
 
         BBSModClient.getFilms().renderHud(batcher2D, tickDelta);
 
-        if (videoRecorder.isRecording() && BBSSettings.recordingOverlays.get())
+        if (videoRecorder.isRecording() && BBSSettings.recordingOverlays.get() && UIScreen.getCurrentMenu() == null)
         {
             int count = videoRecorder.getCounter();
             String label = UIKeys.FILM_VIDEO_RECORDING.format(
