@@ -1091,15 +1091,10 @@ public class BoneGizmoSystem
             else if (c == 'X') { radial = (float) Math.sqrt(iy * iy + iz * iz); }
             else { radial = (float) Math.sqrt(ix * ix + iz * iz); }
 
-            // limitar a arco (para coincidir con huecos): calcular ángulo y filtrar
-            float angDeg;
-            if (c == 'Z') { angDeg = (float) Math.toDegrees(Math.atan2(iy, ix)); angDeg = normalizeDeg(angDeg); }
-            else if (c == 'X') { angDeg = (float) Math.toDegrees(Math.atan2(iz, iy)); angDeg = normalizeDeg(angDeg); }
-            else { angDeg = (float) Math.toDegrees(Math.atan2(iz, ix)); angDeg = normalizeDeg(angDeg); }
-
-            float sweep = 260F;
-            float off = (c == 'Z') ? -40F : (c == 'X') ? 20F : 140F;
-            if (!angleInArc(angDeg, off, sweep)) return null;
+            // cobertura completa de 360°: sin restricción por arco
+            // mantenemos el cálculo del ángulo por si se necesita en el futuro
+            // pero no filtramos por sectores; los anillos son completos
+            // float angDeg = ... (no usado)
 
             if (radial >= (radius - band) && radial <= (radius + band))
             {

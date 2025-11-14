@@ -92,21 +92,25 @@ public class UIPickableFormRenderer extends UIFormRenderer
     @Override
     public boolean subMouseClicked(UIContext context)
     {
-        if (this.formEditor.clickViewport(context, this.stencil))
-        {
-            return true;
-        }
-
-        /* Si el usuario hace click (izq o der) sobre el gizmo, evitamos que el
-         * renderer de modelo empiece a arrastrar la cámara. */
+        /* Dar prioridad al gizmo: si el cursor está sobre un handle del gizmo,
+         * consumimos el clic para evitar seleccionar otro hueso o arrastrar la cámara. */
         if (
             BBSSettings.modelBlockGizmosEnabled.get() &&
             this.area.isInside(context) &&
-            (context.mouseButton == 0 || context.mouseButton == 2) &&
             BoneGizmoSystem.get().isHoveringHandle()
         )
         {
-            return true; /* Consumimos el evento */
+            /* Consumir clic izquierdo, derecho y botón medio */
+            if (context.mouseButton == 0 || context.mouseButton == 1 || context.mouseButton == 2)
+            {
+                return true;
+            }
+        }
+
+        /* Si no está sobre el gizmo, permitimos el pick de huesos en el viewport */
+        if (this.formEditor.clickViewport(context, this.stencil))
+        {
+            return true;
         }
 
         return super.subMouseClicked(context);
