@@ -660,7 +660,8 @@ public class BoneGizmoSystem
             // Resultado: X=rojo, Y=verde, Z=azul
             Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z -> azul
+            // Z -> azul (usar caja alineada para evitar inversión/offset)
+            Draw.fillBox(builder, stack, -thickness / 2F, -thickness / 2F, 0F, thickness / 2F, thickness / 2F, length + connectFudge, 0F, 0F, 1F, 1F);
         }
 
         // Manejadores en los extremos según el modo
@@ -686,7 +687,8 @@ public class BoneGizmoSystem
             // Barras por eje (X rojo, Y verde, Z azul) hasta base del cono
             Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F); // X -> rojo
             Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F); // Y -> verde
-            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, txZ, 0F, 0F, 1F, 1F); // Z -> azul
+            // Z -> azul (usar caja alineada para evitar inversión del eje)
+            Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, barEnd, 0F, 0F, 1F, 1F);
 
             // Conos en las puntas
             drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 0F, 0F, 1F);
@@ -709,7 +711,7 @@ public class BoneGizmoSystem
             }
             if (hz)
             {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, barEnd, thickness * 2F, 1F, 1F, 1F, 0.25F);
+                Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
         }
@@ -743,6 +745,8 @@ public class BoneGizmoSystem
                 stack.translate(length, 0, 0);
                 Draw.fillBox(builder, stack, -(slabThick + 0.006F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
+                // Resaltar también la barra X
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
             }
             if (hy)
             {
@@ -750,6 +754,8 @@ public class BoneGizmoSystem
                 stack.translate(0, length, 0);
                 Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(slabThick + 0.006F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
+                // Resaltar también la barra Y
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
             }
             if (hz)
             {
@@ -757,6 +763,8 @@ public class BoneGizmoSystem
                 stack.translate(0, 0, length);
                 Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
+                // Resaltar también la barra Z (alineada)
+                Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, length + connectFudge, 1F, 1F, 1F, 0.25F);
             }
 
             // Cubo central (referencia de pivote)
