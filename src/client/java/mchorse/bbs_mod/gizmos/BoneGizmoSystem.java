@@ -855,106 +855,182 @@ public class BoneGizmoSystem
      */
     private void drawRingArc3D(BufferBuilder builder, MatrixStack stack, char axis, float radius, float thickness, float r, float g, float b, float startDeg, float sweepDeg, boolean highlight)
     {
-        int segments = 96;
-        double step = Math.toRadians(sweepDeg / segments);
+        // Renderizar un toro (tubo) alrededor del pivote en el plano correspondiente.
+        // radius: radio mayor del anillo, thickness: radio del tubo.
+        int segU = 96;           // segmentos a lo largo del anillo
+        int segV = 24;           // segmentos alrededor de la sección del tubo
+        double u0 = Math.toRadians(startDeg);
+        double uStep = Math.toRadians(sweepDeg / (double) segU);
+        double vStep = Math.PI * 2.0 / (double) segV;
 
-        float th = highlight ? thickness * 1.8F : thickness;
+        float tubeR = thickness; // usar grosor como radio del tubo
+        Matrix4f mat = stack.peek().getPositionMatrix();
 
-        // Halo suave cuando está en hover (usando tira de quads en el plano)
+        // Dibujar superficie del toro mediante quads triangulados
+        for (int iu = 0; iu < segU; iu++)
+        {
+            double u1 = u0 + uStep * iu;
+            double u2 = u0 + uStep * (iu + 1);
+
+            for (int iv = 0; iv < segV; iv++)
+            {
+                double v1 = vStep * iv;
+                double v2 = vStep * (iv + 1);
+
+                float x11, y11, z11; // (u1, v1)
+                float x12, y12, z12; // (u1, v2)
+                float x21, y21, z21; // (u2, v1)
+                float x22, y22, z22; // (u2, v2)
+
+                if (axis == 'Z')
+                {
+                    x11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u1));
+                    y11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u1));
+                    z11 = (float) (tubeR * Math.sin(v1));
+
+                    x12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u1));
+                    y12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u1));
+                    z12 = (float) (tubeR * Math.sin(v2));
+
+                    x21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u2));
+                    y21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u2));
+                    z21 = (float) (tubeR * Math.sin(v1));
+
+                    x22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u2));
+                    y22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u2));
+                    z22 = (float) (tubeR * Math.sin(v2));
+                }
+                else if (axis == 'X')
+                {
+                    y11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u1));
+                    z11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u1));
+                    x11 = (float) (tubeR * Math.sin(v1));
+
+                    y12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u1));
+                    z12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u1));
+                    x12 = (float) (tubeR * Math.sin(v2));
+
+                    y21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u2));
+                    z21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u2));
+                    x21 = (float) (tubeR * Math.sin(v1));
+
+                    y22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u2));
+                    z22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u2));
+                    x22 = (float) (tubeR * Math.sin(v2));
+                }
+                else // 'Y'
+                {
+                    x11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u1));
+                    z11 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u1));
+                    y11 = (float) (tubeR * Math.sin(v1));
+
+                    x12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u1));
+                    z12 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u1));
+                    y12 = (float) (tubeR * Math.sin(v2));
+
+                    x21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.cos(u2));
+                    z21 = (float) ((radius + tubeR * Math.cos(v1)) * Math.sin(u2));
+                    y21 = (float) (tubeR * Math.sin(v1));
+
+                    x22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.cos(u2));
+                    z22 = (float) ((radius + tubeR * Math.cos(v2)) * Math.sin(u2));
+                    y22 = (float) (tubeR * Math.sin(v2));
+                }
+
+                // Triángulos del quad
+                builder.vertex(mat, x11, y11, z11).color(r, g, b, 1F).next();
+                builder.vertex(mat, x12, y12, z12).color(r, g, b, 1F).next();
+                builder.vertex(mat, x22, y22, z22).color(r, g, b, 1F).next();
+
+                builder.vertex(mat, x11, y11, z11).color(r, g, b, 1F).next();
+                builder.vertex(mat, x22, y22, z22).color(r, g, b, 1F).next();
+                builder.vertex(mat, x21, y21, z21).color(r, g, b, 1F).next();
+            }
+        }
+
+        // Halo suave opcional cuando está en hover: un toro blanco más fino
         if (highlight)
         {
-            double angH0 = Math.toRadians(startDeg);
-            float px1h = 0, py1h = 0, pz1h = 0;
-            switch (axis)
+            float hr = tubeR * 0.6F;
+            float ha = 0.35F;
+            for (int iu = 0; iu < segU; iu++)
             {
-                case 'Z': px1h = (float) (Math.cos(angH0) * (radius + 0.008F)); py1h = (float) (Math.sin(angH0) * (radius + 0.008F)); pz1h = 0F; break;
-                case 'X': px1h = 0F; py1h = (float) (Math.cos(angH0) * (radius + 0.008F)); pz1h = (float) (Math.sin(angH0) * (radius + 0.008F)); break;
-                case 'Y': px1h = (float) (Math.cos(angH0) * (radius + 0.008F)); py1h = 0F; pz1h = (float) (Math.sin(angH0) * (radius + 0.008F)); break;
+                double u1 = u0 + uStep * iu;
+                double u2 = u0 + uStep * (iu + 1);
+                for (int iv = 0; iv < segV; iv++)
+                {
+                    double v1 = vStep * iv;
+                    double v2 = vStep * (iv + 1);
+
+                    float x11, y11, z11;
+                    float x12, y12, z12;
+                    float x21, y21, z21;
+                    float x22, y22, z22;
+
+                    if (axis == 'Z')
+                    {
+                        x11 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u1));
+                        y11 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u1));
+                        z11 = (float) (hr * Math.sin(v1));
+
+                        x12 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u1));
+                        y12 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u1));
+                        z12 = (float) (hr * Math.sin(v2));
+
+                        x21 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u2));
+                        y21 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u2));
+                        z21 = (float) (hr * Math.sin(v1));
+
+                        x22 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u2));
+                        y22 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u2));
+                        z22 = (float) (hr * Math.sin(v2));
+                    }
+                    else if (axis == 'X')
+                    {
+                        y11 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u1));
+                        z11 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u1));
+                        x11 = (float) (hr * Math.sin(v1));
+
+                        y12 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u1));
+                        z12 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u1));
+                        x12 = (float) (hr * Math.sin(v2));
+
+                        y21 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u2));
+                        z21 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u2));
+                        x21 = (float) (hr * Math.sin(v1));
+
+                        y22 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u2));
+                        z22 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u2));
+                        x22 = (float) (hr * Math.sin(v2));
+                    }
+                    else // 'Y'
+                    {
+                        x11 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u1));
+                        z11 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u1));
+                        y11 = (float) (hr * Math.sin(v1));
+
+                        x12 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u1));
+                        z12 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u1));
+                        y12 = (float) (hr * Math.sin(v2));
+
+                        x21 = (float) ((radius + hr * Math.cos(v1)) * Math.cos(u2));
+                        z21 = (float) ((radius + hr * Math.cos(v1)) * Math.sin(u2));
+                        y21 = (float) (hr * Math.sin(v1));
+
+                        x22 = (float) ((radius + hr * Math.cos(v2)) * Math.cos(u2));
+                        z22 = (float) ((radius + hr * Math.cos(v2)) * Math.sin(u2));
+                        y22 = (float) (hr * Math.sin(v2));
+                    }
+
+                    builder.vertex(mat, x11, y11, z11).color(1F, 1F, 1F, ha).next();
+                    builder.vertex(mat, x12, y12, z12).color(1F, 1F, 1F, ha).next();
+                    builder.vertex(mat, x22, y22, z22).color(1F, 1F, 1F, ha).next();
+
+                    builder.vertex(mat, x11, y11, z11).color(1F, 1F, 1F, ha).next();
+                    builder.vertex(mat, x22, y22, z22).color(1F, 1F, 1F, ha).next();
+                    builder.vertex(mat, x21, y21, z21).color(1F, 1F, 1F, ha).next();
+                }
             }
-            for (int i = 1; i <= segments; i++)
-            {
-                double ang = angH0 + step * i;
-                float px2h, py2h, pz2h;
-                if (axis == 'Z') { px2h = (float) (Math.cos(ang) * (radius + 0.008F)); py2h = (float) (Math.sin(ang) * (radius + 0.008F)); pz2h = 0F; }
-                else if (axis == 'X') { px2h = 0F; py2h = (float) (Math.cos(ang) * (radius + 0.008F)); pz2h = (float) (Math.sin(ang) * (radius + 0.008F)); }
-                else { px2h = (float) (Math.cos(ang) * (radius + 0.008F)); py2h = 0F; pz2h = (float) (Math.sin(ang) * (radius + 0.008F)); }
-
-                // Perpendicular en el plano del anillo
-                float dx = px2h - px1h;
-                float dy = py2h - py1h;
-                float dz = pz2h - pz1h;
-                float len = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
-                if (len < 1e-6f) len = 1f;
-
-                float ux=0, uy=0, uz=0; // vector perpendicular dentro del plano
-                if (axis == 'Z') { ux = -dy/len; uy = dx/len; uz = 0; }
-                else if (axis == 'X') { ux = 0; uy = -dz/len; uz = dy/len; }
-                else { ux = dz/len; uy = 0; uz = -dx/len; }
-
-                float hw = thickness * 0.3F; // halo más fino
-                float x1a = px1h + ux * hw, y1a = py1h + uy * hw, z1a = pz1h + uz * hw;
-                float x1b = px1h - ux * hw, y1b = py1h - uy * hw, z1b = pz1h - uz * hw;
-                float x2a = px2h + ux * hw, y2a = py2h + uy * hw, z2a = pz2h + uz * hw;
-                float x2b = px2h - ux * hw, y2b = py2h - uy * hw, z2b = pz2h - uz * hw;
-
-                Draw.fillQuad(builder, stack, x1a,y1a,z1a, x1b,y1b,z1b, x2b,y2b,z2b, x2a,y2a,z2a, 1F,1F,1F,0.9F);
-
-                px1h = px2h; py1h = py2h; pz1h = pz2h;
-            }
-        }
-
-        double ang0 = Math.toRadians(startDeg);
-        float px1 = 0, py1 = 0, pz1 = 0;
-        switch (axis)
-        {
-            case 'Z': px1 = (float) (Math.cos(ang0) * radius); py1 = (float) (Math.sin(ang0) * radius); pz1 = 0F; break;
-            case 'X': px1 = 0F; py1 = (float) (Math.cos(ang0) * radius); pz1 = (float) (Math.sin(ang0) * radius); break;
-            case 'Y': px1 = (float) (Math.cos(ang0) * radius); py1 = 0F; pz1 = (float) (Math.sin(ang0) * radius); break;
-        }
-
-        for (int i = 1; i <= segments; i++)
-        {
-            double ang = ang0 + step * i;
-            float px2, py2, pz2;
-            if (axis == 'Z')
-            {
-                px2 = (float) (Math.cos(ang) * radius);
-                py2 = (float) (Math.sin(ang) * radius);
-                pz2 = 0F;
-            }
-            else if (axis == 'X')
-            {
-                px2 = 0F;
-                py2 = (float) (Math.cos(ang) * radius);
-                pz2 = (float) (Math.sin(ang) * radius);
-            }
-            else // 'Y'
-            {
-                px2 = (float) (Math.cos(ang) * radius);
-                py2 = 0F;
-                pz2 = (float) (Math.sin(ang) * radius);
-            }
-
-            // Dibujar el segmento como un rectángulo en el plano correspondiente
-            float dx = px2 - px1;
-            float dy = py2 - py1;
-            float dz = pz2 - pz1;
-            float len = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
-            if (len < 1e-6f) len = 1f;
-
-            float ux=0, uy=0, uz=0; // perpendicular dentro del plano
-            if (axis == 'Z') { ux = -dy/len; uy = dx/len; uz = 0; }
-            else if (axis == 'X') { ux = 0; uy = -dz/len; uz = dy/len; }
-            else { ux = dz/len; uy = 0; uz = -dx/len; }
-
-            float hw = th * 0.5F;
-            float x1a = px1 + ux * hw, y1a = py1 + uy * hw, z1a = pz1 + uz * hw;
-            float x1b = px1 - ux * hw, y1b = py1 - uy * hw, z1b = pz1 - uz * hw;
-            float x2a = px2 + ux * hw, y2a = py2 + uy * hw, z2a = pz2 + uz * hw;
-            float x2b = px2 - ux * hw, y2b = py2 - uy * hw, z2b = pz2 - uz * hw;
-
-            Draw.fillQuad(builder, stack, x1a,y1a,z1a, x1b,y1b,z1b, x2b,y2b,z2b, x2a,y2a,z2a, r,g,b,1F);
-            px1 = px2; py1 = py2; pz1 = pz2;
         }
     }
 
@@ -1124,8 +1200,8 @@ public class BoneGizmoSystem
     private Axis detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
     {
         float radius = 0.22F;
-        float thickness = 0.015F;
-        float band = thickness * 0.75F;
+        float thickness = 0.02F;        // igualar grosor del tubo de render
+        float band = thickness * 0.95F; // tolerancia radial cercana al radio del tubo
 
         class Hit { Axis a; float t; }
         Hit hitBest = null;
