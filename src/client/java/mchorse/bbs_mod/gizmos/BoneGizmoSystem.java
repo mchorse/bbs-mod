@@ -639,6 +639,7 @@ public class BoneGizmoSystem
 
         float length = 0.25F;     // longitud de cada eje
         float thickness = 0.01F;  // grosor de las barras
+        float slabThick = 0.018F; // grosor de las losas de escala (a lo largo del eje)
 
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
         // Usamos el tamaño del cubo del extremo + el grosor de la barra para
@@ -647,14 +648,20 @@ public class BoneGizmoSystem
         float cubeBig = 0.045F;
         // Ajuste por modo: en TRANSLATE conectamos a la base de la flecha;
         // en SCALE nos internamos en el cubo para evitar gaps visuales.
-        float connectFudge = (this.mode == Mode.TRANSLATE) ? 0.03F : (cubeBig + thickness);
+        float connectFudge = (this.mode == Mode.TRANSLATE)
+            ? 0.03F
+            : (this.mode == Mode.SCALE ? slabThick : (cubeBig + thickness));
 
-        // Barras por eje (transformación de color: rojo→verde, verde→azul, azul→rojo)
-        // Resultado: X=rojo, Y=verde, Z=azul
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
-        // Z: mantener la barra donde estaba (lado original positivo)
-        Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z -> azul
+        // Barras base por eje SOLO para ESCALAR
+        // En TRASLADAR dibujamos barras específicas que llegan a los conos,
+        // para evitar que sobrepasen.
+        if (this.mode == Mode.SCALE)
+        {
+            // Resultado: X=rojo, Y=verde, Z=azul
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness, 1F, 0F, 0F, 1F); // X -> rojo
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness, 0F, 1F, 0F, 1F); // Y -> verde
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness, 0F, 0F, 1F, 1F); // Z -> azul
+        }
 
         // Manejadores en los extremos según el modo
 
@@ -666,7 +673,7 @@ public class BoneGizmoSystem
             float headRadius = headWidth * 0.5F;
 
             // Las barras deben llegar hasta la base del cono
-            float barEnd = length - headLen + thickness * 0.5F;
+            float barEnd = length - headLen - 0.002F; // pequeño margen para no atravesar el cono
 
             boolean hx = (this.hoveredAxis == Axis.X);
             boolean hy = (this.hoveredAxis == Axis.Y);
@@ -685,6 +692,9 @@ public class BoneGizmoSystem
             drawCone3D(builder, stack, 'X', length, headLen, headRadius, 1F, 0F, 0F, 1F);
             drawCone3D(builder, stack, 'Y', length, headLen, headRadius, 0F, 1F, 0F, 1F);
             drawCone3D(builder, stack, 'Z', length, headLen, headRadius, 0F, 0F, 1F, 1F);
+
+            // Cubo de pivote en el origen como referencia
+            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
             // Halo suave en el eje hovered
             if (hx)
@@ -708,46 +718,44 @@ public class BoneGizmoSystem
             boolean hx = (this.hoveredAxis == Axis.X);
             boolean hy = (this.hoveredAxis == Axis.Y);
             boolean hz = (this.hoveredAxis == Axis.Z);
+            // Barras base ya están dibujadas arriba para SCALE.
+            // Losas de extremo en cada eje (planos perpendiculares al eje)
+            // X (rojo)
+            stack.push();
+            stack.translate(length, 0F, 0F);
+            Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 1F);
+            stack.pop();
+            // Y (verde)
+            stack.push();
+            stack.translate(0F, length, 0F);
+            Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 1F);
+            stack.pop();
+            // Z (azul)
+            stack.push();
+            stack.translate(0F, 0F, length);
+            Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 1F);
+            stack.pop();
 
-            // Refuerzo visual: si está hovered, engrosar la barra con un overlay
-            if (hx)
-            {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, length + connectFudge, 0, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
-            }
-            if (hy)
-            {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, length + connectFudge, 0, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
-            }
-            if (hz)
-            {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, 0, length + connectFudge, thickness * 1.6F, 1F, 1F, 1F, 0.25F);
-            }
-
-            // Cubos de extremo en cada eje
-            drawEndCube(builder, stack, length, 0, 0, cubeBig, 1F, 0F, 0F); // X rojo
-            drawEndCube(builder, stack, 0, length, 0, cubeBig, 0F, 1F, 0F); // Y verde
-            drawEndCube(builder, stack, 0, 0, length, cubeBig, 0F, 0F, 1F); // Z azul
-
-            // Halo blanco suave alrededor del cubo hovered
+            // Halo suave alrededor de la losa hovered (ligeramente más grande)
             if (hx)
             {
                 stack.push();
                 stack.translate(length, 0, 0);
-                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                Draw.fillBox(builder, stack, -(slabThick + 0.006F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
             }
             if (hy)
             {
                 stack.push();
                 stack.translate(0, length, 0);
-                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(slabThick + 0.006F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
             }
             if (hz)
             {
                 stack.push();
                 stack.translate(0, 0, length);
-                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.35F);
+                Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), 1F, 1F, 1F, 0.30F);
                 stack.pop();
             }
 
