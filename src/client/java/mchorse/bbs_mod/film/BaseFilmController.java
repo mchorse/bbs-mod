@@ -16,6 +16,8 @@ import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.mixin.client.ClientPlayerEntityAccessor;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
@@ -159,6 +161,10 @@ public abstract class BaseFilmController
                 stack.push();
                 MatrixStackUtils.multiply(stack, matrix);
                 Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+                if (BBSSettings.modelBlockGizmosEnabled.get())
+                {
+                    BoneGizmoSystem.get().render3D(stack);
+                }
                 RenderSystem.enableDepthTest();
                 stack.pop();
             }

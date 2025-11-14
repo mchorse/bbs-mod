@@ -38,6 +38,8 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -67,12 +69,15 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -1010,6 +1015,51 @@ public class UIFilmController extends UIElement
         }
 
         this.renderPickingPreview(context, area);
+
+        /* Update and render gizmo overlay based on current bone selection */
+        if (!this.panel.isFlying() && BBSSettings.modelBlockGizmosEnabled.get())
+        {
+            UIPropTransform activeTransform = null;
+
+            UIKeyframeEditor keyframeEditor = this.panel.replayEditor != null ? this.panel.replayEditor.keyframeEditor : null;
+
+            if (keyframeEditor != null && keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+            {
+                activeTransform = poseFactory.poseEditor.transform;
+            }
+
+            Pair<String, Boolean> boneSel = this.getBone();
+
+            if (activeTransform != null && boneSel != null)
+            {
+                IEntity entity = this.getCurrentEntity();
+
+                if (entity != null && entity.getForm() != null && this.panel.lastProjection != null && this.panel.lastView != null)
+                {
+                    float transition = this.worldRenderContext != null ? this.worldRenderContext.tickDelta() : 0F;
+
+                    /* Compute entity's target matrix in world space */
+                    Vector3d cameraPos = this.panel.getCamera().position;
+                    Matrix4f defaultMatrix = BaseFilmController.getMatrixForRenderWithRotation(entity, cameraPos.x, cameraPos.y, cameraPos.z, transition);
+                    Pair<Matrix4f, Float> total = BaseFilmController.getTotalMatrix(this.getEntities(), entity.getForm().anchor.get(), defaultMatrix, cameraPos.x, cameraPos.y, cameraPos.z, transition, 0);
+                    Matrix4f targetMatrix = total != null && total.a != null ? total.a : defaultMatrix;
+
+                    /* Collect bone matrices; when local is true, pass null to collect all */
+                    Form root = entity.getForm();
+                    Map<String, Matrix4f> matrices = FormUtilsClient.getRenderer(root).collectMatrices(entity, boneSel.b ? null : boneSel.a, transition);
+                    Matrix4f boneMatrix = matrices != null ? matrices.get(boneSel.a) : null;
+
+                    if (boneMatrix != null)
+                    {
+                        Matrix4f originRaw = new Matrix4f(targetMatrix).mul(boneMatrix);
+                        Matrix4f origin = MatrixStackUtils.stripScale(originRaw);
+
+                        BoneGizmoSystem.get().update(context, area, origin, this.panel.lastProjection, this.panel.lastView, activeTransform);
+                        BoneGizmoSystem.get().renderOverlay(context.render, area);
+                    }
+                }
+            }
+        }
 
         this.orbit.handleOrbiting(context);
     }
