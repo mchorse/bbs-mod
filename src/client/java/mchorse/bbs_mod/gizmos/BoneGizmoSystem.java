@@ -1049,76 +1049,101 @@ public class BoneGizmoSystem
         }
         else if (this.mode == Mode.UNIVERSAL)
         {
-            // Render combinado: barras/conos de TRANSLATE + losas de SCALE + anillos ROTATE
-            boolean hx = (this.hoveredAxis == Axis.X);
-            boolean hy = (this.hoveredAxis == Axis.Y);
-            boolean hz = (this.hoveredAxis == Axis.Z);
+            // Render combinado: barras/conos (TRANSLATE), losas (SCALE) y anillos (ROTATE)
+            Mode usingSub = this.dragging ? (this.activeSubMode != null ? this.activeSubMode : Mode.TRANSLATE) : null;
+
+            boolean hx = this.dragging ? (this.activeAxis == Axis.X) : (this.hoveredAxis == Axis.X);
+            boolean hy = this.dragging ? (this.activeAxis == Axis.Y) : (this.hoveredAxis == Axis.Y);
+            boolean hz = this.dragging ? (this.activeAxis == Axis.Z) : (this.hoveredAxis == Axis.Z);
 
             float lengthBar = 0.25F + 0.03F;
             float headLen = 0.08F;
             float headRadius = 0.03F;
-            // Usar thickness, outlinePad, slabThick, cubeBig y showX/showY/showZ
-            // definidos al inicio del método
 
             float txX = hx ? thickness * 1.5F : thickness;
             float txY = hy ? thickness * 1.5F : thickness;
             float txZ = hz ? thickness * 1.5F : thickness;
 
-            // Barras + conos (translate)
-            if (showX)
+            // Barras + conos (TRANSLATE) — ocultar si se usa otro submodo
+            if (usingSub == null || usingSub == Mode.TRANSLATE)
             {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F);
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX, 1F, 0F, 0F, 1F);
-                drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
-            }
-            if (showY)
-            {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY + outlinePad, 0F, 0F, 0F, 1F);
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY, 0F, 1F, 0F, 1F);
-                drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
-            }
-            if (showZ)
-            {
-                Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 0F, 1F);
-                Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 1F, 1F);
-                drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
-            }
-
-            // Losas grandes en extremos (scale)
-            if (showX)
-            {
-                stack.push(); stack.translate(0.25F, 0F, 0F);
-                Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
-                Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 0.75F);
-                stack.pop();
-            }
-            if (showY)
-            {
-                stack.push(); stack.translate(0F, 0.25F, 0F);
-                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
-                Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 0.75F);
-                stack.pop();
-            }
-            if (showZ)
-            {
-                stack.push(); stack.translate(0F, 0F, 0.25F);
-                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
-                Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 0.75F);
-                stack.pop();
+                if (showX)
+                {
+                    Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F);
+                    Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX, 1F, 0F, 0F, 1F);
+                    drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
+                }
+                if (showY)
+                {
+                    Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY + outlinePad, 0F, 0F, 0F, 1F);
+                    Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY, 0F, 1F, 0F, 1F);
+                    drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
+                }
+                if (showZ)
+                {
+                    Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 0F, 1F);
+                    Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 1F, 1F);
+                    drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
+                }
             }
 
-            // Anillos de rotación
-            float radius = 0.22F; float thicknessRing = 0.01F; float sweep = 360F;
-            RenderSystem.disableCull();
-            drawEndCube(builder, stack, 0, 0, 0, 0.022F + outlinePad, 0F, 0F, 0F);
-            drawEndCube(builder, stack, 0, 0, 0, 0.022F, 1F, 1F, 1F);
-            drawRingArc3D(builder, stack, 'Z', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
-            drawRingArc3D(builder, stack, 'Z', radius, thicknessRing, 0F, 0F, 1F, 0F, sweep, hz);
-            drawRingArc3D(builder, stack, 'X', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
-            drawRingArc3D(builder, stack, 'X', radius, thicknessRing, 1F, 0F, 0F, 0F, sweep, hx);
-            drawRingArc3D(builder, stack, 'Y', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
-            drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, 0F, sweep, hy);
-            RenderSystem.enableCull();
+            // Losas grandes en extremos (SCALE)
+            if (usingSub == null || usingSub == Mode.SCALE)
+            {
+                // Separar las losas de la punta del cono para que exista espacio visible
+                float slabGap = 0.02F; // espacio entre la punta del cono y la losa
+                float slabOffX = lengthBar + slabGap;
+                float slabOffY = lengthBar + slabGap;
+                float slabOffZ = lengthBar + slabGap;
+
+                if (showX)
+                {
+                    stack.push(); stack.translate(slabOffX, 0F, 0F);
+                    Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                    Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 0.75F);
+                    // Halo/blanco suave cuando el eje X está seleccionado/hover
+                    if (hx)
+                    {
+                        Draw.fillBox(builder, stack, -(slabThick + 0.006F), -(cubeBig + 0.01F), -(cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
+                    }
+                    stack.pop();
+                }
+                if (showY)
+                {
+                    stack.push(); stack.translate(0F, slabOffY, 0F);
+                    Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                    Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 0.75F);
+                    if (hy)
+                    {
+                        Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(slabThick + 0.006F), -(cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), (cubeBig + 0.01F), 1F, 1F, 1F, 0.30F);
+                    }
+                    stack.pop();
+                }
+                if (showZ)
+                {
+                    stack.push(); stack.translate(0F, 0F, slabOffZ);
+                    Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
+                    Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 0.75F);
+                    if (hz)
+                    {
+                        Draw.fillBox(builder, stack, -(cubeBig + 0.01F), -(cubeBig + 0.01F), -(slabThick + 0.006F), (cubeBig + 0.01F), (cubeBig + 0.01F), (slabThick + 0.006F), 1F, 1F, 1F, 0.30F);
+                    }
+                    stack.pop();
+                }
+            }
+
+            // Anillos de rotación — iguales al gizmo de ROTATE
+            if (usingSub == null || usingSub == Mode.ROTATE)
+            {
+                float radius = 0.22F; float thicknessRing = 0.01F; float sweep = 360F;
+                RenderSystem.disableCull();
+                drawEndCube(builder, stack, 0, 0, 0, 0.022F + outlinePad, 0F, 0F, 0F);
+                drawEndCube(builder, stack, 0, 0, 0, 0.022F, 1F, 1F, 1F);
+                if (showZ) { drawRingArc3D(builder, stack, 'Z', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false); drawRingArc3D(builder, stack, 'Z', radius, thicknessRing, 0F, 0F, 1F, 0F, sweep, hz); }
+                if (showX) { drawRingArc3D(builder, stack, 'X', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false); drawRingArc3D(builder, stack, 'X', radius, thicknessRing, 1F, 0F, 0F, 0F, sweep, hx); }
+                if (showY) { drawRingArc3D(builder, stack, 'Y', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false); drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, 0F, sweep, hy); }
+                RenderSystem.enableCull();
+            }
 
             // Losas planas (UNIVERSAL): mismos offsets que TRANSLATE
             float offset = 0.08F; float planeHalf = 0.020F; float planeThick = 0.004F;
@@ -1931,40 +1956,55 @@ public class BoneGizmoSystem
         }
         else if (this.mode == Mode.UNIVERSAL)
         {
-            // Dibujar combinación: líneas con flecha, cubos en extremos y anillos
+            // Gizmo unificado: mostrar solo el submodo/axis activo durante uso
             boolean showX = !this.dragging || this.activeAxis == Axis.X;
             boolean showY = !this.dragging || this.activeAxis == Axis.Y;
             boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
+
+            Mode usingSub = this.dragging ? (this.activeSubMode != null ? this.activeSubMode : Mode.TRANSLATE) : null;
+
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
             int zColor = (Colors.A100 | Colors.BLUE);
-            boolean hx = (this.hoveredAxis == Axis.X);
-            boolean hy = (this.hoveredAxis == Axis.Y);
-            boolean hz = (this.hoveredAxis == Axis.Z);
+
+            // Durante uso, solo brilla el gizmo seleccionado
+            boolean hx = this.dragging ? (this.activeAxis == Axis.X) : (this.hoveredAxis == Axis.X);
+            boolean hy = this.dragging ? (this.activeAxis == Axis.Y) : (this.hoveredAxis == Axis.Y);
+            boolean hz = this.dragging ? (this.activeAxis == Axis.Z) : (this.hoveredAxis == Axis.Z);
+
             float txX = hx ? (thickness + 2F) : thickness;
             float txY = hy ? (thickness + 2F) : thickness;
             float txZ = hz ? (thickness + 2F) : thickness;
             int black = Colors.A100;
 
-            // Líneas + flechas
-            if (showX) { context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black); context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor); drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor); }
-            if (showY) { context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black); context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor); drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor); }
-            if (showZ) { context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black); context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor); drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor); }
+            // Líneas + flechas (TRANSLATE) — se ocultan si se usa otro submodo
+            if (usingSub == null || usingSub == Mode.TRANSLATE)
+            {
+                if (showX) { context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black); context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor); drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor); }
+                if (showY) { context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black); context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor); drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor); }
+                if (showZ) { context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black); context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor); drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor); }
+            }
 
-            // Cubos en extremos (scale)
-            if (showX) drawCubeHandle(context, this.endXx, this.endXy, xColor);
-            if (showY) drawCubeHandle(context, this.endYx, this.endYy, yColor);
-            if (showZ) drawCubeHandle(context, this.endZx, this.endZy, zColor);
+            // Cubos en extremos (SCALE)
+            if (usingSub == null || usingSub == Mode.SCALE)
+            {
+                if (showX) drawCubeHandle(context, this.endXx, this.endXy, xColor);
+                if (showY) drawCubeHandle(context, this.endYx, this.endYy, yColor);
+                if (showZ) drawCubeHandle(context, this.endZx, this.endZy, zColor);
+            }
 
-            // Anillos (rotate)
-            int xRing = (Colors.A100 | Colors.RED);
-            int yRing = (Colors.A100 | Colors.GREEN);
-            int zRing = (Colors.A100 | Colors.BLUE);
-            drawRing(context, cx, cy, this.ringRX, thickness, xRing);
-            drawRing(context, cx, cy, this.ringRY, thickness, yRing);
-            drawRing(context, cx, cy, this.ringRZ, thickness, zRing);
+            // Anillos (ROTATE) igual al gizmo de rotación
+            if (usingSub == null || usingSub == Mode.ROTATE)
+            {
+                int xRing = (Colors.A100 | Colors.RED);
+                int yRing = (Colors.A100 | Colors.GREEN);
+                int zRing = (Colors.A100 | Colors.BLUE);
+                if (showX) drawRing(context, cx, cy, this.ringRX, thickness, xRing);
+                if (showY) drawRing(context, cx, cy, this.ringRY, thickness, yRing);
+                if (showZ) drawRing(context, cx, cy, this.ringRZ, thickness, zRing);
+            }
 
-            // Controladores de plano (rombos/cubos) entre ejes con colores XYZ
+            // Controladores de plano entre ejes — solo mostrar el activo durante arrastre
             int[] cXY = planeCenterScreen(Plane.XY);
             int[] cZX = planeCenterScreen(Plane.ZX);
             int[] cYZ = planeCenterScreen(Plane.YZ);
@@ -1972,11 +2012,14 @@ public class BoneGizmoSystem
             int colXY = Colors.A100 | Colors.BLUE;
             int colZX = Colors.A100 | Colors.GREEN;
             int colYZ = Colors.A100 | Colors.RED;
-            context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, 0.5F));
-            context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, 0.5F));
-            context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, 0.5F));
+            boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
+            boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
+            boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
+            if (showPlaneXY) context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, 0.5F));
+            if (showPlaneZX) context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, 0.5F));
+            if (showPlaneYZ) context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, 0.5F));
 
-            // Halo blanco suave según hovered
+            // Halo blanco suave: solo el gizmo seleccionado cuando se usa
             int halo = Colors.A100 | Colors.WHITE;
             if (hx && showX) context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
             if (hy && showY) context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);

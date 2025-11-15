@@ -4,6 +4,7 @@ import mchorse.bbs_mod.data.IMapSerializable;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import org.joml.Vector4f;
+import java.util.Objects;
 
 /**
  * PivotSettings
@@ -40,5 +41,20 @@ public class PivotSettings implements IMapSerializable
         {
             this.pivot = DataStorageUtils.vector4fFromData(data.get("pivot").asList());
         }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof PivotSettings)) return false;
+        PivotSettings that = (PivotSettings) o;
+        return this.auto == that.auto && Objects.equals(this.pivot, that.pivot);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(this.auto, this.pivot);
     }
 }

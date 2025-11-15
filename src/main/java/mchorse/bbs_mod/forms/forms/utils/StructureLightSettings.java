@@ -2,6 +2,7 @@ package mchorse.bbs_mod.forms.forms.utils;
 
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
+import java.util.Objects;
 // Numeric parsing is handled via MapType helpers; no direct NumberType/NumericType import required
 
 /**
@@ -45,5 +46,20 @@ public class StructureLightSettings
         map.putBool("enabled", this.enabled);
         map.putInt("intensity", this.intensity);
         return map;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof StructureLightSettings)) return false;
+        StructureLightSettings that = (StructureLightSettings) o;
+        return this.enabled == that.enabled && this.intensity == that.intensity;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(this.enabled, this.intensity);
     }
 }
