@@ -183,7 +183,18 @@ public class UIPickableFormRenderer extends UIFormRenderer
             this.stencil.apply();
             FormUtilsClient.render(this.form, formContext.stencilMap(this.stencilMap));
 
-            this.stencil.pickGUI(context, this.area);
+            /* Evitar el picking de huesos cuando el mouse está sobre un gizmo.
+             * Esto permite manipular el gizmo sin seleccionar otro hueso por accidente. */
+            boolean blockPicking = BBSSettings.modelBlockGizmosEnabled.get() && BoneGizmoSystem.get().isHoveringHandle();
+
+            if (!blockPicking)
+            {
+                this.stencil.pickGUI(context, this.area);
+            }
+            else
+            {
+                this.stencil.clearPicking();
+            }
             this.stencil.unbind(this.stencilMap);
 
             MinecraftClient.getInstance().getFramebuffer().beginWrite(true);

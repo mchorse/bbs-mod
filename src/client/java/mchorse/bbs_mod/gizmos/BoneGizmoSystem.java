@@ -62,6 +62,9 @@ public class BoneGizmoSystem
     private Transform dragStart = new Transform();
     private UIPropTransform target;
 
+    /* Signo de rotación dependiente del lado de la cámara (3D) */
+    private float rotateSign = 1F;
+
     /* Soporte de "mouse en bucle" durante el arrastre (como en UIPropTransform) */
     private static final double[] CURSOR_X = new double[1];
     private static final double[] CURSOR_Y = new double[1];
@@ -135,6 +138,8 @@ public class BoneGizmoSystem
             {
                 this.dragStart.copy(this.target.getTransform());
             }
+
+            /* Inicio de arrastre: no capturamos/ocultamos el cursor; solo comenzamos acumulación */
         }
 
         /* Terminar arrastre */
@@ -142,56 +147,70 @@ public class BoneGizmoSystem
         {
             this.dragging = false;
             this.activeAxis = null;
+
+            /* Fin de arrastre: sin cambios en el modo de cursor */
         }
 
-        /* Durante arrastre: aplicar delta */
+        /* Durante arrastre: aplicar delta con bucle (mismo patrón que UIPropTransform) */
         if (this.dragging && this.target != null && this.target.getTransform() != null)
         {
-            /* Implementar bucle horizontal y vertical del cursor */
-            GLFW.glfwGetCursorPos(Window.getWindow(), CURSOR_X, CURSOR_Y);
-            MinecraftClient mc = MinecraftClient.getInstance();
-            int w = mc.getWindow().getWidth();
-            int h = mc.getWindow().getHeight();
+            boolean warped = false;
 
-            double rawX = CURSOR_X[0];
-            double rawY = CURSOR_Y[0];
-            double fx = Math.ceil(w / (double) input.menu.width);
-            double fy = Math.ceil(h / (double) input.menu.height);
-            int border = 5;
-            int borderPadding = border + 1;
+            if (this.wrapChecker.isTime())
+            {
+                /* Implementar bucle horizontal y vertical del cursor */
+                GLFW.glfwGetCursorPos(Window.getWindow(), CURSOR_X, CURSOR_Y);
+                MinecraftClient mc = MinecraftClient.getInstance();
+                int w = mc.getWindow().getWidth();
+                int h = mc.getWindow().getHeight();
 
-            if (rawX <= border)
-            {
-                Window.moveCursor(w - borderPadding, (int) mc.mouse.getY());
-                this.lastX = input.menu.width - (int) (borderPadding / fx);
-                this.wrapChecker.mark();
-            }
-            else if (rawX >= w - border)
-            {
-                Window.moveCursor(borderPadding, (int) mc.mouse.getY());
-                this.lastX = (int) (borderPadding / fx);
-                this.wrapChecker.mark();
+                double rawX = CURSOR_X[0];
+                double rawY = CURSOR_Y[0];
+                double fx = Math.ceil(w / (double) input.menu.width);
+                double fy = Math.ceil(h / (double) input.menu.height);
+                int border = 5;
+                int borderPadding = border + 1;
+
+                if (rawX <= border)
+                {
+                    Window.moveCursor(w - borderPadding, (int) mc.mouse.getY());
+                    this.lastX = input.menu.width - (int) (borderPadding / fx);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+                else if (rawX >= w - border)
+                {
+                    Window.moveCursor(borderPadding, (int) mc.mouse.getY());
+                    this.lastX = (int) (borderPadding / fx);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+
+                if (rawY <= border)
+                {
+                    Window.moveCursor((int) mc.mouse.getX(), h - borderPadding);
+                    this.lastY = input.menu.height - (int) (borderPadding / fy);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
+                else if (rawY >= h - border)
+                {
+                    Window.moveCursor((int) mc.mouse.getX(), borderPadding);
+                    this.lastY = (int) (borderPadding / fy);
+                    this.wrapChecker.mark();
+                    warped = true;
+                }
             }
 
-            if (rawY <= border)
+            if (!warped)
             {
-                Window.moveCursor((int) mc.mouse.getX(), h - borderPadding);
-                this.lastY = input.menu.height - (int) (borderPadding / fy);
-                this.wrapChecker.mark();
+                int stepX = input.mouseX - this.lastX;
+                int stepY = input.mouseY - this.lastY;
+                this.accumDx += stepX;
+                this.accumDy += stepY;
+                this.lastX = input.mouseX;
+                this.lastY = input.mouseY;
             }
-            else if (rawY >= h - border)
-            {
-                Window.moveCursor((int) mc.mouse.getX(), borderPadding);
-                this.lastY = (int) (borderPadding / fy);
-                this.wrapChecker.mark();
-            }
-
-            int stepX = input.mouseX - this.lastX;
-            int stepY = input.mouseY - this.lastY;
-            this.accumDx += stepX;
-            this.accumDy += stepY;
-            this.lastX = input.mouseX;
-            this.lastY = input.mouseY;
 
             float factor = switch (this.mode)
             {
@@ -330,6 +349,43 @@ public class BoneGizmoSystem
                     {
                         this.dragStart.copy(this.target.getTransform());
                     }
+
+                    // Determinar el signo de rotación según el lado de cámara respecto al plano del anillo
+                    // Reconstruimos el rayo del mouse y evaluamos n·rayD para el eje activo
+                    try
+                    {
+                        float nx = (float) (((input.mouseX - viewport.x) / (double) viewport.w) * 2.0 - 1.0);
+                        float ny = (float) ( -(((input.mouseY - viewport.y) / (double) viewport.h) * 2.0 - 1.0) );
+                        org.joml.Matrix4f invPV = new org.joml.Matrix4f(projection).mul(view).invert(new org.joml.Matrix4f());
+                        org.joml.Vector4f nearClip = new org.joml.Vector4f(nx, ny, -1F, 1F);
+                        org.joml.Vector4f farClip  = new org.joml.Vector4f(nx, ny,  1F, 1F);
+                        org.joml.Vector4f nearWorld = invPV.transform(new org.joml.Vector4f(nearClip));
+                        org.joml.Vector4f farWorld  = invPV.transform(new org.joml.Vector4f(farClip));
+                        nearWorld.div(nearWorld.w);
+                        farWorld.div(farWorld.w);
+                        org.joml.Matrix4f invOrigin = new org.joml.Matrix4f(origin).invert(new org.joml.Matrix4f());
+                        org.joml.Vector4f nearLocal4 = invOrigin.transform(new org.joml.Vector4f(nearWorld));
+                        org.joml.Vector4f farLocal4  = invOrigin.transform(new org.joml.Vector4f(farWorld));
+                        org.joml.Vector3f rayO = new org.joml.Vector3f(nearLocal4.x, nearLocal4.y, nearLocal4.z);
+                        org.joml.Vector3f rayF = new org.joml.Vector3f(farLocal4.x, farLocal4.y, farLocal4.z);
+                        org.joml.Vector3f rayD = rayF.sub(rayO, new org.joml.Vector3f());
+                        rayD.normalize();
+
+                        org.joml.Vector3f n = switch (this.activeAxis)
+                        {
+                            case X -> new org.joml.Vector3f(1F, 0F, 0F);
+                            case Y -> new org.joml.Vector3f(0F, 1F, 0F);
+                            case Z -> new org.joml.Vector3f(0F, 0F, 1F);
+                        };
+
+                        float denom = n.x * rayD.x + n.y * rayD.y + n.z * rayD.z;
+                        // Si el rayo entra desde el lado positivo de la normal, invertir para mantener sentido visual
+                        this.rotateSign = (denom >= 0F) ? -1F : 1F;
+                    }
+                    catch (Throwable t)
+                    {
+                        this.rotateSign = 1F;
+                    }
                 }
 
                 if (this.dragging && !mouseDown && this.lastMouseDown)
@@ -413,9 +469,10 @@ public class BoneGizmoSystem
                         float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
                         float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
 
-                        if (this.activeAxis == Axis.X) rx = rx + delta * 10F;
-                        if (this.activeAxis == Axis.Y) ry = ry + delta * 10F;
-                        if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
+                        float d = delta * this.rotateSign * 10F;
+                        if (this.activeAxis == Axis.X) rx = rx + d;
+                        if (this.activeAxis == Axis.Y) ry = ry + d;
+                        if (this.activeAxis == Axis.Z) rz = rz + d;
 
                         this.target.setR(null, rx, ry, rz);
                         this.target.setTransform(t);
@@ -554,6 +611,8 @@ public class BoneGizmoSystem
             {
                 this.dragStart.copy(this.target.getTransform());
             }
+
+            /* Inicio de arrastre: no capturamos/ocultamos el cursor; solo comenzamos acumulación */
         }
 
         /* Terminar arrastre */
@@ -561,6 +620,8 @@ public class BoneGizmoSystem
         {
             this.dragging = false;
             this.activeAxis = null;
+
+            /* Fin de arrastre: sin cambios en el modo de cursor */
         }
 
         /* Durante arrastre: aplicar delta con bucle de mouse como en UIPropTransform */
@@ -753,10 +814,11 @@ public class BoneGizmoSystem
             ? 0.03F
             : (this.mode == Mode.SCALE ? slabThick : (cubeBig + thickness));
 
-        /* Mostrar solo el eje activo durante el arrastre, como en DCCs */
-        boolean showX = !this.dragging || this.activeAxis == Axis.X;
-        boolean showY = !this.dragging || this.activeAxis == Axis.Y;
-        boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
+        /* Mostrar solo el eje activo durante el arrastre; si se arrastra un plano,
+           ocultar todas las flechas. */
+        boolean showX = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.X);
+        boolean showY = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.Y);
+        boolean showZ = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.Z);
 
         // Barras base por eje SOLO para ESCALAR
         // En TRASLADAR dibujamos barras específicas que llegan a los conos,
@@ -867,45 +929,49 @@ public class BoneGizmoSystem
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+            // Mostrar solo el plano activo durante el arrastre; si se arrastra una flecha, ocultar planos
+            boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
+            boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
+            boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
 
             // XY -> azul (perpendicular Z)
-            Draw.fillBox(builder, stack,
+            if (showPlaneXY) { Draw.fillBox(builder, stack,
                 offset - planeHalf, offset - planeHalf, -planeThick,
                 offset + planeHalf, offset + planeHalf,  planeThick,
-                0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack,
+                0F, 0F, 0F, 1F); }
+            if (showPlaneXY) { Draw.fillBox(builder, stack,
                 offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F),
                 offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),  (planeThick - 0.002F),
-                0F, 0F, 1F, 1F);
-            if (hXY) Draw.fillBox(builder, stack,
+                0F, 0F, 1F, 1F); }
+            if (hXY && showPlaneXY) Draw.fillBox(builder, stack,
                 offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F),
                 offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),  (planeThick + 0.004F),
                 1F, 1F, 1F, 0.30F);
 
             // ZX -> verde (perpendicular Y)
-            Draw.fillBox(builder, stack,
+            if (showPlaneZX) { Draw.fillBox(builder, stack,
                 offset - planeHalf, -planeThick, offset - planeHalf,
                 offset + planeHalf,  planeThick, offset + planeHalf,
-                0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack,
+                0F, 0F, 0F, 1F); }
+            if (showPlaneZX) { Draw.fillBox(builder, stack,
                 offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F),
                 offset + (planeHalf - 0.002F),  (planeThick - 0.002F), offset + (planeHalf - 0.002F),
-                0F, 1F, 0F, 1F);
-            if (hZX) Draw.fillBox(builder, stack,
+                0F, 1F, 0F, 1F); }
+            if (hZX && showPlaneZX) Draw.fillBox(builder, stack,
                 offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F),
                 offset + (planeHalf + 0.004F),  (planeThick + 0.004F), offset + (planeHalf + 0.004F),
                 1F, 1F, 1F, 0.30F);
 
             // YZ -> rojo (perpendicular X)
-            Draw.fillBox(builder, stack,
+            if (showPlaneYZ) { Draw.fillBox(builder, stack,
                 -planeThick, offset - planeHalf, offset - planeHalf,
                  planeThick, offset + planeHalf, offset + planeHalf,
-                0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack,
+                0F, 0F, 0F, 1F); }
+            if (showPlaneYZ) { Draw.fillBox(builder, stack,
                 -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F),
                  (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),
-                1F, 0F, 0F, 1F);
-            if (hYZ) Draw.fillBox(builder, stack,
+                1F, 0F, 0F, 1F); }
+            if (hYZ && showPlaneYZ) Draw.fillBox(builder, stack,
                 -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F),
                  (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),
                 1F, 1F, 1F, 0.30F);
@@ -1059,18 +1125,21 @@ public class BoneGizmoSystem
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+            boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
+            boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
+            boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
             // XY -> azul
-            Draw.fillBox(builder, stack, offset - planeHalf, offset - planeHalf, -planeThick, offset + planeHalf, offset + planeHalf, planeThick, 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), 0F, 0F, 1F, 1F);
-            if (hXY) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), 1F, 1F, 1F, 0.30F);
+            if (showPlaneXY) Draw.fillBox(builder, stack, offset - planeHalf, offset - planeHalf, -planeThick, offset + planeHalf, offset + planeHalf, planeThick, 0F, 0F, 0F, 1F);
+            if (showPlaneXY) Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), 0F, 0F, 1F, 1F);
+            if (hXY && showPlaneXY) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), 1F, 1F, 1F, 0.30F);
             // ZX -> verde
-            Draw.fillBox(builder, stack, offset - planeHalf, -planeThick, offset - planeHalf, offset + planeHalf, planeThick, offset + planeHalf, 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), 0F, 1F, 0F, 1F);
-            if (hZX) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
+            if (showPlaneZX) Draw.fillBox(builder, stack, offset - planeHalf, -planeThick, offset - planeHalf, offset + planeHalf, planeThick, offset + planeHalf, 0F, 0F, 0F, 1F);
+            if (showPlaneZX) Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), 0F, 1F, 0F, 1F);
+            if (hZX && showPlaneZX) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
             // YZ -> rojo
-            Draw.fillBox(builder, stack, -planeThick, offset - planeHalf, offset - planeHalf, planeThick, offset + planeHalf, offset + planeHalf, 0F, 0F, 0F, 1F);
-            Draw.fillBox(builder, stack, -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), 1F, 0F, 0F, 1F);
-            if (hYZ) Draw.fillBox(builder, stack, -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
+            if (showPlaneYZ) Draw.fillBox(builder, stack, -planeThick, offset - planeHalf, offset - planeHalf, planeThick, offset + planeHalf, offset + planeHalf, 0F, 0F, 0F, 1F);
+            if (showPlaneYZ) Draw.fillBox(builder, stack, -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), 1F, 0F, 0F, 1F);
+            if (hYZ && showPlaneYZ) Draw.fillBox(builder, stack, -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
         }
         else if (this.mode == Mode.ROTATE)
         {
@@ -1229,11 +1298,11 @@ public class BoneGizmoSystem
             }
         }
 
-        // Halo suave opcional cuando está en hover: un toro blanco más fino
+        // Halo cuando está en hover: cubrir TODO el ancho del anillo
         if (highlight)
         {
-            float hr = tubeR * 0.6F;
-            float ha = 0.35F;
+            float hr = tubeR;      // usar todo el grosor del color
+            float ha = 0.50F;      // más brillo
             for (int iu = 0; iu < segU; iu++)
             {
                 double u1 = u0 + uStep * iu;
@@ -1551,8 +1620,10 @@ public class BoneGizmoSystem
     private Axis detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
     {
         float radius = 0.22F;
-        float thickness = 0.01F;        // radio del tubo (mitad del grosor de barras)
-        float band = thickness * 0.95F; // tolerancia radial cercana al radio del tubo
+        // Grosor coherente con el render
+        float baseThickness = (this.mode == Mode.ROTATE) ? 0.015F : 0.01F;
+        float thickness = baseThickness;        // ancho visual del anillo
+        float band = thickness * 0.5F + 0.002F; // cubrir todo el color del anillo
 
         class Hit { Axis a; float t; }
         Hit hitBest = null;
@@ -1565,51 +1636,36 @@ public class BoneGizmoSystem
 
             if (Math.abs(denom) < 1e-5)
             {
-                // Fallback: el rayo es casi paralelo al plano. Buscamos el punto
-                // sobre el rayo que minimiza la distancia radial en el par de ejes
-                // correspondiente al anillo.
-                if (c == 'Z')
+                // Fallback: resolver intersección del rayo con el círculo del anillo
+                // en el par de ejes correspondiente mediante ecuación cuadrática.
+                float ax, ay, dx, dy;
+                if (c == 'Z') { ax = rayO.x; ay = rayO.y; dx = rayD.x; dy = rayD.y; }
+                else if (c == 'X') { ax = rayO.y; ay = rayO.z; dx = rayD.y; dy = rayD.z; }
+                else { ax = rayO.x; ay = rayO.z; dx = rayD.x; dy = rayD.z; }
+
+                float A = dx * dx + dy * dy;
+                float B = 2F * (ax * dx + ay * dy);
+                float C = ax * ax + ay * ay - radius * radius;
+                float disc = B * B - 4F * A * C;
+                if (A > 1e-8 && disc >= 0F)
                 {
-                    float d2 = rayD.x * rayD.x + rayD.y * rayD.y;
-                    if (d2 > 1e-8)
-                    {
-                        t = - (rayO.x * rayD.x + rayO.y * rayD.y) / d2;
-                        if (t < 0) t = 0; // limitar a frente del rayo
-                    }
-                    else
-                    {
-                        t = 0; // dirección sin componente XY, usar origen
-                    }
-                    ix = rayO.x + rayD.x * t;
-                    iy = rayO.y + rayD.y * t;
-                    iz = rayO.z + rayD.z * t;
+                    float sqrt = (float) Math.sqrt(disc);
+                    float t1 = (-B - sqrt) / (2F * A);
+                    float t2 = (-B + sqrt) / (2F * A);
+                    // Elegir el menor t positivo (frente del rayo)
+                    t = Float.POSITIVE_INFINITY;
+                    if (t1 >= 0F) t = Math.min(t, t1);
+                    if (t2 >= 0F) t = Math.min(t, t2);
+                    if (!Float.isFinite(t)) return null;
                 }
-                else if (c == 'X')
+                else
                 {
-                    float d2 = rayD.y * rayD.y + rayD.z * rayD.z;
-                    if (d2 > 1e-8)
-                    {
-                        t = - (rayO.y * rayD.y + rayO.z * rayD.z) / d2;
-                        if (t < 0) t = 0;
-                    }
-                    else { t = 0; }
-                    ix = rayO.x + rayD.x * t;
-                    iy = rayO.y + rayD.y * t;
-                    iz = rayO.z + rayD.z * t;
+                    return null;
                 }
-                else // 'Y'
-                {
-                    float d2 = rayD.x * rayD.x + rayD.z * rayD.z;
-                    if (d2 > 1e-8)
-                    {
-                        t = - (rayO.x * rayD.x + rayO.z * rayD.z) / d2;
-                        if (t < 0) t = 0;
-                    }
-                    else { t = 0; }
-                    ix = rayO.x + rayD.x * t;
-                    iy = rayO.y + rayD.y * t;
-                    iz = rayO.z + rayD.z * t;
-                }
+
+                ix = rayO.x + rayD.x * t;
+                iy = rayO.y + rayD.y * t;
+                iz = rayO.z + rayD.z * t;
             }
             else
             {
@@ -1712,11 +1768,7 @@ public class BoneGizmoSystem
          * referencia principal). Mantengo etiqueta y borde de depuración. */
         if (BBSSettings.modelBlockGizmosEnabled.get())
         {
-            // Centro del pivote como referencia mínima
-            int cx3 = this.centerX;
-            int cy3 = this.centerY;
-            context.batcher.box(cx3 - 3, cy3 - 3, cx3 + 3, cy3 + 3, Colors.A50 | Colors.WHITE);
-
+            // Con gizmo 3D activo, no dibujamos el pixel/box de pivote 2D.
             RenderSystem.enableDepthTest();
             context.batcher.flush();
             return;
@@ -1729,10 +1781,10 @@ public class BoneGizmoSystem
 
         if (this.mode == Mode.TRANSLATE)
         {
-            /* Ocultar ejes no activos durante arrastre */
-            boolean showX = !this.dragging || this.activeAxis == Axis.X;
-            boolean showY = !this.dragging || this.activeAxis == Axis.Y;
-            boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
+            /* Ocultar ejes no activos durante arrastre; si se arrastra un plano, ocultar todas las flechas */
+            boolean showX = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.X);
+            boolean showY = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.Y);
+            boolean showZ = !this.dragging || (this.activePlane == null && this.activeAxis == Axis.Z);
             /* Líneas al pivote + píxeles en extremos para selección */
             int xColor = (Colors.A100 | Colors.RED);
             int yColor = (Colors.A100 | Colors.GREEN);
@@ -1781,12 +1833,15 @@ public class BoneGizmoSystem
             int colZX = Colors.A100 | Colors.GREEN;
             // YZ -> rojo (eje perpendicular X)
             int colYZ = Colors.A100 | Colors.RED;
-            context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
-            context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
-            context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
-            if (hXY) context.batcher.box(cXY[0] - (ps + 2), cXY[1] - (ps + 2), cXY[0] + (ps + 2), cXY[1] + (ps + 2), Colors.A50 | Colors.WHITE);
-            if (hZX) context.batcher.box(cZX[0] - (ps + 2), cZX[1] - (ps + 2), cZX[0] + (ps + 2), cZX[1] + (ps + 2), Colors.A50 | Colors.WHITE);
-            if (hYZ) context.batcher.box(cYZ[0] - (ps + 2), cYZ[1] - (ps + 2), cYZ[0] + (ps + 2), cYZ[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
+            boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
+            boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
+            if (showPlaneXY) context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
+            if (showPlaneZX) context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
+            if (showPlaneYZ) context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
+            if (hXY && showPlaneXY) context.batcher.box(cXY[0] - (ps + 2), cXY[1] - (ps + 2), cXY[0] + (ps + 2), cXY[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            if (hZX && showPlaneZX) context.batcher.box(cZX[0] - (ps + 2), cZX[1] - (ps + 2), cZX[0] + (ps + 2), cZX[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            if (hYZ && showPlaneYZ) context.batcher.box(cYZ[0] - (ps + 2), cYZ[1] - (ps + 2), cYZ[0] + (ps + 2), cYZ[1] + (ps + 2), Colors.A50 | Colors.WHITE);
 
             // Halo blanco suave en el eje hovered
             int halo = Colors.A100 | Colors.WHITE;
