@@ -860,22 +860,55 @@ public class BoneGizmoSystem
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
-            // Controladores de plano cerca del origen (XY, ZX, YZ)
-            float planeSize = 0.045F;
-            float planeThick = 0.008F;
+            // Controladores de plano como losas planas separadas del pivote y de las barras
+            float offset = 0.08F;    // mitad de la distancia previa
+            float planeHalf = 0.020F; // semitamaño del cuadrado
+            float planeThick = 0.004F; // grosor perpendicular
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
-            float halo = 0.55F;
-            // XY (amarillo) en el cuadrante positivo
-            Draw.fillBox(builder, stack, 0.02F, 0.02F, -planeThick, planeSize, planeSize, planeThick, 1F, 1F, 0F, hXY ? 0.85F : 0.55F);
-            if (hXY) Draw.fillBox(builder, stack, 0.015F, 0.015F, -planeThick - 0.003F, planeSize + 0.005F, planeSize + 0.005F, planeThick + 0.003F, 1F, 1F, 1F, 0.25F);
-            // ZX (magenta)
-            Draw.fillBox(builder, stack, 0.02F, -planeThick, 0.02F, planeSize, planeThick, planeSize, 1F, 0F, 1F, hZX ? 0.85F : 0.55F);
-            if (hZX) Draw.fillBox(builder, stack, 0.015F, -planeThick - 0.003F, 0.015F, planeSize + 0.005F, planeThick + 0.003F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
-            // YZ (cian)
-            Draw.fillBox(builder, stack, -planeThick, 0.02F, 0.02F, planeThick, planeSize, planeSize, 0F, 1F, 1F, hYZ ? 0.85F : 0.55F);
-            if (hYZ) Draw.fillBox(builder, stack, -planeThick - 0.003F, 0.015F, 0.015F, planeThick + 0.003F, planeSize + 0.005F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
+
+            // XY -> azul (perpendicular Z)
+            Draw.fillBox(builder, stack,
+                offset - planeHalf, offset - planeHalf, -planeThick,
+                offset + planeHalf, offset + planeHalf,  planeThick,
+                0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack,
+                offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F),
+                offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),  (planeThick - 0.002F),
+                0F, 0F, 1F, 1F);
+            if (hXY) Draw.fillBox(builder, stack,
+                offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F),
+                offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),  (planeThick + 0.004F),
+                1F, 1F, 1F, 0.30F);
+
+            // ZX -> verde (perpendicular Y)
+            Draw.fillBox(builder, stack,
+                offset - planeHalf, -planeThick, offset - planeHalf,
+                offset + planeHalf,  planeThick, offset + planeHalf,
+                0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack,
+                offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F),
+                offset + (planeHalf - 0.002F),  (planeThick - 0.002F), offset + (planeHalf - 0.002F),
+                0F, 1F, 0F, 1F);
+            if (hZX) Draw.fillBox(builder, stack,
+                offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F),
+                offset + (planeHalf + 0.004F),  (planeThick + 0.004F), offset + (planeHalf + 0.004F),
+                1F, 1F, 1F, 0.30F);
+
+            // YZ -> rojo (perpendicular X)
+            Draw.fillBox(builder, stack,
+                -planeThick, offset - planeHalf, offset - planeHalf,
+                 planeThick, offset + planeHalf, offset + planeHalf,
+                0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack,
+                -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F),
+                 (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),
+                1F, 0F, 0F, 1F);
+            if (hYZ) Draw.fillBox(builder, stack,
+                -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F),
+                 (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),
+                1F, 1F, 1F, 0.30F);
         }
         else if (this.mode == Mode.SCALE)
         {
@@ -1021,17 +1054,23 @@ public class BoneGizmoSystem
             drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, 0F, sweep, hy);
             RenderSystem.enableCull();
 
-            // Planos de desplazamiento cerca del origen (más pequeños y con halo en hover)
-            float planeSize = 0.045F; float planeThick = 0.008F;
+            // Losas planas (UNIVERSAL): mismos offsets que TRANSLATE
+            float offset = 0.08F; float planeHalf = 0.020F; float planeThick = 0.004F;
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
-            Draw.fillBox(builder, stack, 0.02F, 0.02F, -planeThick, planeSize, planeSize, planeThick, 1F, 1F, 0F, hXY ? 0.85F : 0.55F);
-            if (hXY) Draw.fillBox(builder, stack, 0.015F, 0.015F, -planeThick - 0.003F, planeSize + 0.005F, planeSize + 0.005F, planeThick + 0.003F, 1F, 1F, 1F, 0.25F);
-            Draw.fillBox(builder, stack, 0.02F, -planeThick, 0.02F, planeSize, planeThick, planeSize, 1F, 0F, 1F, hZX ? 0.85F : 0.55F);
-            if (hZX) Draw.fillBox(builder, stack, 0.015F, -planeThick - 0.003F, 0.015F, planeSize + 0.005F, planeThick + 0.003F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
-            Draw.fillBox(builder, stack, -planeThick, 0.02F, 0.02F, planeThick, planeSize, planeSize, 0F, 1F, 1F, hYZ ? 0.85F : 0.55F);
-            if (hYZ) Draw.fillBox(builder, stack, -planeThick - 0.003F, 0.015F, 0.015F, planeThick + 0.003F, planeSize + 0.005F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
+            // XY -> azul
+            Draw.fillBox(builder, stack, offset - planeHalf, offset - planeHalf, -planeThick, offset + planeHalf, offset + planeHalf, planeThick, 0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), 0F, 0F, 1F, 1F);
+            if (hXY) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), 1F, 1F, 1F, 0.30F);
+            // ZX -> verde
+            Draw.fillBox(builder, stack, offset - planeHalf, -planeThick, offset - planeHalf, offset + planeHalf, planeThick, offset + planeHalf, 0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), 0F, 1F, 0F, 1F);
+            if (hZX) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
+            // YZ -> rojo
+            Draw.fillBox(builder, stack, -planeThick, offset - planeHalf, offset - planeHalf, planeThick, offset + planeHalf, offset + planeHalf, 0F, 0F, 0F, 1F);
+            Draw.fillBox(builder, stack, -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), 1F, 0F, 0F, 1F);
+            if (hYZ) Draw.fillBox(builder, stack, -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
         }
         else if (this.mode == Mode.ROTATE)
         {
@@ -1452,11 +1491,16 @@ public class BoneGizmoSystem
             }
             if (best != null) { this.hoveredSubMode = best.m; this.hoveredPlane = null; return best.a; }
 
-            // Planos cerca del origen (pequeñas losas)
-            float ps = 0.07F; float pt = 0.01F;
-            float[] pXY = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, 0.02F, -pt), new Vector3f(ps, ps, pt));
-            float[] pZX = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, -pt, 0.02F), new Vector3f(ps, pt, ps));
-            float[] pYZ = rayBoxIntersect(rayO, rayD, new Vector3f(-pt, 0.02F, 0.02F), new Vector3f(pt, ps, ps));
+            // Losas planas desplazadas del pivote
+            float po = 0.08F; // offset (mitad)
+            float ps = 0.020F; // semitamaño del cuadrado
+            float pt = 0.004F; // grosor perpendicular
+            float[] pXY = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(po - ps, po - ps, -pt), new Vector3f(po + ps, po + ps, pt));
+            float[] pZX = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(po - ps, -pt, po - ps), new Vector3f(po + ps, pt, po + ps));
+            float[] pYZ = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(-pt, po - ps, po - ps), new Vector3f(pt, po + ps, po + ps));
 
             float bt = Float.POSITIVE_INFINITY; Axis ba = null; Plane bp = null;
             if (pXY != null && pXY[0] >= 0 && pXY[0] < bt) { bt=pXY[0]; ba=Axis.X; bp=Plane.XY; }
@@ -1487,10 +1531,13 @@ public class BoneGizmoSystem
         // En modo TRANSLATE, también permitir picking de los planos cercanos al origen
         if (this.mode == Mode.TRANSLATE)
         {
-            float ps = 0.045F; float pt = 0.008F;
-            float[] pXY = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, 0.02F, -pt), new Vector3f(ps, ps, pt));
-            float[] pZX = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, -pt, 0.02F), new Vector3f(ps, pt, ps));
-            float[] pYZ = rayBoxIntersect(rayO, rayD, new Vector3f(-pt, 0.02F, 0.02F), new Vector3f(pt, ps, ps));
+            float po = 0.08F; float ps = 0.020F; float pt = 0.004F;
+            float[] pXY = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(po - ps, po - ps, -pt), new Vector3f(po + ps, po + ps, pt));
+            float[] pZX = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(po - ps, -pt, po - ps), new Vector3f(po + ps, pt, po + ps));
+            float[] pYZ = rayBoxIntersect(rayO, rayD,
+                    new Vector3f(-pt, po - ps, po - ps), new Vector3f(pt, po + ps, po + ps));
 
             if (pXY != null && pXY[0] >= 0 && pXY[0] < bestT) { bestT = pXY[0]; best = Axis.X; this.hoveredPlane = Plane.XY; }
             if (pZX != null && pZX[0] >= 0 && pZX[0] < bestT) { bestT = pZX[0]; best = Axis.Z; this.hoveredPlane = Plane.ZX; }
@@ -1720,7 +1767,7 @@ public class BoneGizmoSystem
                 drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
             }
 
-            // Controladores de plano (XY amarillo, ZX magenta, YZ cian)
+            // Controladores de plano (cubos en overlay) usando colores XYZ
             int[] cXY = planeCenterScreen(Plane.XY);
             int[] cZX = planeCenterScreen(Plane.ZX);
             int[] cYZ = planeCenterScreen(Plane.YZ);
@@ -1728,9 +1775,12 @@ public class BoneGizmoSystem
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
-            int colXY = Colors.A100 | Colors.YELLOW;
-            int colZX = Colors.A100 | Colors.MAGENTA;
-            int colYZ = Colors.A100 | Colors.CYAN;
+            // XY -> azul (eje perpendicular Z)
+            int colXY = Colors.A100 | Colors.BLUE;
+            // ZX -> verde (eje perpendicular Y)
+            int colZX = Colors.A100 | Colors.GREEN;
+            // YZ -> rojo (eje perpendicular X)
+            int colYZ = Colors.A100 | Colors.RED;
             context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
             context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
             context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
@@ -1859,14 +1909,14 @@ public class BoneGizmoSystem
             drawRing(context, cx, cy, this.ringRY, thickness, yRing);
             drawRing(context, cx, cy, this.ringRZ, thickness, zRing);
 
-            // Controladores de plano (rombos) entre ejes
+            // Controladores de plano (rombos/cubos) entre ejes con colores XYZ
             int[] cXY = planeCenterScreen(Plane.XY);
             int[] cZX = planeCenterScreen(Plane.ZX);
             int[] cYZ = planeCenterScreen(Plane.YZ);
             int ps = 10;
-            int colXY = Colors.A100 | Colors.YELLOW;
-            int colZX = Colors.A100 | Colors.MAGENTA;
-            int colYZ = Colors.A100 | Colors.CYAN;
+            int colXY = Colors.A100 | Colors.BLUE;
+            int colZX = Colors.A100 | Colors.GREEN;
+            int colYZ = Colors.A100 | Colors.RED;
             context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, 0.5F));
             context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, 0.5F));
             context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, 0.5F));
@@ -1968,10 +2018,11 @@ public class BoneGizmoSystem
         return null;
     }
 
-    /** Centro en pantalla para controladores de plano (basado en endpoints) */
+    /** Centro en pantalla para controladores de plano (basado en endpoints)
+     *  Se usa un factor ~0.55 para que queden más cerca del pivote. */
     private int[] planeCenterScreen(Plane p)
     {
-        float k = 0.5F; // proporcional desde el pivote hacia el extremo
+        float k = 0.55F; // proporcional desde el pivote hacia el extremo
         int cx = this.centerX, cy = this.centerY;
         return switch (p)
         {
