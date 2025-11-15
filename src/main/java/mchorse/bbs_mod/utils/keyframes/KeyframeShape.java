@@ -13,7 +13,7 @@ public enum KeyframeShape
             case "SQUARE" -> SQUARE;
             case "CIRCLE" -> CIRCLE;
             case "TRIANGLE" -> TRIANGLE;
-            case "DIAMOND" -> TRI_STAR;
+            case "DIAMOND" -> DIAMOND;
             case "TRI_STAR" -> TRI_STAR;
             case "FOUR_STAR" -> FOUR_STAR;
             case "FIVE_STAR" -> FIVE_STAR;

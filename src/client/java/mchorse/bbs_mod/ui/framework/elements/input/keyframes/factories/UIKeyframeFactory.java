@@ -13,6 +13,7 @@ import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.color.UIColorPicker;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.IAxisConverter;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
 import mchorse.bbs_mod.ui.utils.UI;
@@ -120,7 +121,15 @@ public abstract class UIKeyframeFactory <T> extends UIElement
             Color choosenColor = (this.keyframe.keyframeColor == null) ? Color.white() : this.keyframe.keyframeColor;
             UIColorContextMenu menu = new UIColorContextMenu(choosenColor);
 
-            this.getContext().replaceContextMenu(menu.callback(() -> this.keyframe.keyframeColor = menu.colorPicker.color));
+            this.getContext().replaceContextMenu(menu.callback(() -> {
+                for(UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+                {
+                    for(Keyframe k : sheet.selection.getSelected())
+                    {
+                        k.keyframeColor = menu.colorPicker.color;
+                    }
+                }
+            }));
         });
 
         this.shape = new UIIcon(Icons.SHAPES, (b) -> {
@@ -128,7 +137,15 @@ public abstract class UIKeyframeFactory <T> extends UIElement
             KeyframeShape keyframeShape = (keyframe.keyframeShape == null) ? KeyframeShape.SQUARE : keyframe.keyframeShape;
             UIShapeContextMenu menu = new UIShapeContextMenu(keyframeShape);
 
-            this.getContext().replaceContextMenu(menu.callback(() -> this.keyframe.keyframeShape = menu.choosenShape));
+            this.getContext().replaceContextMenu(menu.callback(() -> {
+                for(UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+                {
+                    for(Keyframe k : sheet.selection.getSelected())
+                    {
+                        k.keyframeShape = menu.choosenShape;
+                    }
+                }
+            }));
         });
         this.scroll.add(UI.row(this.keyframe_color, this.shape));
 
