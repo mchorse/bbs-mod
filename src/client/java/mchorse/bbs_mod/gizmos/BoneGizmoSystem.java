@@ -284,9 +284,21 @@ public class BoneGizmoSystem
                 float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
                 float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
 
-                if (this.activeAxis == Axis.X) rx = rx + delta * 10F;
-                if (this.activeAxis == Axis.Y) ry = ry + delta * 10F;
-                if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
+                /* Rotación libre basada en vista con CTRL: combinar yaw/pitch usando
+                 * acumulado de mouse para acumular correctamente durante el arrastre. */
+                if (Window.isCtrlPressed())
+                {
+                    float yawDelta = this.accumDx * factor * 10F;    // horizontal -> Y (yaw)
+                    float pitchDelta = -this.accumDy * factor * 10F; // vertical   -> X (pitch)
+                    ry = ry + yawDelta;
+                    rx = rx + pitchDelta;
+                }
+                else
+                {
+                    if (this.activeAxis == Axis.X) rx = rx + delta * 10F;
+                    if (this.activeAxis == Axis.Y) ry = ry + delta * 10F;
+                    if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
+                }
 
                 this.target.setR(null, rx, ry, rz);
                 this.target.setTransform(t);
@@ -390,13 +402,22 @@ public class BoneGizmoSystem
 
                 if (this.dragging && !mouseDown && this.lastMouseDown)
                 {
+                    /* Finalizar arrastre y fijar el estado actual como base */
                     this.dragging = false;
                     this.activeAxis = null;
+                    if (this.target != null && this.target.getTransform() != null)
+                    {
+                        this.dragStart.copy(this.target.getTransform());
+                    }
+                    this.accumDx = 0F;
+                    this.accumDy = 0F;
+                    this.lastX = input.mouseX;
+                    this.lastY = input.mouseY;
                 }
 
                 if (this.dragging && this.target != null && this.target.getTransform() != null)
                 {
-                    // Delta de mouse similar al modo 2D
+                    // Delta de mouse inmediato y acumulado para diferentes comportamientos
                     int stepX = input.mouseX - this.lastX;
                     int stepY = input.mouseY - this.lastY;
                     this.accumDx += stepX;
@@ -469,10 +490,22 @@ public class BoneGizmoSystem
                         float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
                         float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
 
-                        float d = delta * this.rotateSign * 10F;
-                        if (this.activeAxis == Axis.X) rx = rx + d;
-                        if (this.activeAxis == Axis.Y) ry = ry + d;
-                        if (this.activeAxis == Axis.Z) rz = rz + d;
+                        if (Window.isCtrlPressed())
+                        {
+                            /* Rotación libre en 3D: usar acumulado dx/dy como yaw/pitch
+                             * para acumular correctamente movimiento durante el arrastre. */
+                            float yawDelta = this.accumDx * factor * 10F;    // Yaw (Y)
+                            float pitchDelta = -this.accumDy * factor * 10F; // Pitch (X)
+                            ry = ry + yawDelta;
+                            rx = rx + pitchDelta;
+                        }
+                        else
+                        {
+                            float d = delta * this.rotateSign * 10F;
+                            if (this.activeAxis == Axis.X) rx = rx + d;
+                            if (this.activeAxis == Axis.Y) ry = ry + d;
+                            if (this.activeAxis == Axis.Z) rz = rz + d;
+                        }
 
                         this.target.setR(null, rx, ry, rz);
                         this.target.setTransform(t);
@@ -759,9 +792,21 @@ public class BoneGizmoSystem
                 float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
                 float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
 
-                if (this.activeAxis == Axis.X) rx = rx + delta * 10F;
-                if (this.activeAxis == Axis.Y) ry = ry + delta * 10F;
-                if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
+                /* Rotación libre desde la vista con CTRL: combina yaw/pitch usando dx/dy.
+                 * En 3D se siente natural porque el gizmo está en el pivote del hueso. */
+                if (Window.isCtrlPressed())
+                {
+                    float yawDelta = this.accumDx * factor * 10F;   // Yaw (Y)
+                    float pitchDelta = -this.accumDy * factor * 10F; // Pitch (X)
+                    ry = ry + yawDelta;
+                    rx = rx + pitchDelta;
+                }
+                else
+                {
+                    if (this.activeAxis == Axis.X) rx = rx + delta * 10F;
+                    if (this.activeAxis == Axis.Y) ry = ry + delta * 10F;
+                    if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
+                }
 
                 this.target.setR(null, rx, ry, rz);
                 this.target.setTransform(t);
@@ -2225,9 +2270,12 @@ public class BoneGizmoSystem
 
     public void cycleMode(boolean forward)
     {
-        Mode[] values = Mode.values();
+        /* Ciclar solo entre TRANSLATE, ROTATE y SCALE; el modo UNIVERSAL queda fuera. */
+        Mode[] values = new Mode[] { Mode.TRANSLATE, Mode.ROTATE, Mode.SCALE };
         int i = this.mode.ordinal();
-        i = (i + (forward ? 1 : -1) + values.length) % values.length;
-        this.mode = values[i];
+        /* Mapear ordinal actual a índice dentro del arreglo reducido */
+        int current = (this.mode == Mode.TRANSLATE) ? 0 : (this.mode == Mode.ROTATE ? 1 : 2);
+        int next = (current + (forward ? 1 : -1) + values.length) % values.length;
+        this.mode = values[next];
     }
 }
