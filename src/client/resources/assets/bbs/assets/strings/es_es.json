@@ -987,6 +987,7 @@
     "bbs.ui.transforms.editing": "Edición...",
     "bbs.ui.transforms.keys.category": "Transformaciones",
     "bbs.ui.transforms.keys.toggle_axes": "Alternar ejes XYZ",
+    "bbs.ui.transforms.keys.cycle_gizmo": "Alternar gizmo",
     "bbs.ui.transforms.rotate": "Rotar",
     "bbs.ui.transforms.rotate2": "Rotar (2º)",
     "bbs.ui.transforms.scale": "Escala",

@@ -1043,6 +1043,7 @@
     "bbs.ui.transforms.editing": "Editing...",
     "bbs.ui.transforms.keys.category": "Transformations",
     "bbs.ui.transforms.keys.toggle_axes": "Toggle XYZ axes",
+    "bbs.ui.transforms.keys.cycle_gizmo": "Toggle gizmo",
     "bbs.ui.transforms.rotate": "Rotate",
     "bbs.ui.transforms.rotate2": "Rotate (2nd)",
     "bbs.ui.transforms.scale": "Scale",

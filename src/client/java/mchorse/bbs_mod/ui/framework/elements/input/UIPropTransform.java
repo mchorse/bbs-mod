@@ -181,6 +181,19 @@ public class UIPropTransform extends UITransform
             }
         }).category(category);
 
+        /* Alternar modo de gizmo (ciclo entre Trasladar/Escalar/Rotar) */
+        this.keys().register(Keys.TRANSFORMATIONS_CYCLE_GIZMO, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().cycleMode(true);
+            }
+            else
+            {
+                this.enableMode((this.mode + 1) % 3);
+            }
+        }).category(category);
+
         /* Las teclas de eje X/Y/Z solo aplican cuando se está editando
          * y los gizmos están desactivados (flujo clásico). */
         Supplier<Boolean> axisActive = () -> this.editing && !BBSSettings.modelBlockGizmosEnabled.get();

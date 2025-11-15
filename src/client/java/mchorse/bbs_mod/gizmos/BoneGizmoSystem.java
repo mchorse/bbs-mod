@@ -39,12 +39,20 @@ import org.lwjgl.glfw.GLFW;
  */
 public class BoneGizmoSystem
 {
-    public enum Mode { TRANSLATE, ROTATE, SCALE }
+    public enum Mode { TRANSLATE, ROTATE, SCALE, UNIVERSAL }
+    /** Planos de desplazamiento para mover en dos ejes simultáneamente */
+    private enum Plane { XY, YZ, ZX }
 
     private static final BoneGizmoSystem INSTANCE = new BoneGizmoSystem();
 
     /* Estado */
     private Mode mode = Mode.TRANSLATE;
+    /* Submodo cuando UNIVERSAL está activo (determina qué operación aplica) */
+    private Mode hoveredSubMode = null;
+    private Mode activeSubMode = null;
+    /* Controlador de plano cuando se usa TRANSLATE (planos XY/YZ/ZX) */
+    private Plane hoveredPlane = null;
+    private Plane activePlane = null;
     private Axis hoveredAxis = null;
     private Axis activeAxis = null;
     private boolean dragging = false;
@@ -89,6 +97,10 @@ public class BoneGizmoSystem
     public void setMode(Mode mode)
     {
         this.mode = mode;
+        this.hoveredSubMode = null;
+        this.activeSubMode = null;
+        this.hoveredPlane = null;
+        this.activePlane = null;
     }
 
     public void update(UIContext input, Area viewport, UIPropTransform target)
@@ -102,7 +114,7 @@ public class BoneGizmoSystem
         this.centerX = viewport.mx();
         this.centerY = viewport.my();
 
-        /* Detectar eje hovered */
+        /* Detectar eje hovered (y submodo/planos si corresponde) */
         this.hoveredAxis = detectHoveredAxis(input.mouseX, input.mouseY);
 
         /* Inicio de arrastre (edge detection del botón derecho) */
@@ -111,6 +123,8 @@ public class BoneGizmoSystem
         {
             this.dragging = true;
             this.activeAxis = this.hoveredAxis;
+            this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.TRANSLATE) : this.mode;
+            this.activePlane = this.hoveredPlane;
             this.dragStartX = input.mouseX;
             this.dragStartY = input.mouseY;
             this.lastX = input.mouseX;
@@ -184,26 +198,54 @@ public class BoneGizmoSystem
                 case TRANSLATE -> 0.02F;
                 case SCALE -> 0.01F;
                 case ROTATE -> 0.3F;
+                case UNIVERSAL -> {
+                    Mode opInner = (this.activeSubMode != null) ? this.activeSubMode : Mode.TRANSLATE;
+                    yield (opInner == Mode.TRANSLATE) ? 0.02F : (opInner == Mode.SCALE ? 0.01F : 0.3F);
+                }
             };
 
             float delta = this.accumDx * factor; /* Usamos movimiento horizontal para consistencia */
 
             Transform t = this.target.getTransform();
 
-            if (this.mode == Mode.TRANSLATE)
+            Mode op = (this.mode == Mode.UNIVERSAL) ? (this.activeSubMode != null ? this.activeSubMode : Mode.TRANSLATE) : this.mode;
+
+            if (op == Mode.TRANSLATE)
             {
                 float x = t.translate.x;
                 float y = t.translate.y;
                 float z = t.translate.z;
 
-                if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
-                if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor; /* Y hacia arriba */
-                if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                if (this.activePlane == null)
+                {
+                    if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
+                    if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor; /* Y hacia arriba */
+                    if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                }
+                else
+                {
+                    // Controladores de plano: mapear horizontal/vertical a dos ejes
+                    switch (this.activePlane)
+                    {
+                        case XY -> {
+                            x = this.dragStart.translate.x + delta;
+                            y = this.dragStart.translate.y - this.accumDy * factor;
+                        }
+                        case ZX -> {
+                            z = this.dragStart.translate.z + delta;
+                            x = this.dragStart.translate.x - this.accumDy * factor;
+                        }
+                        case YZ -> {
+                            z = this.dragStart.translate.z + delta;
+                            y = this.dragStart.translate.y - this.accumDy * factor;
+                        }
+                    }
+                }
 
                 this.target.setT(null, x, y, z);
                 this.target.setTransform(t);
             }
-            else if (this.mode == Mode.SCALE)
+            else if (op == Mode.SCALE)
             {
                 float x = t.scale.x;
                 float y = t.scale.y;
@@ -216,7 +258,7 @@ public class BoneGizmoSystem
                 this.target.setS(null, x, y, z);
                 this.target.setTransform(t);
             }
-            else if (this.mode == Mode.ROTATE)
+            else if (op == Mode.ROTATE)
             {
                 /* Rotaciones en grados en UIPropTransform.setR */
                 float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
@@ -276,6 +318,8 @@ public class BoneGizmoSystem
                 {
                     this.dragging = true;
                     this.activeAxis = this.hoveredAxis;
+                    this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.TRANSLATE) : this.mode;
+                    this.activePlane = this.hoveredPlane;
                     this.dragStartX = input.mouseX;
                     this.dragStartY = input.mouseY;
                     this.lastX = input.mouseX;
@@ -304,30 +348,53 @@ public class BoneGizmoSystem
                     this.lastX = input.mouseX;
                     this.lastY = input.mouseY;
 
-                    float factor = switch (this.mode)
+                    Mode op = (this.mode == Mode.UNIVERSAL) ? (this.activeSubMode != null ? this.activeSubMode : Mode.TRANSLATE) : this.mode;
+                    float factor = switch (op)
                     {
                         case TRANSLATE -> 0.02F;
                         case SCALE -> 0.01F;
                         case ROTATE -> 0.3F;
+                        case UNIVERSAL -> 0.02F; // default
                     };
 
                     float delta = this.accumDx * factor;
                     Transform t = this.target.getTransform();
 
-                    if (this.mode == Mode.TRANSLATE)
+                    if (op == Mode.TRANSLATE)
                     {
                         float x = t.translate.x;
                         float y = t.translate.y;
                         float z = t.translate.z;
 
-                        if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
-                        if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor;
-                        if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                        if (this.activePlane == null)
+                        {
+                            if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
+                            if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor;
+                            if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                        }
+                        else
+                        {
+                            switch (this.activePlane)
+                            {
+                                case XY -> {
+                                    x = this.dragStart.translate.x + delta;
+                                    y = this.dragStart.translate.y - this.accumDy * factor;
+                                }
+                                case ZX -> {
+                                    z = this.dragStart.translate.z + delta;
+                                    x = this.dragStart.translate.x - this.accumDy * factor;
+                                }
+                                case YZ -> {
+                                    z = this.dragStart.translate.z + delta;
+                                    y = this.dragStart.translate.y - this.accumDy * factor;
+                                }
+                            }
+                        }
 
                         this.target.setT(null, x, y, z);
                         this.target.setTransform(t);
                     }
-                    else if (this.mode == Mode.SCALE)
+                    else if (op == Mode.SCALE)
                     {
                         float x = t.scale.x;
                         float y = t.scale.y;
@@ -340,7 +407,7 @@ public class BoneGizmoSystem
                         this.target.setS(null, x, y, z);
                         this.target.setTransform(t);
                     }
-                    else if (this.mode == Mode.ROTATE)
+                    else if (op == Mode.ROTATE)
                     {
                         float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
                         float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
@@ -468,7 +535,7 @@ public class BoneGizmoSystem
             this.endZy = this.centerY + handleLen;
         }
 
-        /* Detectar eje hovered */
+        /* Detectar eje hovered (y submodo/planos si corresponde) */
         this.hoveredAxis = detectHoveredAxis(input.mouseX, input.mouseY);
 
         /* Inicio de arrastre (edge detection del botón izquierdo) */
@@ -565,26 +632,53 @@ public class BoneGizmoSystem
                 case TRANSLATE -> 0.02F;
                 case SCALE -> 0.01F;
                 case ROTATE -> 0.3F;
+                case UNIVERSAL -> {
+                    Mode opInner = (this.activeSubMode != null) ? this.activeSubMode : Mode.TRANSLATE;
+                    yield (opInner == Mode.TRANSLATE) ? 0.02F : (opInner == Mode.SCALE ? 0.01F : 0.3F);
+                }
             };
 
             float delta = this.accumDx * factor; /* Usamos movimiento horizontal para consistencia */
 
             Transform t = this.target.getTransform();
 
-            if (this.mode == Mode.TRANSLATE)
+            Mode op = (this.mode == Mode.UNIVERSAL) ? (this.activeSubMode != null ? this.activeSubMode : Mode.TRANSLATE) : this.mode;
+
+            if (op == Mode.TRANSLATE)
             {
                 float x = t.translate.x;
                 float y = t.translate.y;
                 float z = t.translate.z;
 
-                if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
-                if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor; /* Y hacia arriba */
-                if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                if (this.activePlane == null)
+                {
+                    if (this.activeAxis == Axis.X) x = this.dragStart.translate.x + delta;
+                    if (this.activeAxis == Axis.Y) y = this.dragStart.translate.y - this.accumDy * factor; /* Y hacia arriba */
+                    if (this.activeAxis == Axis.Z) z = this.dragStart.translate.z + delta;
+                }
+                else
+                {
+                    switch (this.activePlane)
+                    {
+                        case XY -> {
+                            x = this.dragStart.translate.x + delta;
+                            y = this.dragStart.translate.y - this.accumDy * factor;
+                        }
+                        case ZX -> {
+                            z = this.dragStart.translate.z + delta;
+                            x = this.dragStart.translate.x - this.accumDy * factor;
+                        }
+                        case YZ -> {
+                            y = this.dragStart.translate.y + delta;
+                            z = this.dragStart.translate.z - this.accumDy * factor;
+                        }
+                    }
+                }
 
                 this.target.setT(null, x, y, z);
                 this.target.setTransform(t);
             }
-            else if (this.mode == Mode.SCALE)
+            else if (op == Mode.SCALE)
             {
                 float x = t.scale.x;
                 float y = t.scale.y;
@@ -597,7 +691,7 @@ public class BoneGizmoSystem
                 this.target.setS(null, x, y, z);
                 this.target.setTransform(t);
             }
-            else if (this.mode == Mode.ROTATE)
+            else if (op == Mode.ROTATE)
             {
                 /* Rotaciones en grados en UIPropTransform.setR */
                 float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
@@ -766,6 +860,22 @@ public class BoneGizmoSystem
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
                 drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
+            // Controladores de plano cerca del origen (XY, ZX, YZ)
+            float planeSize = 0.045F;
+            float planeThick = 0.008F;
+            boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
+            boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
+            boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+            float halo = 0.55F;
+            // XY (amarillo) en el cuadrante positivo
+            Draw.fillBox(builder, stack, 0.02F, 0.02F, -planeThick, planeSize, planeSize, planeThick, 1F, 1F, 0F, hXY ? 0.85F : 0.55F);
+            if (hXY) Draw.fillBox(builder, stack, 0.015F, 0.015F, -planeThick - 0.003F, planeSize + 0.005F, planeSize + 0.005F, planeThick + 0.003F, 1F, 1F, 1F, 0.25F);
+            // ZX (magenta)
+            Draw.fillBox(builder, stack, 0.02F, -planeThick, 0.02F, planeSize, planeThick, planeSize, 1F, 0F, 1F, hZX ? 0.85F : 0.55F);
+            if (hZX) Draw.fillBox(builder, stack, 0.015F, -planeThick - 0.003F, 0.015F, planeSize + 0.005F, planeThick + 0.003F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
+            // YZ (cian)
+            Draw.fillBox(builder, stack, -planeThick, 0.02F, 0.02F, planeThick, planeSize, planeSize, 0F, 1F, 1F, hYZ ? 0.85F : 0.55F);
+            if (hYZ) Draw.fillBox(builder, stack, -planeThick - 0.003F, 0.015F, 0.015F, planeThick + 0.003F, planeSize + 0.005F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
         }
         else if (this.mode == Mode.SCALE)
         {
@@ -837,6 +947,91 @@ public class BoneGizmoSystem
             // Cubo central (referencia de pivote) con contorno negro
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+        }
+        else if (this.mode == Mode.UNIVERSAL)
+        {
+            // Render combinado: barras/conos de TRANSLATE + losas de SCALE + anillos ROTATE
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+
+            float lengthBar = 0.25F + 0.03F;
+            float headLen = 0.08F;
+            float headRadius = 0.03F;
+            // Usar thickness, outlinePad, slabThick, cubeBig y showX/showY/showZ
+            // definidos al inicio del método
+
+            float txX = hx ? thickness * 1.5F : thickness;
+            float txY = hy ? thickness * 1.5F : thickness;
+            float txZ = hz ? thickness * 1.5F : thickness;
+
+            // Barras + conos (translate)
+            if (showX)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX + outlinePad, 0F, 0F, 0F, 1F);
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, lengthBar - headLen - 0.002F, 0, 0, txX, 1F, 0F, 0F, 1F);
+                drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 0F, 0F, 1F);
+            }
+            if (showY)
+            {
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY + outlinePad, 0F, 0F, 0F, 1F);
+                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, lengthBar - headLen - 0.002F, 0, txY, 0F, 1F, 0F, 1F);
+                drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 0F, 1F, 0F, 1F);
+            }
+            if (showZ)
+            {
+                Draw.fillBox(builder, stack, -(txZ + outlinePad) / 2F, -(txZ + outlinePad) / 2F, 0F, (txZ + outlinePad) / 2F, (txZ + outlinePad) / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, lengthBar - headLen - 0.002F, 0F, 0F, 1F, 1F);
+                drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
+            }
+
+            // Losas grandes en extremos (scale)
+            if (showX)
+            {
+                stack.push(); stack.translate(0.25F, 0F, 0F);
+                Draw.fillBox(builder, stack, -(slabThick + outlinePad), -(cubeBig + outlinePad), -(cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -slabThick, -cubeBig, -cubeBig, slabThick, cubeBig, cubeBig, 1F, 0F, 0F, 0.75F);
+                stack.pop();
+            }
+            if (showY)
+            {
+                stack.push(); stack.translate(0F, 0.25F, 0F);
+                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(slabThick + outlinePad), -(cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), (cubeBig + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -cubeBig, -slabThick, -cubeBig, cubeBig, slabThick, cubeBig, 0F, 1F, 0F, 0.75F);
+                stack.pop();
+            }
+            if (showZ)
+            {
+                stack.push(); stack.translate(0F, 0F, 0.25F);
+                Draw.fillBox(builder, stack, -(cubeBig + outlinePad), -(cubeBig + outlinePad), -(slabThick + outlinePad), (cubeBig + outlinePad), (cubeBig + outlinePad), (slabThick + outlinePad), 0F, 0F, 0F, 1F);
+                Draw.fillBox(builder, stack, -cubeBig, -cubeBig, -slabThick, cubeBig, cubeBig, slabThick, 0F, 0F, 1F, 0.75F);
+                stack.pop();
+            }
+
+            // Anillos de rotación
+            float radius = 0.22F; float thicknessRing = 0.01F; float sweep = 360F;
+            RenderSystem.disableCull();
+            drawEndCube(builder, stack, 0, 0, 0, 0.022F + outlinePad, 0F, 0F, 0F);
+            drawEndCube(builder, stack, 0, 0, 0, 0.022F, 1F, 1F, 1F);
+            drawRingArc3D(builder, stack, 'Z', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
+            drawRingArc3D(builder, stack, 'Z', radius, thicknessRing, 0F, 0F, 1F, 0F, sweep, hz);
+            drawRingArc3D(builder, stack, 'X', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
+            drawRingArc3D(builder, stack, 'X', radius, thicknessRing, 1F, 0F, 0F, 0F, sweep, hx);
+            drawRingArc3D(builder, stack, 'Y', radius, thicknessRing + outlinePad, 0F, 0F, 0F, 0F, sweep, false);
+            drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, 0F, sweep, hy);
+            RenderSystem.enableCull();
+
+            // Planos de desplazamiento cerca del origen (más pequeños y con halo en hover)
+            float planeSize = 0.045F; float planeThick = 0.008F;
+            boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
+            boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
+            boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+            Draw.fillBox(builder, stack, 0.02F, 0.02F, -planeThick, planeSize, planeSize, planeThick, 1F, 1F, 0F, hXY ? 0.85F : 0.55F);
+            if (hXY) Draw.fillBox(builder, stack, 0.015F, 0.015F, -planeThick - 0.003F, planeSize + 0.005F, planeSize + 0.005F, planeThick + 0.003F, 1F, 1F, 1F, 0.25F);
+            Draw.fillBox(builder, stack, 0.02F, -planeThick, 0.02F, planeSize, planeThick, planeSize, 1F, 0F, 1F, hZX ? 0.85F : 0.55F);
+            if (hZX) Draw.fillBox(builder, stack, 0.015F, -planeThick - 0.003F, 0.015F, planeSize + 0.005F, planeThick + 0.003F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
+            Draw.fillBox(builder, stack, -planeThick, 0.02F, 0.02F, planeThick, planeSize, planeSize, 0F, 1F, 1F, hYZ ? 0.85F : 0.55F);
+            if (hYZ) Draw.fillBox(builder, stack, -planeThick - 0.003F, 0.015F, 0.015F, planeThick + 0.003F, planeSize + 0.005F, planeSize + 0.005F, 1F, 1F, 1F, 0.25F);
         }
         else if (this.mode == Mode.ROTATE)
         {
@@ -1190,6 +1385,8 @@ public class BoneGizmoSystem
     private Axis detectHoveredAxis3D(UIContext input, Area viewport, Matrix4f origin, Matrix4f projection, Matrix4f view)
     {
         if (origin == null || projection == null || view == null) return null;
+        // Reiniciar plano hovered por defecto en cada chequeo
+        this.hoveredPlane = null;
 
         // Convertir coordenadas del mouse a NDC
         float nx = (float) (((input.mouseX - viewport.x) / (double) viewport.w) * 2.0 - 1.0);
@@ -1223,6 +1420,53 @@ public class BoneGizmoSystem
             return detectHoveredAxis3DRotate(rayO, rayD);
         }
 
+        if (this.mode == Mode.UNIVERSAL)
+        {
+            // Priorizar anillos de rotación
+            Axis rot = detectHoveredAxis3DRotate(rayO, rayD);
+            if (rot != null) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return rot; }
+
+            // AABBs de barras (translate) y losas (scale). Elegir el más cercano.
+            float len = 0.25F; float fudgeT = 0.06F; float thickT = 0.015F; float thickS = 0.045F;
+            float[] txT = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -thickT/2F, -thickT/2F), new Vector3f(len + fudgeT, thickT/2F, thickT/2F));
+            float[] tyT = rayBoxIntersect(rayO, rayD, new Vector3f(-thickT/2F, 0F, -thickT/2F), new Vector3f(thickT/2F, len + fudgeT, thickT/2F));
+            float[] tzT = rayBoxIntersect(rayO, rayD, new Vector3f(-thickT/2F, -thickT/2F, 0F), new Vector3f(thickT/2F, thickT/2F, len + fudgeT));
+
+            float[] txS = rayBoxIntersect(rayO, rayD, new Vector3f(len - 0.02F, -0.045F, -0.045F), new Vector3f(len + 0.02F, 0.045F, 0.045F));
+            float[] tyS = rayBoxIntersect(rayO, rayD, new Vector3f(-0.045F, len - 0.02F, -0.045F), new Vector3f(0.045F, len + 0.02F, 0.045F));
+            float[] tzS = rayBoxIntersect(rayO, rayD, new Vector3f(-0.045F, -0.045F, len - 0.02F), new Vector3f(0.045F, 0.045F, len + 0.02F));
+
+            class Cand { Axis a; float t; Mode m; }
+            java.util.List<Cand> cands = new java.util.ArrayList<>();
+            if (txT != null && txT[0] >= 0) cands.add(new Cand(){ { a=Axis.X; t=txT[0]; m=Mode.TRANSLATE; } });
+            if (tyT != null && tyT[0] >= 0) cands.add(new Cand(){ { a=Axis.Y; t=tyT[0]; m=Mode.TRANSLATE; } });
+            if (tzT != null && tzT[0] >= 0) cands.add(new Cand(){ { a=Axis.Z; t=tzT[0]; m=Mode.TRANSLATE; } });
+            if (txS != null && txS[0] >= 0) cands.add(new Cand(){ { a=Axis.X; t=txS[0]; m=Mode.SCALE; } });
+            if (tyS != null && tyS[0] >= 0) cands.add(new Cand(){ { a=Axis.Y; t=tyS[0]; m=Mode.SCALE; } });
+            if (tzS != null && tzS[0] >= 0) cands.add(new Cand(){ { a=Axis.Z; t=tzS[0]; m=Mode.SCALE; } });
+
+            Cand best = null;
+            for (Cand c : cands)
+            {
+                if (best == null || c.t < best.t) best = c;
+            }
+            if (best != null) { this.hoveredSubMode = best.m; this.hoveredPlane = null; return best.a; }
+
+            // Planos cerca del origen (pequeñas losas)
+            float ps = 0.07F; float pt = 0.01F;
+            float[] pXY = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, 0.02F, -pt), new Vector3f(ps, ps, pt));
+            float[] pZX = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, -pt, 0.02F), new Vector3f(ps, pt, ps));
+            float[] pYZ = rayBoxIntersect(rayO, rayD, new Vector3f(-pt, 0.02F, 0.02F), new Vector3f(pt, ps, ps));
+
+            float bt = Float.POSITIVE_INFINITY; Axis ba = null; Plane bp = null;
+            if (pXY != null && pXY[0] >= 0 && pXY[0] < bt) { bt=pXY[0]; ba=Axis.X; bp=Plane.XY; }
+            if (pZX != null && pZX[0] >= 0 && pZX[0] < bt) { bt=pZX[0]; ba=Axis.Z; bp=Plane.ZX; }
+            if (pYZ != null && pYZ[0] >= 0 && pYZ[0] < bt) { bt=pYZ[0]; ba=Axis.Y; bp=Plane.YZ; }
+            if (bp != null) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = bp; return ba; }
+
+            this.hoveredSubMode = null; this.hoveredPlane = null; return null;
+        }
+
         // Definir AABB por eje (mover/escalar)
         float length = 0.25F;
         // En escala el cubo del extremo es más grande; ampliamos sección transversal del AABB
@@ -1239,6 +1483,19 @@ public class BoneGizmoSystem
         if (tx != null && tx[0] >= 0 && tx[0] < bestT) { bestT = tx[0]; best = Axis.X; }
         if (ty != null && ty[0] >= 0 && ty[0] < bestT) { bestT = ty[0]; best = Axis.Y; }
         if (tz != null && tz[0] >= 0 && tz[0] < bestT) { bestT = tz[0]; best = Axis.Z; }
+
+        // En modo TRANSLATE, también permitir picking de los planos cercanos al origen
+        if (this.mode == Mode.TRANSLATE)
+        {
+            float ps = 0.045F; float pt = 0.008F;
+            float[] pXY = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, 0.02F, -pt), new Vector3f(ps, ps, pt));
+            float[] pZX = rayBoxIntersect(rayO, rayD, new Vector3f(0.02F, -pt, 0.02F), new Vector3f(ps, pt, ps));
+            float[] pYZ = rayBoxIntersect(rayO, rayD, new Vector3f(-pt, 0.02F, 0.02F), new Vector3f(pt, ps, ps));
+
+            if (pXY != null && pXY[0] >= 0 && pXY[0] < bestT) { bestT = pXY[0]; best = Axis.X; this.hoveredPlane = Plane.XY; }
+            if (pZX != null && pZX[0] >= 0 && pZX[0] < bestT) { bestT = pZX[0]; best = Axis.Z; this.hoveredPlane = Plane.ZX; }
+            if (pYZ != null && pYZ[0] >= 0 && pYZ[0] < bestT) { bestT = pYZ[0]; best = Axis.Y; this.hoveredPlane = Plane.YZ; }
+        }
 
         return best;
     }
@@ -1463,6 +1720,24 @@ public class BoneGizmoSystem
                 drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor);
             }
 
+            // Controladores de plano (XY amarillo, ZX magenta, YZ cian)
+            int[] cXY = planeCenterScreen(Plane.XY);
+            int[] cZX = planeCenterScreen(Plane.ZX);
+            int[] cYZ = planeCenterScreen(Plane.YZ);
+            int ps = 7;
+            boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
+            boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
+            boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+            int colXY = Colors.A100 | Colors.YELLOW;
+            int colZX = Colors.A100 | Colors.MAGENTA;
+            int colYZ = Colors.A100 | Colors.CYAN;
+            context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
+            context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
+            context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
+            if (hXY) context.batcher.box(cXY[0] - (ps + 2), cXY[1] - (ps + 2), cXY[0] + (ps + 2), cXY[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            if (hZX) context.batcher.box(cZX[0] - (ps + 2), cZX[1] - (ps + 2), cZX[0] + (ps + 2), cZX[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            if (hYZ) context.batcher.box(cYZ[0] - (ps + 2), cYZ[1] - (ps + 2), cYZ[0] + (ps + 2), cYZ[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+
             // Halo blanco suave en el eje hovered
             int halo = Colors.A100 | Colors.WHITE;
             if (hx && showX)
@@ -1549,6 +1824,59 @@ public class BoneGizmoSystem
             if (showY) drawRing(context, cx, cy, this.ringRY, thickness, yColor);
             if (showZ) drawRing(context, cx, cy, this.ringRZ, thickness, zColor);
         }
+        else if (this.mode == Mode.UNIVERSAL)
+        {
+            // Dibujar combinación: líneas con flecha, cubos en extremos y anillos
+            boolean showX = !this.dragging || this.activeAxis == Axis.X;
+            boolean showY = !this.dragging || this.activeAxis == Axis.Y;
+            boolean showZ = !this.dragging || this.activeAxis == Axis.Z;
+            int xColor = (Colors.A100 | Colors.RED);
+            int yColor = (Colors.A100 | Colors.GREEN);
+            int zColor = (Colors.A100 | Colors.BLUE);
+            boolean hx = (this.hoveredAxis == Axis.X);
+            boolean hy = (this.hoveredAxis == Axis.Y);
+            boolean hz = (this.hoveredAxis == Axis.Z);
+            float txX = hx ? (thickness + 2F) : thickness;
+            float txY = hy ? (thickness + 2F) : thickness;
+            float txZ = hz ? (thickness + 2F) : thickness;
+            int black = Colors.A100;
+
+            // Líneas + flechas
+            if (showX) { context.batcher.line(cx, cy, this.endXx, this.endXy, txX + 3F, black); context.batcher.line(cx, cy, this.endXx, this.endXy, txX, xColor); drawArrowHandle(context, cx, cy, this.endXx, this.endXy, xColor); }
+            if (showY) { context.batcher.line(cx, cy, this.endYx, this.endYy, txY + 3F, black); context.batcher.line(cx, cy, this.endYx, this.endYy, txY, yColor); drawArrowHandle(context, cx, cy, this.endYx, this.endYy, yColor); }
+            if (showZ) { context.batcher.line(cx, cy, this.endZx, this.endZy, txZ + 3F, black); context.batcher.line(cx, cy, this.endZx, this.endZy, txZ, zColor); drawArrowHandle(context, cx, cy, this.endZx, this.endZy, zColor); }
+
+            // Cubos en extremos (scale)
+            if (showX) drawCubeHandle(context, this.endXx, this.endXy, xColor);
+            if (showY) drawCubeHandle(context, this.endYx, this.endYy, yColor);
+            if (showZ) drawCubeHandle(context, this.endZx, this.endZy, zColor);
+
+            // Anillos (rotate)
+            int xRing = (Colors.A100 | Colors.RED);
+            int yRing = (Colors.A100 | Colors.GREEN);
+            int zRing = (Colors.A100 | Colors.BLUE);
+            drawRing(context, cx, cy, this.ringRX, thickness, xRing);
+            drawRing(context, cx, cy, this.ringRY, thickness, yRing);
+            drawRing(context, cx, cy, this.ringRZ, thickness, zRing);
+
+            // Controladores de plano (rombos) entre ejes
+            int[] cXY = planeCenterScreen(Plane.XY);
+            int[] cZX = planeCenterScreen(Plane.ZX);
+            int[] cYZ = planeCenterScreen(Plane.YZ);
+            int ps = 10;
+            int colXY = Colors.A100 | Colors.YELLOW;
+            int colZX = Colors.A100 | Colors.MAGENTA;
+            int colYZ = Colors.A100 | Colors.CYAN;
+            context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, 0.5F));
+            context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, 0.5F));
+            context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, 0.5F));
+
+            // Halo blanco suave según hovered
+            int halo = Colors.A100 | Colors.WHITE;
+            if (hx && showX) context.batcher.line(cx, cy, this.endXx, this.endXy, thickness + 4F, halo);
+            if (hy && showY) context.batcher.line(cx, cy, this.endYx, this.endYy, thickness + 4F, halo);
+            if (hz && showZ) context.batcher.line(cx, cy, this.endZx, this.endZy, thickness + 4F, halo);
+        }
 
         /* Centro del pivote: dibujar un cuadrado más visible */
         int half = 5; // tamaño total 10px
@@ -1584,15 +1912,73 @@ public class BoneGizmoSystem
             return null;
         }
 
-        /* Mover/Escalar: picking por proximidad a las líneas completas y a los endpoints */
+        /* Mover/Escalar/Universal: picking por proximidad a líneas, endpoints y anillos */
         int cx = this.centerX;
         int cy = this.centerY;
         int tol = Math.max(6, this.handleThickness + 4);
+        if (this.mode == Mode.UNIVERSAL)
+        {
+            // Primero: anillos de rotación
+            double dx = mx - cx; double dy = my - cy; double d = Math.sqrt(dx * dx + dy * dy);
+            int tolRing = Math.max(6, this.handleThickness * 2);
+            if (Math.abs(d - this.ringRX) <= tolRing) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return Axis.X; }
+            if (Math.abs(d - this.ringRY) <= tolRing) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return Axis.Y; }
+            if (Math.abs(d - this.ringRZ) <= tolRing) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return Axis.Z; }
+
+            // Endpoints: cubos -> SCALE
+            if (isNear(mx, my, endXx, endXy, hitRadius)) { this.hoveredSubMode = Mode.SCALE; this.hoveredPlane = null; return Axis.X; }
+            if (isNear(mx, my, endYx, endYy, hitRadius)) { this.hoveredSubMode = Mode.SCALE; this.hoveredPlane = null; return Axis.Y; }
+            if (isNear(mx, my, endZx, endZy, hitRadius)) { this.hoveredSubMode = Mode.SCALE; this.hoveredPlane = null; return Axis.Z; }
+
+            // Controladores de plano: centros intermedios
+            int[] cXY = planeCenterScreen(Plane.XY);
+            int[] cZX = planeCenterScreen(Plane.ZX);
+            int[] cYZ = planeCenterScreen(Plane.YZ);
+            int pr = hitRadius; // radio pick aproximado
+            if (isNear(mx, my, cXY[0], cXY[1], pr)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = Plane.XY; return Axis.X; }
+            if (isNear(mx, my, cZX[0], cZX[1], pr)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = Plane.ZX; return Axis.Z; }
+            if (isNear(mx, my, cYZ[0], cYZ[1], pr)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = Plane.YZ; return Axis.Y; }
+
+            // Líneas: TRANSLATE
+            if (isNearLine(mx, my, cx, cy, endXx, endXy, tol)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = null; return Axis.X; }
+            if (isNearLine(mx, my, cx, cy, endYx, endYy, tol)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = null; return Axis.Y; }
+            if (isNearLine(mx, my, cx, cy, endZx, endZy, tol)) { this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = null; return Axis.Z; }
+
+            this.hoveredSubMode = null; this.hoveredPlane = null; return null;
+        }
+
+        // Modo normal: TRANSLATE o SCALE
+        if (this.mode == Mode.TRANSLATE)
+        {
+            // Incluir controladores de plano en modo TRANSLATE
+            int[] cXY = planeCenterScreen(Plane.XY);
+            int[] cZX = planeCenterScreen(Plane.ZX);
+            int[] cYZ = planeCenterScreen(Plane.YZ);
+            int pr = hitRadius;
+            if (isNear(mx, my, cXY[0], cXY[1], pr)) { this.hoveredPlane = Plane.XY; this.hoveredSubMode = Mode.TRANSLATE; return Axis.X; }
+            if (isNear(mx, my, cZX[0], cZX[1], pr)) { this.hoveredPlane = Plane.ZX; this.hoveredSubMode = Mode.TRANSLATE; return Axis.Z; }
+            if (isNear(mx, my, cYZ[0], cYZ[1], pr)) { this.hoveredPlane = Plane.YZ; this.hoveredSubMode = Mode.TRANSLATE; return Axis.Y; }
+            this.hoveredPlane = null;
+        }
+
         if (isNearLine(mx, my, cx, cy, endXx, endXy, tol) || isNear(mx, my, endXx, endXy, hitRadius)) return Axis.X;
         if (isNearLine(mx, my, cx, cy, endYx, endYy, tol) || isNear(mx, my, endYx, endYy, hitRadius)) return Axis.Y;
         if (isNearLine(mx, my, cx, cy, endZx, endZy, tol) || isNear(mx, my, endZx, endZy, hitRadius)) return Axis.Z;
 
         return null;
+    }
+
+    /** Centro en pantalla para controladores de plano (basado en endpoints) */
+    private int[] planeCenterScreen(Plane p)
+    {
+        float k = 0.5F; // proporcional desde el pivote hacia el extremo
+        int cx = this.centerX, cy = this.centerY;
+        return switch (p)
+        {
+            case XY -> new int[]{ (int)(cx + (endXx - cx) * k), (int)(cy + (endYy - cy) * k) };
+            case ZX -> new int[]{ (int)(cx + (endXx - cx) * k), (int)(cy + (endZy - cy) * k) };
+            case YZ -> new int[]{ (int)(cx + (endYx - cx) * k), (int)(cy + (endZy - cy) * k) };
+        };
     }
 
     private void drawRing(UIRenderingContext context, int cx, int cy, int radius, float thickness, int color)
