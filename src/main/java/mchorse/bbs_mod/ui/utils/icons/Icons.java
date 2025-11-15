@@ -222,6 +222,16 @@ public class Icons
     public static final Icon KEY_CAP_RIGHT = new Icon(ATLAS, "key_cap", 236, 236, 4, 20);
     public static final Icon KEY_CAP_REPEATABLE = new Icon(ATLAS, "key_cap_repeatable", 224, 236, 12, 20);
 
+    public static final Icon SHAPES = register(new Icon(ATLAS, "shapes", 66, 144, 12, 14));
+    public static final Icon SQUARE = register(new Icon(ATLAS, "square", 83, 145, 12, 13));
+    public static final Icon TRIANGLE = register(new Icon(ATLAS, "triangle", 98, 145, 13, 13));
+    public static final Icon DIAMOND = register(new Icon(ATLAS, "diamond", 115, 145, 12, 13));
+    public static final Icon CIRCLE = register(new Icon(ATLAS, "circle", 131, 147, 10, 10));
+    public static final Icon TRI_STAR = register(new Icon(ATLAS, "tri_star", 161, 144, 13, 13));
+    public static final Icon FOUR_STAR = register(new Icon(ATLAS, "four_star", 145, 144, 13, 13));
+    public static final Icon FIVE_STAR = register(new Icon(ATLAS, "five_star", 177, 144, 14, 14));
+    public static final Icon SIX_STAR = register(new Icon(ATLAS, "six_star", 194, 144, 12, 15));
+
     public static Icon register(Icon icon)
     {
         if (ICONS.containsKey(icon.id))

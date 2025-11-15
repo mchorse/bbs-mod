@@ -7,6 +7,10 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.AbstractUIKeyframeShape;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IUIKeyframeShapeIndependantBackground;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.UIKeyframeShapeFactory;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
@@ -594,14 +598,19 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                     isPointHover = isPointHover || this.keyframes.getGrabbingArea(context).isInside(x1, my);
                 }
 
-                int c = (sheet.selection.has(j) || isPointHover ? Colors.WHITE : sheet.color) | Colors.A100;
+                int kc = frame.keyframeColor != null ? frame.keyframeColor.getRGBColor() | Colors.A100 : sheet.color;
+
+                int c = (sheet.selection.has(j) || isPointHover ? Colors.WHITE : kc) | Colors.A100;
 
                 if (toRemove)
                 {
                     c = Colors.RED | Colors.A100;
                 }
 
-                this.renderSquare(context, builder, matrix, x1, my, toRemove ? 4 : 3, c);
+                int offset = toRemove ? 4 : 3;
+
+                this.renderShape(frame, context, builder, matrix, x1, my, offset, c);
+                //this.renderSquare(context, builder, matrix, x1, my, toRemove ? 4 : 3, c);
             }
 
             /* Render keyframe handles (inner) */
@@ -610,7 +619,9 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                 Keyframe frame = (Keyframe) keyframes.get(j);
                 int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
 
-                this.renderSquare(context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), my, 2, c | Colors.A100);
+                AbstractUIKeyframeShape shapeResult = this.renderShape(frame, context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), my, 2, c | Colors.A100);
+                this.renderShapeBackground(shapeResult);
+                // this.renderSquare(context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), my, 2, c | Colors.A100);
             }
 
             RenderSystem.enableBlend();
@@ -645,6 +656,28 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     protected void renderSquare(UIContext context, BufferBuilder builder, Matrix4f matrix, int x, int y, int offset, int c)
     {
         context.batcher.fillRect(builder, matrix, x - offset, y - offset, offset * 2, offset * 2, c, c, c, c);
+    }
+
+    protected AbstractUIKeyframeShape renderShape(Keyframe frame, UIContext context, BufferBuilder builder, Matrix4f matrix, int x, int y, int offset, int c)
+    {
+        KeyframeShape keyframeShape = frame.keyframeShape;
+
+        AbstractUIKeyframeShape shape = (AbstractUIKeyframeShape) UIKeyframeShapeFactory.createShape(
+                keyframeShape, context, builder, matrix,
+                x, y, offset, c);
+
+        shape.renderKeyframe();
+
+
+        return shape;
+    }
+
+    protected void renderShapeBackground(AbstractUIKeyframeShape shape)
+    {
+        if(shape instanceof IUIKeyframeShapeIndependantBackground)
+        {
+            ((IUIKeyframeShapeIndependantBackground) shape).renderKeyframeBackground();
+        }
     }
 
     @Override

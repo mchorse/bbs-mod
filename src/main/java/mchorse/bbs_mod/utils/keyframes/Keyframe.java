@@ -3,6 +3,7 @@ package mchorse.bbs_mod.utils.keyframes;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.interps.Interpolations;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
@@ -18,6 +19,9 @@ public class Keyframe <T> extends BaseValue
     public float ly;
     public float rx = 5;
     public float ry;
+
+    public KeyframeShape keyframeShape = KeyframeShape.SQUARE; // If null, is a square as usual
+    public Color keyframeColor; // If null, takes the color of the channel as usual.
 
     /**
      * Forced duration that would be used instead of the difference
@@ -114,6 +118,8 @@ public class Keyframe <T> extends BaseValue
         this.duration = keyframe.duration;
         this.value = this.factory.copy(keyframe.value);
         this.interp.copy(keyframe.interp);
+        this.keyframeShape = keyframe.keyframeShape;
+        this.keyframeColor = keyframe.keyframeColor;
     }
 
     @Override
@@ -146,12 +152,14 @@ public class Keyframe <T> extends BaseValue
 
         data.putFloat("tick", this.tick);
         data.put("value", this.factory.toData(this.value));
+        data.putString("keyframe_shape", this.keyframeShape.toString().toUpperCase());
         if (this.duration != 0F) data.putFloat("duration", this.duration);
         if (this.interp.getInterp() != Interpolations.LINEAR) data.put("interp", this.interp.toData());
         if (this.lx != 5F) data.putFloat("lx", this.lx);
         if (this.ly != 0F) data.putFloat("ly", this.ly);
         if (this.rx != 5F) data.putFloat("rx", this.rx);
         if (this.ry != 0F) data.putFloat("ry", this.ry);
+        if(this.keyframeColor != null) data.putInt("keyframe_color", this.keyframeColor.getRGBColor());
 
         return data;
     }
@@ -174,5 +182,7 @@ public class Keyframe <T> extends BaseValue
         if (map.has("ly")) this.ly = map.getFloat("ly");
         if (map.has("rx")) this.rx = map.getFloat("rx");
         if (map.has("ry")) this.ry = map.getFloat("ry");
+        if(map.has("keyframe_shape")) this.keyframeShape = KeyframeShape.fromString(map.getString("keyframe_shape"));
+        if(map.has("keyframe_color")) this.keyframeColor = Color.rgb(map.getInt("keyframe_color"));
     }
 }

@@ -5,17 +5,22 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.context.UIColorContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.context.UIInterpolationContextMenu;
+import mchorse.bbs_mod.ui.framework.elements.context.UIShapeContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragEndEvent;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.framework.elements.input.color.UIColorPicker;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.IAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
@@ -31,6 +36,9 @@ public abstract class UIKeyframeFactory <T> extends UIElement
     public UITrackpad tick;
     public UITrackpad duration;
     public UIIcon interp;
+
+    public UIIcon shape;
+    public UIIcon keyframe_color;
 
     protected Keyframe<T> keyframe;
     protected UIKeyframes editor;
@@ -107,6 +115,23 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.interp.keys().register(Keys.KEYFRAMES_INTERP, this.interp::clickItself).category(UIKeys.KEYFRAMES_KEYS_CATEGORY);
 
         this.scroll.add(UI.row(this.interp, this.tick, this.duration));
+
+        this.keyframe_color = new UIIcon(Icons.COLOR, (b) -> {
+            Color choosenColor = (this.keyframe.keyframeColor == null) ? Color.white() : this.keyframe.keyframeColor;
+            UIColorContextMenu menu = new UIColorContextMenu(choosenColor);
+
+            this.getContext().replaceContextMenu(menu.callback(() -> this.keyframe.keyframeColor = menu.colorPicker.color));
+        });
+
+        this.shape = new UIIcon(Icons.SHAPES, (b) -> {
+
+            KeyframeShape keyframeShape = (keyframe.keyframeShape == null) ? KeyframeShape.SQUARE : keyframe.keyframeShape;
+            UIShapeContextMenu menu = new UIShapeContextMenu(keyframeShape);
+
+            this.getContext().replaceContextMenu(menu.callback(() -> this.keyframe.keyframeShape = menu.choosenShape));
+        });
+        this.scroll.add(UI.row(this.keyframe_color, this.shape));
+
         this.add(this.scroll);
 
         /* Fill data */
