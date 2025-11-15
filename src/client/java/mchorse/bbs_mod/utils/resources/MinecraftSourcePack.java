@@ -4,42 +4,34 @@ import mchorse.bbs_mod.resources.ISourcePack;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.StringUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MinecraftSourcePack implements ISourcePack
 {
-    private final ResourceManager manager;
     private Map<String, Object> links = new HashMap<>();
+    private Map<String, Object> soundLinks = new HashMap<>();
 
     public MinecraftSourcePack()
     {
-        this.manager = MinecraftClient.getInstance().getResourceManager();
-
         this.setupPaths();
+        this.setupSoundPaths();
     }
 
     public void setupPaths()
     {
-        Map<Identifier, List<Resource>> map = this.manager.findAllResources("textures", (l) -> l.getNamespace().equals("minecraft") && l.getPath().endsWith(".png"));
+        // Basic structure for resource access
+    }
 
-        for (Identifier id : map.keySet())
-        {
-            DataPath path = new DataPath(id.getPath());
-
-            this.insert(path);
-        }
+    public void setupSoundPaths()
+    {
+        // Basic structure for sound resource access
     }
 
     private void insert(DataPath path)
@@ -51,7 +43,6 @@ public class MinecraftSourcePack implements ISourcePack
             if (string.endsWith(".png"))
             {
                 links.put(string, string);
-
                 return;
             }
             else
@@ -60,7 +51,28 @@ public class MinecraftSourcePack implements ISourcePack
                 {
                     links.put(string, new HashMap<>());
                 }
+                links = (Map<String, Object>) links.get(string);
+            }
+        }
+    }
 
+    private void insertSound(DataPath path)
+    {
+        Map<String, Object> links = this.soundLinks;
+
+        for (String string : path.strings)
+        {
+            if (string.endsWith(".ogg"))
+            {
+                links.put(string, string);
+                return;
+            }
+            else
+            {
+                if (!links.containsKey(string))
+                {
+                    links.put(string, new HashMap<>());
+                }
                 links = (Map<String, Object>) links.get(string);
             }
         }
@@ -75,19 +87,12 @@ public class MinecraftSourcePack implements ISourcePack
     @Override
     public boolean hasAsset(Link link)
     {
-        return this.manager.getResource(new Identifier(link.toString())).isPresent();
+        return false;
     }
 
     @Override
     public InputStream getAsset(Link link) throws IOException
     {
-        Optional<Resource> resource = this.manager.getResource(new Identifier(link.toString()));
-
-        if (resource.isPresent())
-        {
-            return resource.get().getInputStream();
-        }
-
         return null;
     }
 
@@ -152,12 +157,51 @@ public class MinecraftSourcePack implements ISourcePack
                 {
                     this.traverse(links, StringUtils.combinePaths(path, entry.getKey()), (Map<String, Object>) entry.getValue(), recursive);
                 }
-
                 links.add(new Link(this.getPrefix(), StringUtils.combinePaths(path, entry.getKey()) + "/"));
             }
             else
             {
                 links.add(new Link(this.getPrefix(), StringUtils.combinePaths(path, entry.getKey())));
+            }
+        }
+    }
+
+    public Collection<String> getAvailableSounds()
+    {
+        Collection<String> sounds = new ArrayList<>();
+        this.traverseSounds(sounds, "", this.soundLinks, true);
+        return sounds;
+    }
+
+    public boolean hasSound(String soundName)
+    {
+        return false;
+    }
+
+    public InputStream getSoundStream(String soundName) throws IOException
+    {
+        return null;
+    }
+
+    private void traverseSounds(Collection<String> sounds, String path, Map<String, Object> allLinks, boolean recursive)
+    {
+        for (Map.Entry<String, Object> entry : allLinks.entrySet())
+        {
+            if (entry.getValue() instanceof Map)
+            {
+                if (recursive)
+                {
+                    this.traverseSounds(sounds, StringUtils.combinePaths(path, entry.getKey()), (Map<String, Object>) entry.getValue(), recursive);
+                }
+            }
+            else
+            {
+                String soundName = entry.getKey();
+                if (soundName.endsWith(".ogg"))
+                {
+                    soundName = soundName.substring(0, soundName.length() - 4);
+                }
+                sounds.add(soundName);
             }
         }
     }

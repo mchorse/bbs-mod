@@ -172,6 +172,8 @@ public class Icons
     public static final Icon SUN = register(new Icon(ATLAS, "sun", 0, 144));
     public static final Icon STOPWATCH = register(new Icon(ATLAS, "stopwatch", 16, 144));
     public static final Icon HEART_ALT = register(new Icon(ATLAS, "heart_alt", 32, 144));
+    public static final Icon LIKE = register(new Icon(ATLAS, "like", 48, 144));
+    public static final Icon DISLIKE = register(new Icon(ATLAS, "dislike", 64, 144));
 
     public static final Icon INTERP_LINEAR = register(new Icon(ATLAS, "interp_linear", 0, 192));
     public static final Icon INTERP_CONST = register(new Icon(ATLAS, "interp_const", 16, 192));

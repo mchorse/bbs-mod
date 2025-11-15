@@ -302,6 +302,11 @@ public class BBSMod implements ModInitializer
         return new File(getAssetsFolder(), path);
     }
 
+    public static File getAudioCacheFolder()
+    {
+        return getSettingsPath("audio_cache");
+    }
+
     /**
      * Config folder within game's folder. It's used to store any configuration
      * files.
