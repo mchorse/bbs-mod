@@ -71,6 +71,12 @@ public class BoneGizmoSystem
     /* Usar canal secundario de rotación (R2) cuando esté activo */
     private boolean useRotation2 = false;
 
+    /* Escalado dinámico del gizmo según distancia cámara–pivote */
+    private float gizmoScale = 0.2F;
+    private float minGizmoScale = 0.6F;
+    private float maxGizmoScale = 10.0F;
+    private float scaleSlope = 0.75F;
+
     /* Soporte de "mouse en bucle" durante el arrastre (como en UIPropTransform) */
     private static final double[] CURSOR_X = new double[1];
     private static final double[] CURSOR_Y = new double[1];
@@ -419,6 +425,34 @@ public class BoneGizmoSystem
                     float ndcYc = cp.y / cp.w;
                     this.centerX = viewport.x + (int) (((ndcXc + 1F) * 0.5F) * viewport.w);
                     this.centerY = viewport.y + (int) (((-ndcYc + 1F) * 0.5F) * viewport.h);
+                }
+
+                /* Calcular escala dinámica del gizmo en función de la distancia
+                 * entre la cámara y el pivote (origen). Esto mantiene un tamaño
+                 * visual relativamente constante en pantalla al alejar/acercar. */
+                try
+                {
+                    org.joml.Vector4f camW4 = new org.joml.Vector4f(0, 0, 0, 1);
+                    org.joml.Vector4f camWorld = new Matrix4f(view).invert(new Matrix4f()).transform(camW4);
+                    camWorld.div(camWorld.w);
+
+                    org.joml.Vector4f pivotW4 = new org.joml.Vector4f(0, 0, 0, 1);
+                    org.joml.Vector4f pivotWorld = new Matrix4f(origin).transform(pivotW4);
+                    pivotWorld.div(pivotWorld.w);
+
+                    float dx = camWorld.x - pivotWorld.x;
+                    float dy = camWorld.y - pivotWorld.y;
+                    float dz = camWorld.z - pivotWorld.z;
+                    float dist = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    float s = dist * scaleSlope;
+                    if (s < minGizmoScale) s = minGizmoScale;
+                    if (s > maxGizmoScale) s = maxGizmoScale;
+                    this.gizmoScale = s;
+                }
+                catch (Throwable t)
+                {
+                    this.gizmoScale = 1F;
                 }
 
                 // Iniciar/terminar arrastre basado en 3D hover
@@ -1007,16 +1041,17 @@ public class BoneGizmoSystem
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
-        float length = 0.25F;     // longitud de cada eje
-        float thickness = 0.02F;  // grosor de las barras (similar a coolerAxes)
-        float outlinePad = 0.01F; // pad para contorno negro tipo coolerAxes
-        float slabThick = 0.018F; // grosor de las losas de escala (a lo largo del eje)
+        float baseLength = 0.25F;
+        float length = baseLength * this.gizmoScale;     // longitud de cada eje
+        float thickness = 0.02F * this.gizmoScale;       // grosor de las barras (similar a coolerAxes)
+        float outlinePad = 0.01F * this.gizmoScale;      // pad para contorno negro tipo coolerAxes
+        float slabThick = 0.018F * this.gizmoScale;      // grosor de las losas de escala (a lo largo del eje)
 
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
         // Usamos el tamaño del cubo del extremo + el grosor de la barra para
         // evitar gaps en perspectiva o por redondeos.
-        float cubeSmall = 0.022F;
-        float cubeBig = 0.045F;
+        float cubeSmall = 0.022F * this.gizmoScale;
+        float cubeBig = 0.045F * this.gizmoScale;
         // Ajuste por modo: en TRANSLATE conectamos a la base de la flecha;
         // en SCALE nos internamos en el cubo para evitar gaps visuales.
         float connectFudge = (this.mode == Mode.TRANSLATE)
@@ -1059,8 +1094,8 @@ public class BoneGizmoSystem
         if (this.mode == Mode.TRANSLATE)
         {
             // Conos en las puntas de cada eje (estilo DCCs)
-            float headLen = 0.08F;       // altura del cono (más grueso)
-            float headWidth = 0.06F;     // diámetro aproximado de la base (más grueso)
+            float headLen = 0.08F * this.gizmoScale;       // altura del cono (más grueso)
+            float headWidth = 0.06F * this.gizmoScale;     // diámetro aproximado de la base (más grueso)
             float headRadius = headWidth * 0.5F;
 
             // Igualar longitud visual de barras con ESCALAR y ajustar conos al nuevo extremo
@@ -1132,9 +1167,9 @@ public class BoneGizmoSystem
                 drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
             }
             // Controladores de plano como losas planas separadas del pivote y de las barras
-            float offset = 0.08F;    // mitad de la distancia previa
-            float planeHalf = 0.020F; // semitamaño del cuadrado
-            float planeThick = 0.004F; // grosor perpendicular
+            float offset = 0.08F * this.gizmoScale;    // mitad de la distancia previa
+            float planeHalf = 0.020F * this.gizmoScale; // semitamaño del cuadrado
+            float planeThick = 0.004F * this.gizmoScale; // grosor perpendicular
             boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
             boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
             boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
@@ -1377,7 +1412,7 @@ public class BoneGizmoSystem
         }
         else if (this.mode == Mode.ROTATE)
         {
-            float radius = 0.22F;
+            float radius = 0.22F * this.gizmoScale;
             float sweep = 360F;
             float offZ = 0F;
             float offX = 0F;
@@ -1769,14 +1804,14 @@ public class BoneGizmoSystem
             if (rot != null) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return rot; }
 
             // AABBs de barras (translate) y losas (scale). Elegir el más cercano.
-            float len = 0.25F; float fudgeT = 0.06F; float thickT = 0.015F; float thickS = 0.045F;
+            float len = 0.25F * this.gizmoScale; float fudgeT = 0.06F * this.gizmoScale; float thickT = 0.015F * this.gizmoScale; float thickS = 0.045F * this.gizmoScale;
             float[] txT = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -thickT/2F, -thickT/2F), new Vector3f(len + fudgeT, thickT/2F, thickT/2F));
             float[] tyT = rayBoxIntersect(rayO, rayD, new Vector3f(-thickT/2F, 0F, -thickT/2F), new Vector3f(thickT/2F, len + fudgeT, thickT/2F));
             float[] tzT = rayBoxIntersect(rayO, rayD, new Vector3f(-thickT/2F, -thickT/2F, 0F), new Vector3f(thickT/2F, thickT/2F, len + fudgeT));
 
-            float[] txS = rayBoxIntersect(rayO, rayD, new Vector3f(len - 0.02F, -0.045F, -0.045F), new Vector3f(len + 0.02F, 0.045F, 0.045F));
-            float[] tyS = rayBoxIntersect(rayO, rayD, new Vector3f(-0.045F, len - 0.02F, -0.045F), new Vector3f(0.045F, len + 0.02F, 0.045F));
-            float[] tzS = rayBoxIntersect(rayO, rayD, new Vector3f(-0.045F, -0.045F, len - 0.02F), new Vector3f(0.045F, 0.045F, len + 0.02F));
+            float[] txS = rayBoxIntersect(rayO, rayD, new Vector3f(len - (0.02F * this.gizmoScale), -(0.045F * this.gizmoScale), -(0.045F * this.gizmoScale)), new Vector3f(len + (0.02F * this.gizmoScale), (0.045F * this.gizmoScale), (0.045F * this.gizmoScale)));
+            float[] tyS = rayBoxIntersect(rayO, rayD, new Vector3f(-(0.045F * this.gizmoScale), len - (0.02F * this.gizmoScale), -(0.045F * this.gizmoScale)), new Vector3f((0.045F * this.gizmoScale), len + (0.02F * this.gizmoScale), (0.045F * this.gizmoScale)));
+            float[] tzS = rayBoxIntersect(rayO, rayD, new Vector3f(-(0.045F * this.gizmoScale), -(0.045F * this.gizmoScale), len - (0.02F * this.gizmoScale)), new Vector3f((0.045F * this.gizmoScale), (0.045F * this.gizmoScale), len + (0.02F * this.gizmoScale)));
 
             class Cand { Axis a; float t; Mode m; }
             java.util.List<Cand> cands = new java.util.ArrayList<>();
@@ -1795,9 +1830,9 @@ public class BoneGizmoSystem
             if (best != null) { this.hoveredSubMode = best.m; this.hoveredPlane = null; return best.a; }
 
             // Losas planas desplazadas del pivote
-            float po = 0.08F; // offset (mitad)
-            float ps = 0.020F; // semitamaño del cuadrado
-            float pt = 0.004F; // grosor perpendicular
+            float po = 0.08F * this.gizmoScale; // offset (mitad)
+            float ps = 0.020F * this.gizmoScale; // semitamaño del cuadrado
+            float pt = 0.004F * this.gizmoScale; // grosor perpendicular
             float[] pXY = rayBoxIntersect(rayO, rayD,
                     new Vector3f(po - ps, po - ps, -pt), new Vector3f(po + ps, po + ps, pt));
             float[] pZX = rayBoxIntersect(rayO, rayD,
@@ -1815,10 +1850,10 @@ public class BoneGizmoSystem
         }
 
         // Definir AABB por eje (mover/escalar)
-        float length = 0.25F;
+        float length = 0.25F * this.gizmoScale;
         // En escala el cubo del extremo es más grande; ampliamos sección transversal del AABB
-        float thickness = (this.mode == Mode.SCALE) ? 0.045F : 0.015F;
-        float fudge = (this.mode == Mode.TRANSLATE) ? 0.06F : ((this.mode == Mode.SCALE) ? 0.045F : 0.02F);
+        float thickness = ((this.mode == Mode.SCALE) ? 0.045F : 0.015F) * this.gizmoScale;
+        float fudge = ((this.mode == Mode.TRANSLATE) ? 0.06F : ((this.mode == Mode.SCALE) ? 0.045F : 0.02F)) * this.gizmoScale;
 
         float[] tx = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -thickness/2F, -thickness/2F), new Vector3f(length + fudge, thickness/2F, thickness/2F));
         float[] ty = rayBoxIntersect(rayO, rayD, new Vector3f(-thickness/2F, 0F, -thickness/2F), new Vector3f(thickness/2F, length + fudge, thickness/2F));
@@ -1834,7 +1869,7 @@ public class BoneGizmoSystem
         // En modo TRANSLATE, también permitir picking de los planos cercanos al origen
         if (this.mode == Mode.TRANSLATE)
         {
-            float po = 0.08F; float ps = 0.020F; float pt = 0.004F;
+            float po = 0.08F * this.gizmoScale; float ps = 0.020F * this.gizmoScale; float pt = 0.004F * this.gizmoScale;
             float[] pXY = rayBoxIntersect(rayO, rayD,
                     new Vector3f(po - ps, po - ps, -pt), new Vector3f(po + ps, po + ps, pt));
             float[] pZX = rayBoxIntersect(rayO, rayD,
@@ -1853,11 +1888,11 @@ public class BoneGizmoSystem
     /** Picking 3D para el gizmo de rotación: intersección rayo-plano y banda alrededor del radio. */
     private Axis detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
     {
-        float radius = 0.22F;
+        float radius = 0.22F * this.gizmoScale;
         // Grosor coherente con el render
-        float baseThickness = (this.mode == Mode.ROTATE) ? 0.015F : 0.01F;
+        float baseThickness = ((this.mode == Mode.ROTATE) ? 0.015F : 0.01F) * this.gizmoScale;
         float thickness = baseThickness;        // ancho visual del anillo
-        float band = thickness * 0.5F + 0.002F; // cubrir todo el color del anillo
+        float band = thickness * 0.5F + (0.002F * this.gizmoScale); // cubrir todo el color del anillo
 
         class Hit { Axis a; float t; }
         Hit hitBest = null;

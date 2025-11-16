@@ -1204,4 +1204,5 @@
     "bbs.ui.gizmos.keys.toggle_rotation_channel": "Toggle rotation channel",
     "keybinds.config.gizmos.title": "Gizmos",
     "keybinds.config.gizmos.tooltip": "Keybinds that control bone gizmos (translate/rotate/scale)",
+    "bbs.ui.supporters.cml_intro": "This version of BBS CML Edition was made possible thanks to the support of the CML Discord server!!"
 }
