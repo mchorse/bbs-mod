@@ -941,6 +941,8 @@ public class UIKeys
     public static final IKey VIDEO_SETTINGS_TITLE = L10n.lang("bbs.ui.video_settings.title");
     public static final IKey VIDEO_SETTINGS_WIDTH = L10n.lang("bbs.ui.video_settings.width");
     public static final IKey WORLD_KEYS_CYCLE_PANELS = L10n.lang("bbs.ui.world.keys.cycle_panels");
+    public static final IKey GIZMOS_KEYS_CATEGORY = L10n.lang("bbs.ui.gizmos.keys.category");
+    public static final IKey GIZMOS_KEYS_TOGGLE_ROTATION_CHANNEL = L10n.lang("bbs.ui.gizmos.keys.toggle_rotation_channel");
 
     /* Key collections */
     public static final KeyCollection C_CLIP = new KeyCollection("bbs.ui.camera.clips.^")

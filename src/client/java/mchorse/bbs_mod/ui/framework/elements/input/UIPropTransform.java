@@ -194,6 +194,15 @@ public class UIPropTransform extends UITransform
             }
         }).category(category);
 
+        /* Toggle entre canal de rotación principal (R) y secundario (R2) para el gizmo */
+        this.keys().register(Keys.GIZMOS_TOGGLE_ROTATION_CHANNEL, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().toggleRotationChannel();
+            }
+        }).active(() -> BBSSettings.modelBlockGizmosEnabled.get()).category(UIKeys.GIZMOS_KEYS_CATEGORY);
+
         /* Las teclas de eje X/Y/Z solo aplican cuando se está editando
          * y los gizmos están desactivados (flujo clásico). */
         Supplier<Boolean> axisActive = () -> this.editing && !BBSSettings.modelBlockGizmosEnabled.get();

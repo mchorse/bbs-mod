@@ -1,5 +1,4 @@
 package mchorse.bbs_mod.ui;
-
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
 import org.lwjgl.glfw.GLFW;
@@ -138,4 +137,7 @@ public class Keys
 
     /* Texture picker */
     public static final KeyCombo TEXTURE_PICKER_FIND = new KeyCombo("find", UIKeys.TEXTURE_KEYS_FIND_ALL, GLFW.GLFW_KEY_F, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("texture_picker");
+    
+    /* Gizmos */
+    public static final KeyCombo GIZMOS_TOGGLE_ROTATION_CHANNEL = new KeyCombo("toggle_rotation_channel", UIKeys.GIZMOS_KEYS_TOGGLE_ROTATION_CHANNEL, GLFW.GLFW_KEY_Q).categoryKey("gizmos");
 }

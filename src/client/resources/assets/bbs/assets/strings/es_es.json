@@ -1107,5 +1107,8 @@
     "bbs.ui.replays.bone_anchoring.select_bone_title": "Seleccionar hueso",
     "bbs.ui.replays.bone_anchoring.select_bone_description": "Selecciona el hueso que deseas anclar a esta pista de pose",
     "bbs.ui.supporters.cml_animators": "Colaboradores De BBS CML Edition",
-    "bbs.ui.supporters.cml_intro": "Esta version de BBS CML Edition se logro gracias al apoyo del servidor de discord CML!!"
+    "bbs.ui.supporters.cml_intro": "Esta version de BBS CML Edition se logro gracias al apoyo del servidor de discord CML!!",
+    "keybinds.config.gizmos.title": "Gizmos",
+    "keybinds.config.gizmos.tooltip": "Atajos que controlan los gizmos de hueso (trasladar/rotar/escalar)",
+    "bbs.ui.gizmos.keys.toggle_rotation_channel": "Alternar canal de rotación"
 }

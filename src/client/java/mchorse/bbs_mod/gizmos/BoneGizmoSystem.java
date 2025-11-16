@@ -57,6 +57,10 @@ public class BoneGizmoSystem
     private Axis activeAxis = null;
     private boolean dragging = false;
     private boolean lastMouseDown = false;
+    /* Track CTRL state during drag to preserve free-rotation edits */
+    private boolean lastCtrlPressedWhileDragging = false;
+    /* Track SHIFT state during drag to preserve free-rotation edits when CTRL is held */
+    private boolean lastShiftPressedWhileDragging = false;
     private int dragStartX = 0;
     private int dragStartY = 0;
     private Transform dragStart = new Transform();
@@ -64,6 +68,8 @@ public class BoneGizmoSystem
 
     /* Signo de rotación dependiente del lado de la cámara (3D) */
     private float rotateSign = 1F;
+    /* Usar canal secundario de rotación (R2) cuando esté activo */
+    private boolean useRotation2 = false;
 
     /* Soporte de "mouse en bucle" durante el arrastre (como en UIPropTransform) */
     private static final double[] CURSOR_X = new double[1];
@@ -106,6 +112,18 @@ public class BoneGizmoSystem
         this.activePlane = null;
     }
 
+    /** Alterna entre aplicar rotación en R (principal) o R2 (secundario). */
+    public void toggleRotationChannel()
+    {
+        this.useRotation2 = !this.useRotation2;
+    }
+
+    /** Indica si el gizmo está usando el canal de rotación secundario. */
+    public boolean isUsingRotation2()
+    {
+        return this.useRotation2;
+    }
+
     public void update(UIContext input, Area viewport, UIPropTransform target)
     {
         this.target = target;
@@ -134,6 +152,8 @@ public class BoneGizmoSystem
             this.lastY = input.mouseY;
             this.accumDx = 0F;
             this.accumDy = 0F;
+            this.lastCtrlPressedWhileDragging = Window.isCtrlPressed();
+            this.lastShiftPressedWhileDragging = Window.isShiftPressed();
             if (this.target != null && this.target.getTransform() != null)
             {
                 this.dragStart.copy(this.target.getTransform());
@@ -200,6 +220,37 @@ public class BoneGizmoSystem
                     this.wrapChecker.mark();
                     warped = true;
                 }
+            }
+
+            /* If CTRL/SHIFT state toggled mid-drag, rebase rotation start to current values
+             * so free-rotation edits are preserved when switching modes. SHIFT only matters
+             * for free rotation when CTRL is held. */
+            boolean ctrlNow = Window.isCtrlPressed();
+            boolean shiftNow = Window.isShiftPressed();
+            boolean ctrlChanged = ctrlNow != this.lastCtrlPressedWhileDragging;
+            boolean shiftChanged = ctrlNow && (shiftNow != this.lastShiftPressedWhileDragging);
+            if (ctrlChanged || shiftChanged)
+            {
+                Transform current = this.target.getTransform();
+                if (current != null)
+                {
+                    if (this.useRotation2)
+                    {
+                        this.dragStart.rotate2.x = current.rotate2.x;
+                        this.dragStart.rotate2.y = current.rotate2.y;
+                        this.dragStart.rotate2.z = current.rotate2.z;
+                    }
+                    else
+                    {
+                        this.dragStart.rotate.x = current.rotate.x;
+                        this.dragStart.rotate.y = current.rotate.y;
+                        this.dragStart.rotate.z = current.rotate.z;
+                    }
+                }
+                this.accumDx = 0F;
+                this.accumDy = 0F;
+                this.lastCtrlPressedWhileDragging = ctrlNow;
+                this.lastShiftPressedWhileDragging = shiftNow;
             }
 
             if (!warped)
@@ -280,18 +331,38 @@ public class BoneGizmoSystem
             else if (op == Mode.ROTATE)
             {
                 /* Rotaciones en grados en UIPropTransform.setR */
-                float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
-                float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
-                float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                float rx, ry, rz;
+                if (this.useRotation2)
+                {
+                    rx = (float) Math.toDegrees(this.dragStart.rotate2.x);
+                    ry = (float) Math.toDegrees(this.dragStart.rotate2.y);
+                    rz = (float) Math.toDegrees(this.dragStart.rotate2.z);
+                }
+                else
+                {
+                    rx = (float) Math.toDegrees(this.dragStart.rotate.x);
+                    ry = (float) Math.toDegrees(this.dragStart.rotate.y);
+                    rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                }
 
                 /* Rotación libre basada en vista con CTRL: combinar yaw/pitch usando
                  * acumulado de mouse para acumular correctamente durante el arrastre. */
                 if (Window.isCtrlPressed())
                 {
-                    float yawDelta = this.accumDx * factor * 10F;    // horizontal -> Y (yaw)
-                    float pitchDelta = -this.accumDy * factor * 10F; // vertical   -> X (pitch)
-                    ry = ry + yawDelta;
-                    rx = rx + pitchDelta;
+                    if (Window.isShiftPressed())
+                    {
+                        float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z (roll)
+                        float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
+                        rz = rz + zDelta;
+                        ry = ry + yDelta;
+                    }
+                    else
+                    {
+                        float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y (yaw)
+                        float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X (pitch)
+                        ry = ry + yDelta;
+                        rx = rx + xDelta;
+                    }
                 }
                 else
                 {
@@ -300,7 +371,14 @@ public class BoneGizmoSystem
                     if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
                 }
 
-                this.target.setR(null, rx, ry, rz);
+                if (this.useRotation2)
+                {
+                    this.target.setR2(null, rx, ry, rz);
+                }
+                else
+                {
+                    this.target.setR(null, rx, ry, rz);
+                }
                 this.target.setTransform(t);
             }
         }
@@ -357,6 +435,8 @@ public class BoneGizmoSystem
                     this.lastY = input.mouseY;
                     this.accumDx = 0F;
                     this.accumDy = 0F;
+                    this.lastCtrlPressedWhileDragging = Window.isCtrlPressed();
+                    this.lastShiftPressedWhileDragging = Window.isShiftPressed();
                     if (this.target != null && this.target.getTransform() != null)
                     {
                         this.dragStart.copy(this.target.getTransform());
@@ -417,6 +497,35 @@ public class BoneGizmoSystem
 
                 if (this.dragging && this.target != null && this.target.getTransform() != null)
                 {
+                    /* Rebase rotation start if CTRL/SHIFT toggled mid-drag to preserve free-rotation edits */
+                    boolean ctrlNow = Window.isCtrlPressed();
+                    boolean shiftNow = Window.isShiftPressed();
+                    boolean ctrlChanged = ctrlNow != this.lastCtrlPressedWhileDragging;
+                    boolean shiftChanged = ctrlNow && (shiftNow != this.lastShiftPressedWhileDragging);
+                    if (ctrlChanged || shiftChanged)
+                    {
+                        Transform current = this.target.getTransform();
+                        if (current != null)
+                        {
+                            if (this.useRotation2)
+                            {
+                                this.dragStart.rotate2.x = current.rotate2.x;
+                                this.dragStart.rotate2.y = current.rotate2.y;
+                                this.dragStart.rotate2.z = current.rotate2.z;
+                            }
+                            else
+                            {
+                                this.dragStart.rotate.x = current.rotate.x;
+                                this.dragStart.rotate.y = current.rotate.y;
+                                this.dragStart.rotate.z = current.rotate.z;
+                            }
+                        }
+                        this.accumDx = 0F;
+                        this.accumDy = 0F;
+                        this.lastCtrlPressedWhileDragging = ctrlNow;
+                        this.lastShiftPressedWhileDragging = shiftNow;
+                    }
+
                     // Delta de mouse inmediato y acumulado para diferentes comportamientos
                     int stepX = input.mouseX - this.lastX;
                     int stepY = input.mouseY - this.lastY;
@@ -486,18 +595,39 @@ public class BoneGizmoSystem
                     }
                     else if (op == Mode.ROTATE)
                     {
-                        float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
-                        float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
-                        float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                        float rx, ry, rz;
+                        if (this.useRotation2)
+                        {
+                            rx = (float) Math.toDegrees(this.dragStart.rotate2.x);
+                            ry = (float) Math.toDegrees(this.dragStart.rotate2.y);
+                            rz = (float) Math.toDegrees(this.dragStart.rotate2.z);
+                        }
+                        else
+                        {
+                            rx = (float) Math.toDegrees(this.dragStart.rotate.x);
+                            ry = (float) Math.toDegrees(this.dragStart.rotate.y);
+                            rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                        }
 
                         if (Window.isCtrlPressed())
                         {
-                            /* Rotación libre en 3D: usar acumulado dx/dy como yaw/pitch
-                             * para acumular correctamente movimiento durante el arrastre. */
-                            float yawDelta = this.accumDx * factor * 10F;    // Yaw (Y)
-                            float pitchDelta = -this.accumDy * factor * 10F; // Pitch (X)
-                            ry = ry + yawDelta;
-                            rx = rx + pitchDelta;
+                            /* Combinaciones:
+                             * - CTRL        -> XY (horizontal->Y, vertical->X)
+                             * - CTRL+SHIFT  -> ZY (horizontal->Z, vertical->Y) */
+                            if (Window.isShiftPressed())
+                            {
+                                float zDelta = this.accumDx * factor * 10F;    // Z
+                                float yDelta = -this.accumDy * factor * 10F;   // Y
+                                rz = rz + zDelta;
+                                ry = ry + yDelta;
+                            }
+                            else
+                            {
+                                float yDelta = this.accumDx * factor * 10F;    // Y
+                                float xDelta = -this.accumDy * factor * 10F;   // X
+                                ry = ry + yDelta;
+                                rx = rx + xDelta;
+                            }
                         }
                         else
                         {
@@ -507,7 +637,14 @@ public class BoneGizmoSystem
                             if (this.activeAxis == Axis.Z) rz = rz + d;
                         }
 
-                        this.target.setR(null, rx, ry, rz);
+                        if (this.useRotation2)
+                        {
+                            this.target.setR2(null, rx, ry, rz);
+                        }
+                        else
+                        {
+                            this.target.setR(null, rx, ry, rz);
+                        }
                         this.target.setTransform(t);
                     }
                 }
@@ -788,18 +925,38 @@ public class BoneGizmoSystem
             else if (op == Mode.ROTATE)
             {
                 /* Rotaciones en grados en UIPropTransform.setR */
-                float rx = (float) Math.toDegrees(this.dragStart.rotate.x);
-                float ry = (float) Math.toDegrees(this.dragStart.rotate.y);
-                float rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                float rx, ry, rz;
+                if (this.useRotation2)
+                {
+                    rx = (float) Math.toDegrees(this.dragStart.rotate2.x);
+                    ry = (float) Math.toDegrees(this.dragStart.rotate2.y);
+                    rz = (float) Math.toDegrees(this.dragStart.rotate2.z);
+                }
+                else
+                {
+                    rx = (float) Math.toDegrees(this.dragStart.rotate.x);
+                    ry = (float) Math.toDegrees(this.dragStart.rotate.y);
+                    rz = (float) Math.toDegrees(this.dragStart.rotate.z);
+                }
 
                 /* Rotación libre desde la vista con CTRL: combina yaw/pitch usando dx/dy.
                  * En 3D se siente natural porque el gizmo está en el pivote del hueso. */
                 if (Window.isCtrlPressed())
                 {
-                    float yawDelta = this.accumDx * factor * 10F;   // Yaw (Y)
-                    float pitchDelta = -this.accumDy * factor * 10F; // Pitch (X)
-                    ry = ry + yawDelta;
-                    rx = rx + pitchDelta;
+                    if (Window.isShiftPressed())
+                    {
+                        float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z
+                        float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
+                        rz = rz + zDelta;
+                        ry = ry + yDelta;
+                    }
+                    else
+                    {
+                        float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y
+                        float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X
+                        ry = ry + yDelta;
+                        rx = rx + xDelta;
+                    }
                 }
                 else
                 {
@@ -808,7 +965,14 @@ public class BoneGizmoSystem
                     if (this.activeAxis == Axis.Z) rz = rz + delta * 10F;
                 }
 
-                this.target.setR(null, rx, ry, rz);
+                if (this.useRotation2)
+                {
+                    this.target.setR2(null, rx, ry, rz);
+                }
+                else
+                {
+                    this.target.setR(null, rx, ry, rz);
+                }
                 this.target.setTransform(t);
             }
         }
