@@ -7,9 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * @link http://soundfile.sapp.org/doc/WaveFormat/
- */
 public class WaveWriter
 {
     public static void write(File file, Wave wave) throws IOException
@@ -17,16 +14,15 @@ public class WaveWriter
         write(new FileOutputStream(file), wave);
     }
 
+    // Write WAVE file with RIFF header
     public static void write(OutputStream stream, Wave wave) throws IOException
     {
-        /* Header chunk */
         writeString(stream, "RIFF");
-        writeInt(stream, 4);
+        // RIFF chunk size calculation
+        writeInt(stream, 36 + wave.data.length);
         writeString(stream, "WAVE");
 
-        /* Format subchunk */
         writeString(stream, "fmt ");
-        /* 16 bytes because it's PCM format with no extra data */
         writeInt(stream, 16);
         writeShort(stream, wave.audioFormat);
         writeShort(stream, wave.numChannels);
@@ -37,7 +33,6 @@ public class WaveWriter
         writeShort(stream, wave.blockAlign);
         writeShort(stream, wave.bitsPerSample);
 
-        /* Data subchunk */
         writeString(stream, "data");
         writeInt(stream, wave.data.length);
         stream.write(wave.data);
@@ -45,6 +40,7 @@ public class WaveWriter
         stream.close();
     }
 
+    // Write string to stream
     private static void writeString(OutputStream stream, String string) throws IOException
     {
         byte[] bytes = new byte[string.length()];
@@ -57,6 +53,7 @@ public class WaveWriter
         stream.write(bytes);
     }
 
+    // Write integer to stream
     private static void writeInt(OutputStream stream, int integer) throws IOException
     {
         byte[] bytes = new byte[4];
@@ -69,6 +66,7 @@ public class WaveWriter
         stream.write(bytes);
     }
 
+    // Write short to stream
     private static void writeShort(OutputStream stream, int integer) throws IOException
     {
         byte[] bytes = new byte[2];
