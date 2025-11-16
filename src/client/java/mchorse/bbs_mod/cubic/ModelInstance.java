@@ -59,6 +59,13 @@ public class ModelInstance implements IModelInstance
     public boolean onCpu;
     public String anchorGroup = "";
 
+    /* Look-at configuration (per model, from config.json) */
+    public boolean lookAtConfigured = false;
+    public String lookAtHeadBone = "head";
+    public String lookAtAnchorBone = "anchor";
+    public boolean lookAtAllowPitch = true;
+    public float lookAtHeadLimitDeg = 45F;
+
     public Vector3f scale = new Vector3f(1F);
     public float uiScale = 1F;
     public Pose sneakingPose = new Pose();
@@ -207,6 +214,18 @@ public class ModelInstance implements IModelInstance
         {
             this.fpOffhand = new ArmorSlot();
             this.fpOffhand.fromData(config.get("fp_offhand"));
+        }
+
+        /* Optional look-at configuration */
+        if (config.has("look_at", BaseType.TYPE_MAP))
+        {
+            this.lookAtConfigured = true;
+            MapType lookAt = config.getMap("look_at");
+
+            if (lookAt.has("head")) this.lookAtHeadBone = lookAt.getString("head", this.lookAtHeadBone);
+            if (lookAt.has("anchor")) this.lookAtAnchorBone = lookAt.getString("anchor", this.lookAtAnchorBone);
+            if (lookAt.has("pitch")) this.lookAtAllowPitch = lookAt.getBool("pitch", this.lookAtAllowPitch);
+            if (lookAt.has("head_limit")) this.lookAtHeadLimitDeg = lookAt.getFloat("head_limit", this.lookAtHeadLimitDeg);
         }
     }
 
