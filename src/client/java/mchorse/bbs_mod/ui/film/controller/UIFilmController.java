@@ -1023,9 +1023,17 @@ public class UIFilmController extends UIElement
 
             UIKeyframeEditor keyframeEditor = this.panel.replayEditor != null ? this.panel.replayEditor.keyframeEditor : null;
 
-            if (keyframeEditor != null && keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+            if (keyframeEditor != null)
             {
-                activeTransform = poseFactory.poseEditor.transform;
+                if (keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+                {
+                    activeTransform = poseFactory.poseEditor.transform;
+                }
+                else if (keyframeEditor.editor instanceof mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory tfFactory)
+                {
+                    // Obtener el editor de transform para keyframes de transform/transform_overlay
+                    activeTransform = tfFactory.getTransform();
+                }
             }
 
             Pair<String, Boolean> boneSel = this.getBone();

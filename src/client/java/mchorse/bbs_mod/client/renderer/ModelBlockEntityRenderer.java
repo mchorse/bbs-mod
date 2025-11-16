@@ -99,7 +99,7 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
                 .camera(camera));
             RenderSystem.disableDepthTest();
 
-            if (this.canRenderAxes(entity) && UIBaseMenu.renderAxes && !BBSSettings.modelBlockGizmosEnabled.get())
+            if (this.canRenderAxes(entity) && UIBaseMenu.renderAxes)
             {
                 matrices.push();
                 MatrixStackUtils.scaleBack(matrices);

@@ -167,9 +167,17 @@ public class UIKeyframeEditor extends UIElement
         {
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
 
-            if (sheet != null && sheet.id.endsWith("transform"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
+                if (sheet.id.endsWith("transform"))
+                {
+                    bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
+                }
+                else if (sheet.id.contains("transform_overlay"))
+                {
+                    int slash = sheet.id.lastIndexOf('/');
+                    bone = slash >= 0 ? sheet.id.substring(0, slash) : "";
+                }
             }
         }
 

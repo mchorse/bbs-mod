@@ -10,6 +10,7 @@ import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
@@ -149,13 +150,21 @@ public class UIPickableFormRenderer extends UIFormRenderer
         Matrix4f origin = originRaw != null ? MatrixStackUtils.stripScale(originRaw) : null;
         UIPropTransform activeTransform = null;
 
-        /* Priorizar el transform del editor de estados cuando está visible y la pista es de pose/pose_overlay */
+        /* Priorizar el transform del editor de estados cuando está visible y la pista es de pose/pose_overlay o transform/transform_overlay */
         if (this.formEditor.statesEditor.isVisible()
             && this.formEditor.statesKeyframes != null
-            && this.formEditor.statesKeyframes.keyframeEditor != null
-            && this.formEditor.statesKeyframes.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+            && this.formEditor.statesKeyframes.keyframeEditor != null)
         {
-            activeTransform = poseFactory.poseEditor.transform;
+            Object factory = this.formEditor.statesKeyframes.keyframeEditor.editor;
+
+            if (factory instanceof UIPoseKeyframeFactory poseFactory)
+            {
+                activeTransform = poseFactory.poseEditor.transform;
+            }
+            else if (factory instanceof UITransformKeyframeFactory transformFactory)
+            {
+                activeTransform = transformFactory.getTransform();
+            }
         }
         else if (this.formEditor.editor instanceof UIModelForm uiModelForm)
         {

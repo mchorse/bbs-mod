@@ -27,6 +27,11 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         this.scroll.add(this.transform);
     }
 
+    public UIPropTransform getTransform()
+    {
+        return this.transform;
+    }
+
     public static class UIPoseTransforms extends UIPropTransform
     {
         private UITransformKeyframeFactory editor;
