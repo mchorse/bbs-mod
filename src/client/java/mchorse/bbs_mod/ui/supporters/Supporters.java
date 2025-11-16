@@ -815,7 +815,7 @@ public class Supporters
         this.add("Jesuluto", "https://www.tiktok.com/@jesulutoxd", "textures/banners/Jesuluto.png").withDate(12, 1);
         this.add("Kazu_MC", "https://www.tiktok.com/@k4zuyuky", "textures/banners/Kazu_MC.png").withDate(12, 1);
         this.add("SoyTon", "https://www.tiktok.com/@_soyton_", "textures/banners/SoyTon.png").withDate(12, 1);
-        this.add("TheRocket", "https://www.youtube.com/@The_Rockett", "textures/banners/TheRocket.png").withDate(12, 1);
+        this.add("TheRocket", "https://www.youtube.com/@TheRocketttt", "textures/banners/TheRocket.png").withDate(12, 1);
         this.add("AND_010", "https://www.youtube.com/@AND010", "textures/banners/AND_010.png").withDate(12, 1);
         this.add("Mattux", "https://www.youtube.com/@Mattux", "textures/banners/Mattux.png").withDate(12, 1);
         this.add("SR400X", "https://x.com/SR400X_", "textures/banners/SR400X.png").withDate(12, 1);
@@ -824,6 +824,7 @@ public class Supporters
         this.add("Redbirdpro", "https://www.youtube.com/@RedbirdproMC", "textures/banners/Redbirdpro.png").withDate(12, 1);
         this.add("MiniSunn_", "https://www.youtube.com/channel/UCoHzxz8f08OSs6LCD2QBr7Q", "textures/banners/MiniSunn_.png").withDate(12, 1);
         this.add("lolinmalo", "https://www.youtube.com/@lolinmalo", "textures/banners/lolinmalo.png").withDate(12, 1);
+        this.add("ItzUkyo2013", "https://www.x.com/@UkyoKounji_2013", "textures/banners/ItzUkyo2013.png").withDate(12, 1);
     }
 
     private Supporter add(String name)
@@ -862,11 +863,11 @@ public class Supporters
 
     public List<Supporter> getCCSupporters()
     {
-        return this.supporters.stream().filter(Supporter::hasBanner).filter(s -> !s.name.equals("CML") && !s.name.equals("ElGatoPro300") && !s.name.equals("seb024xd") && !s.name.equals("TobbyMC") && !s.name.equals("JaviCubito") && !s.name.equals("SEKZA_MC") && !s.name.equals("Jesuluto") && !s.name.equals("Kazu_MC") && !s.name.equals("SoyTon") && !s.name.equals("TheRocket") && !s.name.equals("AND_010") && !s.name.equals("Mattux") && !s.name.equals("SR400X") && !s.name.equals("MrJack") && !s.name.equals("Yeyo Sin Contexto") && !s.name.equals("Redbirdpro") && !s.name.equals("MiniSunn_") && !s.name.equals("lolinmalo")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
+        return this.supporters.stream().filter(Supporter::hasBanner).filter(s -> !s.name.equals("CML") && !s.name.equals("ElGatoPro300") && !s.name.equals("seb024xd") && !s.name.equals("TobbyMC") && !s.name.equals("JaviCubito") && !s.name.equals("SEKZA_MC") && !s.name.equals("Jesuluto") && !s.name.equals("Kazu_MC") && !s.name.equals("SoyTon") && !s.name.equals("TheRocket") && !s.name.equals("AND_010") && !s.name.equals("Mattux") && !s.name.equals("SR400X") && !s.name.equals("MrJack") && !s.name.equals("Yeyo Sin Contexto") && !s.name.equals("Redbirdpro") && !s.name.equals("MiniSunn_") && !s.name.equals("lolinmalo") && !s.name.equals("ItzUkyo2013")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
     }
 
     public List<Supporter> getCMLSupporters()
     {
-        return this.supporters.stream().filter(s -> s.name.equals("CML") || s.name.equals("ElGatoPro300") || s.name.equals("seb024xd") || s.name.equals("TobbyMC") || s.name.equals("JaviCubito") || s.name.equals("SEKZA_MC") || s.name.equals("Jesuluto") || s.name.equals("Kazu_MC") || s.name.equals("SoyTon") || s.name.equals("TheRocket") || s.name.equals("AND_010") || s.name.equals("Mattux") || s.name.equals("SR400X") || s.name.equals("MrJack") || s.name.equals("Yeyo Sin Contexto") || s.name.equals("Redbirdpro") || s.name.equals("MiniSunn_") || s.name.equals("lolinmalo")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
+        return this.supporters.stream().filter(s -> s.name.equals("CML") || s.name.equals("ElGatoPro300") || s.name.equals("seb024xd") || s.name.equals("TobbyMC") || s.name.equals("JaviCubito") || s.name.equals("SEKZA_MC") || s.name.equals("Jesuluto") || s.name.equals("Kazu_MC") || s.name.equals("SoyTon") || s.name.equals("TheRocket") || s.name.equals("AND_010") || s.name.equals("Mattux") || s.name.equals("SR400X") || s.name.equals("MrJack") || s.name.equals("Yeyo Sin Contexto") || s.name.equals("Redbirdpro") || s.name.equals("MiniSunn_") || s.name.equals("lolinmalo") || s.name.equals("ItzUkyo2013")).sorted(Comparator.comparing((a) -> a.date)).collect(Collectors.toList());
     }
 }
