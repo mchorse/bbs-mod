@@ -38,6 +38,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -329,8 +330,9 @@ public class ModelInstance implements IModelInstance
                 BufferRenderer.drawWithGlobalProgram(builder.end());
             }
 
+            // PASSE 2 : Rendu des alwaysOnTop par-dessus tout
             RenderSystem.disableDepthTest();
-            RenderSystem.disableDepthTest();
+            GL11.glFrontFace(GL11.GL_CW); // <-- Inverse le winding order (clockwise au lieu de counter-clockwise)
 
             if (isVao)
             {
@@ -347,6 +349,7 @@ public class ModelInstance implements IModelInstance
                 BufferRenderer.drawWithGlobalProgram(builder.end());
             }
 
+            GL11.glFrontFace(GL11.GL_CCW); // <-- Remet normal (counter-clockwise)
             RenderSystem.enableDepthTest();
 
         }

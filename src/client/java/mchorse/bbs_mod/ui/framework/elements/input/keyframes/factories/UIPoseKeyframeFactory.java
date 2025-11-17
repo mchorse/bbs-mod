@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 {
@@ -39,7 +40,6 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
     public UIToggle focus;
 
     public static boolean focusOnLimb = false;
-    public static String limbFocused = "";
 
     public UIPoseKeyframeFactory(Keyframe<Pose> keyframe, UIKeyframes editor)
     {
@@ -48,6 +48,19 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         this.poseEditor = new UIPoseFactoryEditor(editor, keyframe);
 
         UIKeyframeSheet sheet = editor.getGraph().getSheet(keyframe);
+
+        this.poseEditor.bonePickingCallback(() -> {
+            if (FormUtils.getForm(sheet.property) instanceof ModelForm modelForm) {
+                if (focusOnLimb)
+                {
+                    ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
+
+                    System.out.println("model: " + model);
+                    updateFocus(model);
+                }
+            }
+        });
+
 
         if (FormUtils.getForm(sheet.property) instanceof ModelForm modelForm)
         {
@@ -72,10 +85,6 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 focusOnLimb = b.getValue();
                 ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
 
-                if (focusOnLimb) {
-                    limbFocused = UIPoseEditor.getLastLimb();
-                }
-
                 toggleFocus(model);
             }
         });
@@ -87,12 +96,11 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 
     public void toggleFocus(ModelInstance model)
     {
-
         if(model.getModel() instanceof Model m)
         {
             // Transparency for others
             Pose currentPose = this.poseEditor.getPose();
-            PoseTransform limbFocus = currentPose.get(limbFocused);
+            PoseTransform limbFocus = currentPose.get(UIPoseEditor.getLastLimb());
 
             List<PoseTransform> poseTransforms = m.getAllGroupKeys().stream()
                     .map(currentPose::get)
@@ -107,12 +115,38 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             limbFocus.color.a = 1f;
 
             // Always on top
-            ModelGroup group = m.getGroup(limbFocused);
+            ModelGroup group = m.getGroup(UIPoseEditor.getLastLimb());
+
 
             if(group == null) return;
             group.alwaysOnTop = focusOnLimb;
         }
+    }
 
+    public void updateFocus(ModelInstance model)
+    {
+        if (!(model.getModel() instanceof Model m)) return;
+
+        Pose currentPose = this.poseEditor.getPose();
+
+        for (ModelGroup group : m.getAllGroups())
+        {
+            group.alwaysOnTop = false;
+        }
+
+        currentPose.transforms.forEach((key, transform) -> {
+            boolean isLimbFocused = Objects.equals(key, UIPoseEditor.getLastLimb());
+            transform.color.a = (focusOnLimb && !isLimbFocused) ? 0.2f : 1f;
+        });
+
+        if (focusOnLimb)
+        {
+            ModelGroup focusedGroup = m.getGroup(UIPoseEditor.getLastLimb());
+            if (focusedGroup != null)
+            {
+                focusedGroup.alwaysOnTop = true;
+            }
+        }
     }
 
     @Override
@@ -145,6 +179,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
     {
         private UIKeyframes editor;
         private Keyframe<Pose> keyframe;
+        private Runnable bonePickingCallback;
 
         public static void apply(UIKeyframes editor, Keyframe keyframe, Consumer<Pose> consumer)
         {
@@ -224,6 +259,16 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         protected void setLighting(PoseTransform poseTransform, boolean value)
         {
             apply(this.editor, this.keyframe, this.getGroup(poseTransform), (poseT) -> poseT.lighting = value ? 0F : 1F);
+        }
+
+        @Override
+        protected void pickBone(String bone) {
+            super.pickBone(bone);
+            bonePickingCallback.run();
+        }
+
+        public void bonePickingCallback(Runnable bonePickingCallback) {
+            this.bonePickingCallback = bonePickingCallback;
         }
     }
 
