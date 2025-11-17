@@ -103,6 +103,7 @@ public class AudioRenderer
         float total = totalDuration / 20F;
         Map<AudioClip, Wave> map = new HashMap<>();
 
+
         for (AudioClip clip : clips)
         {
             if (!clip.enabled.get())
@@ -112,7 +113,9 @@ public class AudioRenderer
 
             try
             {
-                map.put(clip, AudioReader.read(BBSMod.getProvider(), clip.audio.get()));
+                Wave wave = AudioReader.read(BBSMod.getProvider(), clip.audio.get());
+                map.put(clip, wave);
+                
             }
             catch (Exception e)
             {
@@ -126,20 +129,27 @@ public class AudioRenderer
         }
 
         int byteRate = sampleRate * 2;
-        int totalBytes = (int) (total * byteRate);
-        byte[] bytes = new byte[totalBytes + totalBytes % 2];
+        int totalBytes = (int) Math.ceil(total * byteRate);
+        /* Ensure the buffer size is large enough to hold all
+         * audio data and maintain byte alignment. */
+        byte[] bytes = new byte[totalBytes + (totalBytes % 2)];
         Wave finalWave = new Wave(1, 1, sampleRate, 16, bytes);
         ByteBuffer buffer = MemoryUtil.memAlloc(2);
+        
 
         for (AudioClip clip : clips)
         {
             try
             {
-                finalWave.add(buffer, map.get(clip),
-                    TimeUtils.toSeconds(clip.tick.get()),
-                    TimeUtils.toSeconds(clip.offset.get()),
-                    TimeUtils.toSeconds(clip.duration.get())
-                );
+                Wave wave = map.get(clip);
+                if (wave != null) {
+                    
+                    finalWave.add(buffer, wave,
+                        TimeUtils.toSeconds(clip.tick.get()),
+                        TimeUtils.toSeconds(clip.offset.get()),
+                        TimeUtils.toSeconds(clip.duration.get())
+                    );
+                }
             }
             catch (Exception e)
             {

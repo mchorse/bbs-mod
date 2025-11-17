@@ -13,6 +13,7 @@ import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.ScrollDirection;
 import mchorse.bbs_mod.utils.Pair;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.IInterp;
 import mchorse.bbs_mod.utils.interps.Interpolations;
@@ -673,9 +674,12 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
             Keyframe frame = (Keyframe) keyframes.get(j);
             Keyframe prev = j > 0 ? (Keyframe) keyframes.get(j - 1) : null;
             int y = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()));
+
+            Color keyframeColor = frame.getColor();
+            int kc = keyframeColor != null ? keyframeColor.getRGBColor() : 0;
             int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
 
-            this.renderSquare(context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), y, 2, c | Colors.A100);
+            this.renderSquare(context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), y, 2, kc | c | Colors.A100);
 
             if (frame.getInterpolation().getInterp() == Interpolations.BEZIER)
             {

@@ -552,6 +552,8 @@ public class UIKeys
     public static final IKey ITEM_STACK_CONTEXT_PASTE = L10n.lang("bbs.ui.item_stack.context.paste");
     public static final IKey ITEM_STACK_CONTEXT_RESET = L10n.lang("bbs.ui.item_stack.context.reset");
     public static final IKey ITEM_STACK_CONTEXT_INVENTORY = L10n.lang("bbs.ui.item_stack.context.inventory");
+    public static final IKey KEYFRAMES_CHANGE_COLOR = L10n.lang("bbs.ui.keyframes.change_color");
+    public static final IKey KEYFRAMES_CHANGE_SHAPE = L10n.lang("bbs.ui.keyframes.change_shape");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES = L10n.lang("bbs.ui.keyframes.context.adjust_values");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_LEFT = L10n.lang("bbs.ui.keyframes.context.adjust_values_left");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_RIGHT = L10n.lang("bbs.ui.keyframes.context.adjust_values_right");
@@ -576,7 +578,16 @@ public class UIKeys
     public static final IKey KEYFRAMES_KEYS_STACK_KEYFRAMES = L10n.lang("bbs.ui.keyframes.keys.stack_keyframes");
     public static final IKey KEYFRAMES_KEYS_TOGGLE_INTERP = L10n.lang("bbs.ui.keyframes.keys.toggle_interp");
     public static final IKey KEYFRAMES_LEFT_HANDLE = L10n.lang("bbs.ui.keyframes.left_handle");
+    public static final IKey KEYFRAMES_RESET_COLOR = L10n.lang("bbs.ui.keyframes.reset_color");
     public static final IKey KEYFRAMES_RIGHT_HANDLE = L10n.lang("bbs.ui.keyframes.right_handle");
+    public static final IKey KEYFRAMES_SHAPES_CIRCLE = L10n.lang("bbs.ui.keyframes.shapes.circle");
+    public static final IKey KEYFRAMES_SHAPES_DIAMOND = L10n.lang("bbs.ui.keyframes.shapes.diamond");
+    public static final IKey KEYFRAMES_SHAPES_FIVE_STAR = L10n.lang("bbs.ui.keyframes.shapes.five_star");
+    public static final IKey KEYFRAMES_SHAPES_FOUR_STAR = L10n.lang("bbs.ui.keyframes.shapes.four_star");
+    public static final IKey KEYFRAMES_SHAPES_SIX_STAR = L10n.lang("bbs.ui.keyframes.shapes.six_star");
+    public static final IKey KEYFRAMES_SHAPES_SQUARE = L10n.lang("bbs.ui.keyframes.shapes.square");
+    public static final IKey KEYFRAMES_SHAPES_TRIANGLE = L10n.lang("bbs.ui.keyframes.shapes.triangle");
+    public static final IKey KEYFRAMES_SHAPES_TRI_STAR = L10n.lang("bbs.ui.keyframes.shapes.tri_star");
     public static final IKey KEYFRAMES_TICK = L10n.lang("bbs.ui.keyframes.tick");
     public static final IKey KEYFRAMES_VALUE = L10n.lang("bbs.ui.keyframes.value");
     public static final IKey KEYS_LIST = L10n.lang("bbs.ui.keys.list");

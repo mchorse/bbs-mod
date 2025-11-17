@@ -279,9 +279,9 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
             this.impact.tooltip(UIKeys.GUN_IMPACT_TITLE);
 
             /* Zoom */
-            UINestedEdit zoomForm = new UINestedEdit((edit) -> UIFormPalette.open(this.main, edit, gun.zoomForm, (f) ->
+            UINestedEdit zoomForm = new UINestedEdit((edit) -> UIFormPalette.open(this.main, edit, gun.getZoomForm(), (f) ->
             {
-                gun.zoomForm = FormUtils.copy(f);
+                gun.setZoomForm(FormUtils.copy(f));
                 this.sectionZoom.getChildren(UINestedEdit.class).get(0).setForm(f);
             })).keybinds();
             UIPropTransform zoomTransform = new UIPropTransform();
@@ -294,7 +294,7 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
             UITrackpad fovDuration = new UITrackpad((v) -> gun.fovDuration = v.intValue());
             UITrackpad fovTarget = new UITrackpad((v) -> gun.fovTarget = v.floatValue());
 
-            zoomForm.setForm(gun.zoomForm);
+            zoomForm.setForm(gun.getZoomForm());
             zoomTransform.setTransform(gun.zoomTransform);
             cmdZoomOn.setText(gun.cmdZoomOn);
             cmdZoomOff.setText(gun.cmdZoomOff);

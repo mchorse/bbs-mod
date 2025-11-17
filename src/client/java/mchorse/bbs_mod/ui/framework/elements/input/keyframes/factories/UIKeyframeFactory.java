@@ -8,14 +8,20 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.context.UIInterpolationContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragEndEvent;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
+import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.IAxisConverter;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.KeyframeShapeRenderers;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
@@ -31,6 +37,9 @@ public abstract class UIKeyframeFactory <T> extends UIElement
     public UITrackpad tick;
     public UITrackpad duration;
     public UIIcon interp;
+
+    public UIIcon shape;
+    public UIColor color;
 
     protected Keyframe<T> keyframe;
     protected UIKeyframes editor;
@@ -108,7 +117,55 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.interp.tooltip(new InterpolationTooltip(0F, 0.5F, () -> this.keyframe.getInterpolation()));
         this.interp.keys().register(Keys.KEYFRAMES_INTERP, this.interp::clickItself).category(UIKeys.KEYFRAMES_KEYS_CATEGORY);
 
-        this.scroll.add(UI.row(this.interp, this.tick, this.duration));
+        this.color = new UIColor((c) ->
+        {
+            for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+            {
+                for (Keyframe kf : sheet.selection.getSelected()) kf.setColor(new Color().set(c));
+            }
+        });
+        this.color.setColor(keyframe.getColor() == null ? 0 : keyframe.getColor().getRGBColor());
+        this.color.noLabel().w(40).tooltip(UIKeys.KEYFRAMES_CHANGE_COLOR);
+        this.color.context((menu) ->
+        {
+            menu.action(Icons.COLOR, UIKeys.KEYFRAMES_RESET_COLOR, () ->
+            {
+                for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+                {
+                    for (Keyframe kf : sheet.selection.getSelected()) kf.setColor(null);
+                }
+
+                this.color.setColor(0);
+            });
+        });
+
+        this.shape = new UIIcon(Icons.SHAPES, (b) ->
+        {
+            KeyframeShape currentShape = keyframe.getShape() == null ? KeyframeShape.SQUARE : keyframe.getShape();
+
+            this.getContext().replaceContextMenu((menu) ->
+            {
+                for (KeyframeShape shape : KeyframeShape.values())
+                {
+                    IKeyframeShapeRenderer shapeRenderer = KeyframeShapeRenderers.SHAPES.get(shape);
+
+                    menu.action(shapeRenderer.getIcon(), shapeRenderer.getLabel(), shape == currentShape, () ->
+                    {
+                        for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+                        {
+                            for (Keyframe kf : sheet.selection.getSelected())
+                            {
+                                kf.setShape(shape);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        this.shape.tooltip(UIKeys.KEYFRAMES_CHANGE_SHAPE);
+
+        this.scroll.add(UI.row(this.interp, this.tick, this.duration, this.color, this.shape));
+
         this.add(this.scroll);
 
         /* Fill data */

@@ -226,4 +226,11 @@ public class BOBJModel implements IModel
         MolangHelper.setMolangVariables(action.parser, target, tick, transition);
         BOBJModelAnimator.animate(this, action, tick, blend, skipInitial);
     }
+
+    @Override
+    public void postApply(IEntity target, Animation action, float tick, float transition)
+    {
+        MolangHelper.setMolangVariables(action.parser, target, tick, transition);
+        BOBJModelAnimator.postAnimate(this, action, tick);
+    }
 }

@@ -222,7 +222,7 @@ public class StringUtils
             StringBuilder builder = new StringBuilder();
             int i = 0;
 
-            for(int c = text.length(); i < c; i++)
+            for (int c = text.length(); i < c; i++)
             {
                 char character = text.charAt(i);
 
