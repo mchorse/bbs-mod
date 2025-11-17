@@ -328,6 +328,27 @@ public class ModelInstance implements IModelInstance
                 CubicRenderer.processRenderModel(renderProcessor, builder, stack, model);
                 BufferRenderer.drawWithGlobalProgram(builder.end());
             }
+
+            RenderSystem.disableDepthTest();
+            RenderSystem.disableDepthTest();
+
+            if (isVao)
+            {
+                CubicRenderer.processRenderModelAlwaysOnTop(renderProcessor, null, stack, model);
+            }
+            else
+            {
+                RenderSystem.setShader(program);
+
+                BufferBuilder builder = Tessellator.getInstance().getBuffer();
+
+                builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
+                CubicRenderer.processRenderModelAlwaysOnTop(renderProcessor, builder, stack, model);
+                BufferRenderer.drawWithGlobalProgram(builder.end());
+            }
+
+            RenderSystem.enableDepthTest();
+
         }
         else if (this.model instanceof BOBJModel model)
         {

@@ -1,6 +1,8 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
 import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.cubic.data.model.Model;
+import mchorse.bbs_mod.cubic.data.model.ModelGroup;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
@@ -9,6 +11,7 @@ import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
@@ -24,12 +27,19 @@ import mchorse.bbs_mod.utils.pose.PoseTransform;
 import mchorse.bbs_mod.utils.pose.Transform;
 import org.joml.Vector3d;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 {
     public UIPoseFactoryEditor poseEditor;
+    public UIToggle focus;
+
+    public static boolean focusOnLimb = false;
+    public static String limbFocused = "";
 
     public UIPoseKeyframeFactory(Keyframe<Pose> keyframe, UIKeyframes editor)
     {
@@ -57,7 +67,52 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             this.poseEditor.fillGroups(bones, false);
         }
 
-        this.scroll.add(this.poseEditor);
+        this.focus = new UIToggle(UIKeys.POSE_CONTEXT_FOCUS, b -> {
+            if (FormUtils.getForm(sheet.property) instanceof ModelForm modelForm) {
+                focusOnLimb = b.getValue();
+                ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
+
+                if (focusOnLimb) {
+                    limbFocused = UIPoseEditor.getLastLimb();
+                }
+
+                toggleFocus(model);
+            }
+        });
+
+        this.scroll.add(this.poseEditor, this.focus);
+    }
+
+
+
+    public void toggleFocus(ModelInstance model)
+    {
+
+        if(model.getModel() instanceof Model m)
+        {
+            // Transparency for others
+            Pose currentPose = this.poseEditor.getPose();
+            PoseTransform limbFocus = currentPose.get(limbFocused);
+
+            List<PoseTransform> poseTransforms = m.getAllGroupKeys().stream()
+                    .map(currentPose::get)
+                    .toList();
+
+            List<PoseTransform> limbsUnfocus = currentPose.transforms.entrySet().stream()
+                    .filter(pose -> !Objects.equals(pose.getKey(), UIPoseEditor.getLastLimb()))
+                    .map(Map.Entry::getValue)
+                    .toList();
+
+            limbsUnfocus.forEach(poseTransform -> poseTransform.color.a = (focusOnLimb) ? 0.2f : 1f);
+            limbFocus.color.a = 1f;
+
+            // Always on top
+            ModelGroup group = m.getGroup(limbFocused);
+
+            if(group == null) return;
+            group.alwaysOnTop = focusOnLimb;
+        }
+
     }
 
     @Override

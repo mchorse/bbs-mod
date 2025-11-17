@@ -753,6 +753,8 @@
     "bbs.ui.pose.context.fix": "Fix",
     "bbs.ui.pose.context.fix-tooltip": "When enabled disables the influence of the model's animation",
     "bbs.ui.pose.context.flip_pose": "Flip pose",
+    "bbs.ui.pose.context.focus": "Focus on bone",
+    "bbs.ui.pose.context.unfocus": "Focus on all bones",
     "bbs.ui.pose.context.name": "Name...",
     "bbs.ui.pose.context.paste": "Paste pose",
     "bbs.ui.pose.context.reset": "Reset pose",

@@ -4,6 +4,7 @@ import mchorse.bbs_mod.cubic.IModel;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
@@ -34,6 +35,7 @@ public class UIPoseEditor extends UIElement
     public UIColor color;
     public UIToggle lighting;
     public UIPropTransform transform;
+    public UIButton focus;
 
     private String group = "";
     private Pose pose;
@@ -105,7 +107,8 @@ public class UIPoseEditor extends UIElement
         this.transform.setModel();
 
         this.column().vertical().stretch();
-        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform);
+
+        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform, this.focus);
     }
 
     private void applyChildren(Consumer<PoseTransform> consumer)
@@ -225,6 +228,8 @@ public class UIPoseEditor extends UIElement
             this.transform.setTransform(null);
         }
     }
+
+    public static String getLastLimb() { return lastLimb; }
 
     protected void setFix(PoseTransform transform, float value)
     {

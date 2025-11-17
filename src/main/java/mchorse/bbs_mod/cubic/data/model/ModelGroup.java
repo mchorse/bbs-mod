@@ -27,6 +27,8 @@ public class ModelGroup implements IMapSerializable
     public Transform initial = new Transform();
     public Transform current = new Transform();
 
+    public boolean alwaysOnTop = false;
+
     public ModelGroup(String id)
     {
         this.id = id;
