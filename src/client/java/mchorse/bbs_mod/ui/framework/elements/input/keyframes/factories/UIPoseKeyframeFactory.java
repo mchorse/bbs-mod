@@ -335,6 +335,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 poseT.scale.set(1F, 1F, 1F);
                 poseT.rotate.set(0F, 0F, 0F);
                 poseT.rotate2.set(0F, 0F, 0F);
+                poseT.pivot.set(0F, 0F, 0F);
             });
             this.refillTransform();
         }
@@ -364,6 +365,13 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         public void pasteRotation2(Vector3d rotation)
         {
             UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.rotate2.set(Vectors.toRad(rotation)));
+            this.refillTransform();
+        }
+
+        @Override
+        public void pastePivot(Vector3d pivot)
+        {
+            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.pivot.set((float) pivot.x, (float) pivot.y, (float) pivot.z));
             this.refillTransform();
         }
 
@@ -428,6 +436,22 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 poseT.rotate2.x += dx;
                 poseT.rotate2.y += dy;
                 poseT.rotate2.z += dz;
+            });
+        }
+
+        @Override
+        public void setP(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = (float) x - transform.pivot.x;
+            float dy = (float) y - transform.pivot.y;
+            float dz = (float) z - transform.pivot.z;
+
+            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            {
+                poseT.pivot.x += dx;
+                poseT.pivot.y += dy;
+                poseT.pivot.z += dz;
             });
         }
     }

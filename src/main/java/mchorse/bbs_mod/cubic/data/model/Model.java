@@ -103,6 +103,7 @@ public class Model implements IMapSerializable, IModel
 
             poseTransform.copy(group.current);
             poseTransform.translate.sub(group.initial.translate);
+            poseTransform.pivot.sub(group.initial.pivot);
             poseTransform.rotate.sub(group.initial.rotate);
 
             poseTransform.rotate.x = MathUtils.toRad(poseTransform.rotate.x);
@@ -149,6 +150,12 @@ public class Model implements IMapSerializable, IModel
             group.color.copy(transform.color);
             group.current.translate.add(transform.translate);
             group.current.scale.add(transform.scale).sub(1, 1, 1);
+            /* Para modelos/pose: el pivote de la pose debe sobreponer la posición
+             * sin alterar el modelo original, y además actualizar el punto de rotación.
+             * Aplicamos el delta de pivot a la traslación (override de posición)
+             * y también al pivot actual (centro de rotación de la pose). */
+            group.current.translate.add(transform.pivot);
+            group.current.pivot.add(transform.pivot);
             group.current.rotate.add(
                 (float) Math.toDegrees(transform.rotate.x),
                 (float) Math.toDegrees(transform.rotate.y),

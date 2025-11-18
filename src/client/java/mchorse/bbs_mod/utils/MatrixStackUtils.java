@@ -56,6 +56,12 @@ public class MatrixStackUtils
     public static void applyTransform(MatrixStack stack, Transform transform)
     {
         stack.translate(transform.translate.x, transform.translate.y, transform.translate.z);
+
+        if (transform.pivot.x != 0F || transform.pivot.y != 0F || transform.pivot.z != 0F)
+        {
+            stack.translate(transform.pivot.x, transform.pivot.y, transform.pivot.z);
+        }
+
         stack.multiply(RotationAxis.POSITIVE_Z.rotation(transform.rotate.z));
         stack.multiply(RotationAxis.POSITIVE_Y.rotation(transform.rotate.y));
         stack.multiply(RotationAxis.POSITIVE_X.rotation(transform.rotate.x));
@@ -63,6 +69,11 @@ public class MatrixStackUtils
         stack.multiply(RotationAxis.POSITIVE_Y.rotation(transform.rotate2.y));
         stack.multiply(RotationAxis.POSITIVE_X.rotation(transform.rotate2.x));
         scaleStack(stack, transform.scale.x, transform.scale.y, transform.scale.z);
+
+        if (transform.pivot.x != 0F || transform.pivot.y != 0F || transform.pivot.z != 0F)
+        {
+            stack.translate(-transform.pivot.x, -transform.pivot.y, -transform.pivot.z);
+        }
     }
 
     public static void multiply(MatrixStack stack, Matrix4f matrix)

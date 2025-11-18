@@ -45,6 +45,8 @@ public class ModelGroup implements IMapSerializable
         /* Setup initial transformations */
         if (data.has("origin")) this.initial.translate.set(DataStorageUtils.vector3fFromData(data.getList("origin")));
         if (data.has("rotate")) this.initial.rotate.set(DataStorageUtils.vector3fFromData(data.getList("rotate")));
+        if (data.has("pivot")) this.initial.pivot.set(DataStorageUtils.vector3fFromData(data.getList("pivot")));
+        else this.initial.pivot.set(this.initial.translate);
 
         /* Setup cubes and meshes */
         if (data.has("cubes"))
@@ -78,6 +80,7 @@ public class ModelGroup implements IMapSerializable
     {
         data.put("origin", DataStorageUtils.vector3fToData(this.initial.translate));
         data.put("rotate", DataStorageUtils.vector3fToData(this.initial.rotate));
+        data.put("pivot", DataStorageUtils.vector3fToData(this.initial.pivot));
 
         if (!this.cubes.isEmpty())
         {

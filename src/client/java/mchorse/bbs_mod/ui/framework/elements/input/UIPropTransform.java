@@ -244,6 +244,7 @@ public class UIPropTransform extends UITransform
         this.fillS(transform.scale.x, transform.scale.y, transform.scale.z);
         this.fillR(MathUtils.toDeg(transform.rotate.x), MathUtils.toDeg(transform.rotate.y), MathUtils.toDeg(transform.rotate.z));
         this.fillR2(MathUtils.toDeg(transform.rotate2.x), MathUtils.toDeg(transform.rotate2.y), MathUtils.toDeg(transform.rotate2.z));
+        this.fillP(transform.pivot.x, transform.pivot.y, transform.pivot.z);
     }
 
     private void enableMode(int mode)
@@ -374,6 +375,14 @@ public class UIPropTransform extends UITransform
     {
         this.preCallback();
         this.transform.rotate2.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
+        this.postCallback();
+    }
+
+    @Override
+    public void setP(Axis axis, double x, double y, double z)
+    {
+        this.preCallback();
+        this.transform.pivot.set((float) x, (float) y, (float) z);
         this.postCallback();
     }
 

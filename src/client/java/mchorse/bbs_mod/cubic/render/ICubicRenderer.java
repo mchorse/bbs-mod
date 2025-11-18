@@ -14,14 +14,14 @@ public interface ICubicRenderer
     public static void translateGroup(MatrixStack stack, ModelGroup group)
     {
         Vector3f translate = group.current.translate;
-        Vector3f pivot = group.initial.translate;
+        Vector3f pivot = group.current.pivot;
 
         stack.translate(-(translate.x - pivot.x) / 16F, (translate.y - pivot.y) / 16F, (translate.z - pivot.z) / 16F);
     }
 
     public static void moveToGroupPivot(MatrixStack stack, ModelGroup group)
     {
-        Vector3f pivot = group.initial.translate;
+        Vector3f pivot = group.current.pivot;
 
         stack.translate(pivot.x / 16F, pivot.y / 16F, pivot.z / 16F);
     }
@@ -46,7 +46,7 @@ public interface ICubicRenderer
 
     public static void moveBackFromGroupPivot(MatrixStack stack, ModelGroup group)
     {
-        Vector3f pivot = group.initial.translate;
+        Vector3f pivot = group.current.pivot;
 
         stack.translate(-pivot.x / 16F, -pivot.y / 16F, -pivot.z / 16F);
     }

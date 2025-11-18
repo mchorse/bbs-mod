@@ -165,6 +165,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 poseTransform.scale.lerp(value.scale, value.fix);
                 poseTransform.rotate.lerp(value.rotate, value.fix);
                 poseTransform.rotate2.lerp(value.rotate2, value.fix);
+                poseTransform.pivot.lerp(value.pivot, value.fix);
             }
             else
             {
@@ -172,6 +173,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 poseTransform.scale.add(value.scale).sub(1, 1, 1);
                 poseTransform.rotate.add(value.rotate);
                 poseTransform.rotate2.add(value.rotate2);
+                poseTransform.pivot.add(value.pivot);
             }
         }
     }

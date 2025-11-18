@@ -34,11 +34,15 @@ public abstract class UITransform extends UIElement
     public UITrackpad r2x;
     public UITrackpad r2y;
     public UITrackpad r2z;
+    public UITrackpad px;
+    public UITrackpad py;
+    public UITrackpad pz;
 
     protected UIIcon iconT;
     protected UIIcon iconS;
     protected UIIcon iconR;
     protected UIIcon iconR2;
+    protected UIIcon iconP;
 
     protected UIElement scaleRow;
 
@@ -110,24 +114,39 @@ public abstract class UITransform extends UIElement
         this.iconS.tooltip(UIKeys.TRANSFORMS_UNIFORM_SCALE);
         this.iconR = new UIIcon(Icons.REFRESH, null);
         this.iconR2 = new UIIcon(Icons.REFRESH, null);
+        this.iconP = new UIIcon(Icons.SPHERE, null);
 
-        this.iconT.disabledColor = this.iconS.disabledColor = this.iconR.disabledColor = this.iconR2.disabledColor = Colors.WHITE;
-        this.iconT.hoverColor = this.iconS.hoverColor = this.iconR.hoverColor = this.iconR2.hoverColor = Colors.WHITE;
+        this.iconT.disabledColor = this.iconS.disabledColor = this.iconR.disabledColor = this.iconR2.disabledColor = this.iconP.disabledColor = Colors.WHITE;
+        this.iconT.hoverColor = this.iconS.hoverColor = this.iconR.hoverColor = this.iconR2.hoverColor = this.iconP.hoverColor = Colors.WHITE;
 
         this.iconT.setEnabled(false);
         this.iconR.setEnabled(false);
         this.iconR2.setEnabled(false);
+        this.iconP.setEnabled(false);
 
         this.add(UI.row(this.iconT, this.tx, this.ty, this.tz));
         this.add(this.scaleRow = UI.row(this.iconS, this.sx, this.sy, this.sz));
         this.add(UI.row(this.iconR, this.rx, this.ry, this.rz));
         this.add(UI.row(this.iconR2, this.r2x, this.r2y, this.r2z));
+        
+        IKey rawPivot = IKey.constant("%s (%s)");
+        this.px = new UITrackpad((value) -> this.internalSetP(value, Axis.X)).block().onlyNumbers();
+        this.px.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_X));
+        this.px.textbox.setColor(Colors.RED);
+        this.py = new UITrackpad((value) -> this.internalSetP(value, Axis.Y)).block().onlyNumbers();
+        this.py.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_Y));
+        this.py.textbox.setColor(Colors.GREEN);
+        this.pz = new UITrackpad((value) -> this.internalSetP(value, Axis.Z)).block().onlyNumbers();
+        this.pz.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_Z));
+        this.pz.textbox.setColor(Colors.BLUE);
+
+        this.add(UI.row(this.iconP, this.px, this.py, this.pz));
 
         this.context((menu) ->
         {
             ListType transforms = Window.getClipboardList();
 
-            if (transforms != null && transforms.size() < 9)
+            if (transforms != null && transforms.size() < 12)
             {
                 transforms = null;
             }
@@ -147,14 +166,14 @@ public abstract class UITransform extends UIElement
             menu.action(Icons.CLOSE, UIKeys.TRANSFORMS_CONTEXT_RESET, this::reset);
         });
 
-        this.wh(190, 70);
+        this.wh(190, 90);
 
         this.keys().register(Keys.COPY, this::copyTransformations).inside().label(UIKeys.TRANSFORMS_CONTEXT_COPY);
         this.keys().register(Keys.PASTE, () ->
         {
             ListType transforms = Window.getClipboardList();
 
-            if (transforms != null && transforms.size() < 9)
+            if (transforms != null && transforms.size() < 12)
             {
                 transforms = null;
             }
@@ -227,6 +246,12 @@ public abstract class UITransform extends UIElement
         this.setR2(null, x, y, z);
     }
 
+    public void fillSetP(double x, double y, double z)
+    {
+        this.fillP(x, y, z);
+        this.setP(null, x, y, z);
+    }
+
     public void fillT(double x, double y, double z)
     {
         this.tx.setValue(x);
@@ -253,6 +278,13 @@ public abstract class UITransform extends UIElement
         this.r2x.setValue(x);
         this.r2y.setValue(y);
         this.r2z.setValue(z);
+    }
+
+    public void fillP(double x, double y, double z)
+    {
+        this.px.setValue(x);
+        this.py.setValue(y);
+        this.pz.setValue(z);
     }
     
     protected void internalSetT(double x, Axis axis)
@@ -328,6 +360,22 @@ public abstract class UITransform extends UIElement
         }
     }
 
+    protected void internalSetP(double x, Axis axis)
+    {
+        try
+        {
+            this.setP(axis,
+                axis == Axis.X ? x : this.px.value,
+                axis == Axis.Y ? x : this.py.value,
+                axis == Axis.Z ? x : this.pz.value
+            );
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     public abstract void setT(Axis axis, double x, double y, double z);
 
     public abstract void setS(Axis axis, double x, double y, double z);
@@ -335,6 +383,8 @@ public abstract class UITransform extends UIElement
     public abstract void setR(Axis axis, double x, double y, double z);
 
     public abstract void setR2(Axis axis, double x, double y, double z);
+
+    public abstract void setP(Axis axis, double x, double y, double z);
 
     private void copyTransformations()
     {
@@ -352,6 +402,9 @@ public abstract class UITransform extends UIElement
         list.addDouble(this.r2x.value);
         list.addDouble(this.r2y.value);
         list.addDouble(this.r2z.value);
+        list.addDouble(this.px.value);
+        list.addDouble(this.py.value);
+        list.addDouble(this.pz.value);
 
         Window.setClipboard(list);
     }
@@ -362,6 +415,7 @@ public abstract class UITransform extends UIElement
         this.pasteScale(this.getVector(list, 3));
         this.pasteRotation(this.getVector(list, 6));
         this.pasteRotation2(this.getVector(list, 9));
+        this.pastePivot(this.getVector(list, 12));
     }
 
     public void pasteTranslation(Vector3d translation)
@@ -382,6 +436,11 @@ public abstract class UITransform extends UIElement
     public void pasteRotation2(Vector3d rotation)
     {
         this.fillSetR2(rotation.x, rotation.y, rotation.z);
+    }
+
+    public void pastePivot(Vector3d pivot)
+    {
+        this.fillSetP(pivot.x, pivot.y, pivot.z);
     }
 
     private Vector3d getVector(ListType list, int offset)
@@ -415,6 +474,7 @@ public abstract class UITransform extends UIElement
         this.fillSetS(1, 1, 1);
         this.fillSetR(0, 0, 0);
         this.fillSetR2(0, 0, 0);
+        this.fillSetP(0, 0, 0);
     }
 
     @Override

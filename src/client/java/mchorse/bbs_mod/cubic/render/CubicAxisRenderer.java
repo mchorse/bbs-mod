@@ -15,7 +15,7 @@ public class CubicAxisRenderer implements ICubicRenderer
     public boolean renderGroup(BufferBuilder builder, MatrixStack stack, ModelGroup group, Model model)
     {
         stack.push();
-        stack.translate(group.initial.translate.x / 16, group.initial.translate.y / 16, group.initial.translate.z / 16);
+        stack.translate(group.current.pivot.x / 16, group.current.pivot.y / 16, group.current.pivot.z / 16);
 
         Matrix4f matrix = stack.peek().getPositionMatrix();
         float f = 0.1F;

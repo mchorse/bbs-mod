@@ -91,6 +91,13 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
         }
 
         @Override
+        public void pastePivot(Vector3d pivot)
+        {
+            apply(this.editor.editor, this.editor.keyframe, (poseT) -> poseT.pivot.set((float) pivot.x, (float) pivot.y, (float) pivot.z));
+            this.refillTransform();
+        }
+
+        @Override
         public void setT(Axis axis, double x, double y, double z)
         {
             Transform transform = this.getTransform();
@@ -151,6 +158,22 @@ public class UITransformKeyframeFactory extends UIKeyframeFactory<Transform>
                 poseT.rotate2.x += dx;
                 poseT.rotate2.y += dy;
                 poseT.rotate2.z += dz;
+            });
+        }
+
+        @Override
+        public void setP(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = (float) x - transform.pivot.x;
+            float dy = (float) y - transform.pivot.y;
+            float dz = (float) z - transform.pivot.z;
+
+            apply(this.editor.editor, this.editor.keyframe, (poseT) ->
+            {
+                poseT.pivot.x += dx;
+                poseT.pivot.y += dy;
+                poseT.pivot.z += dz;
             });
         }
     }

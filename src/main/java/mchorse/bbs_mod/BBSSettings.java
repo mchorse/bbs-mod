@@ -228,7 +228,7 @@ public class BBSSettings
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);
         /* Enable gizmos by default to make them visible in editor */
-        modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", true);
+        modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", false);
 
 
         /* Estructuras: modo de renderizado */
