@@ -29,7 +29,7 @@ public class ModelProperties implements IMapSerializable
         return this.form;
     }
 
-    private Form processForm(Form form)
+    protected Form processForm(Form form)
     {
         if (form != null)
         {

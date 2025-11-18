@@ -244,6 +244,13 @@ public class Model implements IMapSerializable, IModel
         CubicModelAnimator.animate(this, action, tick, blend, skipInitial);
     }
 
+    @Override
+    public void postApply(IEntity target, Animation action, float tick, float transition)
+    {
+        MolangHelper.setMolangVariables(this.parser, target, tick, transition);
+        CubicModelAnimator.postAnimate(this, action, tick);
+    }
+
     /* Deserialization / Serialization */
 
     @Override

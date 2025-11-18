@@ -675,8 +675,7 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
             Keyframe prev = j > 0 ? (Keyframe) keyframes.get(j - 1) : null;
             int y = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()));
 
-            Color keyframeColor = frame.keyframeColor;
-
+            Color keyframeColor = frame.getColor();
             int kc = keyframeColor != null ? keyframeColor.getRGBColor() : 0;
             int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
 

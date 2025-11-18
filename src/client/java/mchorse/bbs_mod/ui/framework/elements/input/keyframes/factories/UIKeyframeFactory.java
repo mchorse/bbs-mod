@@ -5,16 +5,16 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
-import mchorse.bbs_mod.ui.framework.elements.context.UIColorContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.context.UIInterpolationContextMenu;
-import mchorse.bbs_mod.ui.framework.elements.context.UIShapeContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragEndEvent;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
+import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
-import mchorse.bbs_mod.ui.framework.elements.input.color.UIColorPicker;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.IAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.KeyframeShapeRenderers;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -39,7 +39,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
     public UIIcon interp;
 
     public UIIcon shape;
-    public UIIcon keyframe_color;
+    public UIColor color;
 
     protected Keyframe<T> keyframe;
     protected UIKeyframes editor;
@@ -115,39 +115,54 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.interp.tooltip(new InterpolationTooltip(0F, 0.5F, () -> this.keyframe.getInterpolation()));
         this.interp.keys().register(Keys.KEYFRAMES_INTERP, this.interp::clickItself).category(UIKeys.KEYFRAMES_KEYS_CATEGORY);
 
-        this.scroll.add(UI.row(this.interp, this.tick, this.duration));
-
-        this.keyframe_color = new UIIcon(Icons.COLOR, (b) -> {
-            Color choosenColor = (this.keyframe.keyframeColor == null) ? Color.white() : this.keyframe.keyframeColor;
-            UIColorContextMenu menu = new UIColorContextMenu(choosenColor);
-
-            this.getContext().replaceContextMenu(menu.callback(() -> {
-                for(UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+        this.color = new UIColor((c) ->
+        {
+            for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+            {
+                for (Keyframe kf : sheet.selection.getSelected()) kf.setColor(new Color().set(c));
+            }
+        });
+        this.color.setColor(keyframe.getColor() == null ? 0 : keyframe.getColor().getRGBColor());
+        this.color.noLabel().w(40).tooltip(UIKeys.KEYFRAMES_CHANGE_COLOR);
+        this.color.context((menu) ->
+        {
+            menu.action(Icons.COLOR, UIKeys.KEYFRAMES_RESET_COLOR, () ->
+            {
+                for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
                 {
-                    for(Keyframe k : sheet.selection.getSelected())
-                    {
-                        k.keyframeColor = menu.colorPicker.color;
-                    }
+                    for (Keyframe kf : sheet.selection.getSelected()) kf.setColor(null);
                 }
-            }));
+
+                this.color.setColor(0);
+            });
         });
 
-        this.shape = new UIIcon(Icons.SHAPES, (b) -> {
+        this.shape = new UIIcon(Icons.SHAPES, (b) ->
+        {
+            KeyframeShape currentShape = keyframe.getShape() == null ? KeyframeShape.SQUARE : keyframe.getShape();
 
-            KeyframeShape keyframeShape = (keyframe.keyframeShape == null) ? KeyframeShape.SQUARE : keyframe.keyframeShape;
-            UIShapeContextMenu menu = new UIShapeContextMenu(keyframeShape);
-
-            this.getContext().replaceContextMenu(menu.callback(() -> {
-                for(UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+            this.getContext().replaceContextMenu((menu) ->
+            {
+                for (KeyframeShape shape : KeyframeShape.values())
                 {
-                    for(Keyframe k : sheet.selection.getSelected())
+                    IKeyframeShapeRenderer shapeRenderer = KeyframeShapeRenderers.SHAPES.get(shape);
+
+                    menu.action(shapeRenderer.getIcon(), shapeRenderer.getLabel(), shape == currentShape, () ->
                     {
-                        k.keyframeShape = menu.choosenShape;
-                    }
+                        for (UIKeyframeSheet sheet : this.editor.getGraph().getSheets())
+                        {
+                            for (Keyframe kf : sheet.selection.getSelected())
+                            {
+                                kf.setShape(shape);
+                            }
+                        }
+                    });
                 }
-            }));
+            });
         });
-        this.scroll.add(UI.row(this.keyframe_color, this.shape));
+        this.shape.tooltip(UIKeys.KEYFRAMES_CHANGE_SHAPE);
+
+        this.scroll.add(UI.row(this.interp, this.tick, this.duration, this.color, this.shape));
 
         this.add(this.scroll);
 

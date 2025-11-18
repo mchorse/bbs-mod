@@ -54,7 +54,7 @@ public class GunProperties extends ModelProperties
     public boolean collideEntities = true;
 
     /* Zoom */
-    public Form zoomForm;
+    private Form zoomForm;
     public final Transform zoomTransform = new Transform();
     public String cmdZoomOn = "";
     public String cmdZoomOff = "";
@@ -127,6 +127,16 @@ public class GunProperties extends ModelProperties
         tp.scale.set(0.666F);
         tp.rotate.y = -MathUtils.PI / 2;
         tp.rotate2.z = MathUtils.PI / 4;
+    }
+
+    public Form getZoomForm()
+    {
+        return this.zoomForm;
+    }
+
+    public void setZoomForm(Form zoomForm)
+    {
+        this.zoomForm = this.processForm(zoomForm);
     }
 
     public void fromNetwork(PacketByteBuf buf)
@@ -219,7 +229,7 @@ public class GunProperties extends ModelProperties
         this.collideBlocks = data.getBool("collideBlocks", true);
         this.collideEntities = data.getBool("collideEntities", true);
 
-        this.zoomForm = FormUtils.fromData(data.get("zoomForm"));
+        this.setZoomForm(FormUtils.fromData(data.get("zoomForm")));
         this.zoomTransform.fromData(data.getMap("zoomTransform"));
         this.cmdZoomOn = data.getString("cmdZoomOn");
         this.cmdZoomOff = data.getString("cmdZoomOff");

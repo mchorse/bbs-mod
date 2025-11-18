@@ -121,4 +121,53 @@ public class CubicModelAnimator
         current.rotate.y = (float) Lerps.lerpYaw(current.rotate.y, (float) rotation.y + initial.rotate.y, blend);
         current.rotate.z = (float) Lerps.lerpYaw(current.rotate.z, (float) rotation.z + initial.rotate.z, blend);
     }
+
+    public static void postAnimate(Model model, Animation animation, float tick)
+    {
+        for (ModelGroup group : model.topGroups)
+        {
+            animateGroupPost(group, animation, tick);
+        }
+    }
+
+    private static void animateGroupPost(ModelGroup group, Animation animation, float frame)
+    {
+        AnimationPart part = animation.parts.get(group.id);
+
+        if (part != null)
+        {
+            applyGroupAnimationPost(group, part, frame);
+        }
+
+        for (ModelGroup childGroup : group.children)
+        {
+            animateGroupPost(childGroup, animation, frame);
+        }
+    }
+
+    private static void applyGroupAnimationPost(ModelGroup group, AnimationPart animation, float frame)
+    {
+        Vector3d position = interpolateList(p, animation.x, animation.y, animation.z, frame, 0D);
+        Vector3d scale = interpolateList(s, animation.sx, animation.sy, animation.sz, frame, 1D);
+        Vector3d rotation = interpolateList(r, animation.rx, animation.ry, animation.rz, frame, 0D);
+
+        scale.sub(1, 1, 1);
+
+        rotation.x *= -1;
+        rotation.y *= -1;
+
+        Transform current = group.current;
+
+        current.translate.x += (float) position.x;
+        current.translate.y += (float) position.y;
+        current.translate.z += (float) position.z;
+
+        current.scale.x += (float) scale.x;
+        current.scale.y += (float) scale.y;
+        current.scale.z += (float) scale.z;
+
+        current.rotate.x += (float) rotation.x;
+        current.rotate.y += (float) rotation.y;
+        current.rotate.z += (float) rotation.z;
+    }
 }
