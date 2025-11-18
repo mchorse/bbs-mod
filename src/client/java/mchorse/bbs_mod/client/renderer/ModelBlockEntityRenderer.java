@@ -30,6 +30,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockEntity>
 {
@@ -103,13 +105,25 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
             {
                 Camera cam = MinecraftClient.getInstance().gameRenderer.getCamera();
                 Vec3d camPos = cam.getPos();
+                Vec3d targetPos = camPos;
+                try
+                {
+                    if (!MinecraftClient.getInstance().options.getPerspective().isFirstPerson())
+                    {
+                        if (MinecraftClient.getInstance().player != null)
+                        {
+                            targetPos = MinecraftClient.getInstance().player.getCameraPosVec(tickDelta);
+                        }
+                    }
+                }
+                catch (Exception ignore) {}
 
                 double ox = pos.getX() + 0.5D + transform.translate.x;
                 double oy = pos.getY() + transform.translate.y;
                 double oz = pos.getZ() + 0.5D + transform.translate.z;
 
-                double dx = camPos.x - ox;
-                double dz = camPos.z - oz;
+                double dx = targetPos.x - ox;
+                double dz = targetPos.z - oz;
                 double horiz = Math.sqrt(dx * dx + dz * dz);
 
                 float baseYaw = transform.rotate.y;
@@ -121,14 +135,6 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
                 float travel = Math.abs(yawDelta);
                 while (travel >= twoPi) { travel -= twoPi; }
                 /* Usar delta continuo para reparto cabeza/anchor (evita salto en 180°) */
-
-                /* Aproximar altura de la cabeza para un pitch más natural */
-                float approxHeadHeight = 1.5F * transform.scale.y;
-                double dyHead = camPos.y - (oy + approxHeadHeight);
-                float pitch = (float) Math.atan2(dyHead, horiz);
-                float pitchLimit = (float) Math.toRadians(90.0);
-                if (pitch > pitchLimit) pitch = pitchLimit;
-                if (pitch < -pitchLimit) pitch = -pitchLimit;
 
                 applied = transform.copy();
 
@@ -146,6 +152,28 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
 
                     if (lookAtEnabled && hasHead)
                     {
+                        /* Calcular pitch basado en altura real del hueso cabeza */
+                        float approxHeadHeight = 1.5F * applied.scale.y;
+                        try
+                        {
+                            java.util.Map<String, Matrix4f> mats = new java.util.HashMap<>();
+                            mi.captureMatrices(mats, headKey);
+                            Matrix4f mat = mats.get(headKey);
+                            if (mat != null)
+                            {
+                                Vector3f tr = new Vector3f();
+                                mat.getTranslation(tr);
+                                approxHeadHeight = tr.y * applied.scale.y;
+                            }
+                        }
+                        catch (Exception ignore) {}
+
+                        double dyHead = targetPos.y - (oy + approxHeadHeight);
+                        float pitch = (float) Math.atan2(dyHead, horiz);
+                        float pitchLimit = (float) Math.toRadians(90.0);
+                        if (pitch > pitchLimit) pitch = pitchLimit;
+                        if (pitch < -pitchLimit) pitch = -pitchLimit;
+
                         float headLimit = (float) Math.toRadians(mi != null ? mi.lookAtHeadLimitDeg : 45.0F);
                         float headYawBase = Math.max(-headLimit, Math.min(yawDelta, headLimit));
 
