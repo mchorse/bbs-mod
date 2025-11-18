@@ -596,10 +596,14 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
             // Si hay opacidad global (<1), forzar capa translúcida para todos los bloques
             // de la estructura, de modo que el alpha se aplique incluso a geometría sólida/cutout.
+            // En modo shaders (useEntityLayers=true) usar la variante de entidad translúcida CON CULL
+            // para conservar el culling y evitar doble cara con packs.
             float globalAlpha = this.form.color.get().a;
             if (globalAlpha < 0.999f)
             {
-                layer = RenderLayer.getTranslucent();
+                layer = useEntityLayers
+                    ? TexturedRenderLayers.getEntityTranslucentCull()
+                    : RenderLayer.getTranslucent();
             }
 
             VertexConsumer vc = consumers.getBuffer(layer);
@@ -648,7 +652,21 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                     {
                         @SuppressWarnings({"rawtypes", "unchecked"})
                         net.minecraft.client.render.block.entity.BlockEntityRenderer raw = (net.minecraft.client.render.block.entity.BlockEntityRenderer) renderer;
-                        raw.render(be, 0F, stack, consumers, beLight, overlay);
+
+                        // Aplicar tinte/alpha global y forzar capa translúcida en capas cutout
+                        // para que los Block Entities también respeten la opacidad.
+                        mchorse.bbs_mod.forms.CustomVertexConsumerProvider beProvider = mchorse.bbs_mod.forms.FormUtilsClient.getProvider();
+                        beProvider.setSubstitute(BBSRendering.getColorConsumer(this.form.color.get()));
+                        try
+                        {
+                            raw.render(be, 0F, stack, beProvider, beLight, overlay);
+                        }
+                        finally
+                        {
+                            beProvider.draw();
+                            beProvider.setSubstitute(null);
+                            mchorse.bbs_mod.forms.CustomVertexConsumerProvider.clearRunnables();
+                        }
                     }
                 }
             }
@@ -669,6 +687,8 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
      */
     private void renderAnimatedBlocksVanilla(FormRenderingContext context, MatrixStack stack, net.minecraft.client.render.VertexConsumerProvider consumers, int light, int overlay)
     {
+        // Asegurar atlas de bloques activo
+        RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
         // Centrado basado en límites reales (min/max)
         float cx;
         float cy;
@@ -770,6 +790,15 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 ? RenderLayers.getEntityBlockLayer(entry.state, true)
                 : RenderLayer.getTranslucentMovingBlock();
 
+            // Si hay alpha global, preferir capa translúcida de entidad en shaders para asegurar fade suave
+            float globalAlphaAnim = this.form.color.get().a;
+            if (globalAlphaAnim < 0.999f)
+            {
+                layer = shadersEnabled
+                    ? TexturedRenderLayers.getEntityTranslucentCull()
+                    : RenderLayer.getTranslucentMovingBlock();
+            }
+
             // Aplicar alpha global como recolor
             VertexConsumer vc = consumers.getBuffer(layer);
             Color tint = this.form.color.get();
@@ -793,6 +822,8 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         // Asegurar estado de blending correcto para capas translúcidas
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        // Asegurar atlas de bloques activo
+        RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
         // Calcular pivote efectivo igual que en renderStructureCulledWorld
         float cx;
         float cy;
@@ -873,15 +904,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             stack.push();
             stack.translate(entry.pos.getX() - pivotX, entry.pos.getY() - pivotY, entry.pos.getZ() - pivotZ);
 
-            // Capa según el estado; hojas suelen ser cutout_mipped, césped/plantas cutout
-            RenderLayer layer = RenderLayers.getBlockLayer(entry.state);
+            // Capa según el estado; en shaders usar variante de entidad para packs
+            boolean shadersEnabledTint = mchorse.bbs_mod.client.BBSRendering.isIrisShadersEnabled() && mchorse.bbs_mod.client.BBSRendering.isRenderingWorld();
+            RenderLayer layer = shadersEnabledTint
+                ? RenderLayers.getEntityBlockLayer(entry.state, false)
+                : RenderLayers.getBlockLayer(entry.state);
 
             // Si hay opacidad global (<1), forzar capa translúcida para que el alpha
             // se aplique en materiales originalmente cutout/cull y no "desaparezcan".
             float globalAlpha = this.form.color.get().a;
             if (globalAlpha < 0.999f)
             {
-                layer = RenderLayer.getTranslucent();
+                layer = shadersEnabledTint ? TexturedRenderLayers.getEntityTranslucentCull() : RenderLayer.getTranslucent();
             }
 
             VertexConsumer vc = consumers.getBuffer(layer);
