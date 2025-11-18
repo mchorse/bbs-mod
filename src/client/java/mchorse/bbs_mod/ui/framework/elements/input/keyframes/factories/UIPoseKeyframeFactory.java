@@ -55,7 +55,6 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 {
                     ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
 
-                    System.out.println("model: " + model);
                     updateFocus(model);
                 }
             }
@@ -88,6 +87,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 toggleFocus(model);
             }
         });
+        this.focus.setValue(false);
 
         this.scroll.add(this.poseEditor, this.focus);
     }
@@ -129,6 +129,10 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
 
         Pose currentPose = this.poseEditor.getPose();
 
+        List<PoseTransform> poseTransforms = m.getAllGroupKeys().stream()
+                .map(currentPose::get)
+                .toList();
+
         for (ModelGroup group : m.getAllGroups())
         {
             group.alwaysOnTop = false;
@@ -147,6 +151,28 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
                 focusedGroup.alwaysOnTop = true;
             }
         }
+    }
+
+    public void deactivateFocus(ModelInstance model)
+    {
+        if (!(model.getModel() instanceof Model m)) return;
+
+        Pose currentPose = this.poseEditor.getPose();
+        focusOnLimb = false;
+        this.focus.setValue(false);
+
+        List<PoseTransform> poseTransforms = m.getAllGroupKeys().stream()
+                .map(currentPose::get)
+                .toList();
+
+        for (ModelGroup group : m.getAllGroups())
+        {
+            group.alwaysOnTop = false;
+        }
+
+        currentPose.transforms.forEach((key, transform) -> {
+            transform.color.a = 1f;
+        });
     }
 
     @Override

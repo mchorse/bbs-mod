@@ -13,13 +13,18 @@ import mchorse.bbs_mod.camera.controller.RunnerCameraController;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.client.renderer.MorphRenderer;
+import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.cubic.data.model.Model;
+import mchorse.bbs_mod.cubic.data.model.ModelGroup;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtils;
+import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -44,6 +49,8 @@ import mchorse.bbs_mod.ui.film.utils.undo.UIUndoHistoryOverlay;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UINumberOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
@@ -661,6 +668,9 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         cameraController.remove(this.runner);
 
         this.disableContext();
+
+        deactivateAlwaysOnTop();
+
         this.replayEditor.close();
 
         this.notifyServer(ActionState.STOP);
@@ -674,11 +684,25 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         BBSRendering.setCustomSize(false);
         MorphRenderer.hidePlayer = false;
 
+        deactivateAlwaysOnTop();
+
         this.setFlight(false);
         this.getCameraController().remove(this.runner);
 
         this.disableContext();
         this.secretPlay.removeFromParent();
+    }
+
+    private void deactivateAlwaysOnTop()
+    {
+        // Deactivate alwaysOnTop
+        Form modelForm = this.replayEditor.getReplay().form.get();
+        ModelInstance model = ((ModelFormRenderer) FormUtilsClient.getRenderer(modelForm)).getModel();
+        if (!(model.getModel() instanceof Model m)) return;
+
+        UIKeyframeFactory keyframeFactory = this.replayEditor.keyframeEditor.editor;
+        if(!(keyframeFactory instanceof UIPoseKeyframeFactory uiPoseKeyframeFactory)) return;
+        uiPoseKeyframeFactory.deactivateFocus(model);
     }
 
     private void disableContext()
