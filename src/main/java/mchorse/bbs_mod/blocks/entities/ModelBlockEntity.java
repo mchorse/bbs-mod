@@ -56,9 +56,12 @@ public class ModelBlockEntity extends BlockEntity
     public void tick(World world, BlockPos pos, BlockState state)
     {
         ModelBlockEntityUpdateCallback.EVENT.invoker().update(this);
-
-        this.entity.update();
+        /* Asegura que el StubEntity tenga posición y mundo correctos para cálculos de luz/bioma.
+         * Sin esto, el entity se queda en (0,0,0) y los renders toman luz de esa zona,
+         * provocando oscurecimiento en editor, miniatura y bloque de modelo. */
         this.entity.setWorld(world);
+        this.entity.setPosition(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
+        this.entity.update();
         this.properties.update(this.entity);
     }
 

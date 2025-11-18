@@ -583,10 +583,26 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
 
         BlockEntityRenderDispatcher beDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 
-        // Posición ancla en el mundo: el formulario se renderiza relativo a su entidad
-        // Si no hay entidad (UI), usar origen como ancla
+        // Posición ancla en el mundo: para ítems/UI usar posición del jugador (más estable)
+        // para evitar anclar en (0,0,0) y obtener luz mundial baja.
         net.minecraft.util.math.BlockPos anchor;
-        if (context.entity != null)
+        boolean isItemContext = (context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_FP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_TP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
+        if (isItemContext || context.entity == null)
+        {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player != null)
+            {
+                anchor = mc.player.getBlockPos();
+            }
+            else
+            {
+                anchor = net.minecraft.util.math.BlockPos.ORIGIN;
+            }
+        }
+        else
         {
             anchor = new net.minecraft.util.math.BlockPos(
                 (int)Math.floor(context.entity.getX()),
@@ -594,17 +610,17 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 (int)Math.floor(context.entity.getZ())
             );
         }
-        else
-        {
-            anchor = net.minecraft.util.math.BlockPos.ORIGIN;
-        }
 
         // Definir offset base desde el centro/paridad para que el BlockRenderView
         // pueda traducir las consultas de luz/color a coordenadas de mundo reales.
         int baseDx = (int)Math.floor(-pivotX);
         int baseDy = (int)Math.floor(-pivotY);
         int baseDz = (int)Math.floor(-pivotZ);
-        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz);
+        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz)
+            // En UI/miniatura/ítem inventario, forzar luz de cielo máxima para evitar oscurecer
+            .setForceMaxSkyLight(context.ui
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.PREVIEW
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
 
         for (BlockEntry entry : blocks)
         {
@@ -782,9 +798,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             .setLightsEnabled(lightsEnabled2)
             .setLightIntensity(lightIntensity2);
 
-        // Ancla mundial
+        // Ancla mundial: preferir la posición del jugador en UI/ítems
         net.minecraft.util.math.BlockPos anchor;
-        if (context.entity != null)
+        boolean isItemContextAnim = (context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_FP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_TP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
+        if (isItemContextAnim || context.entity == null)
+        {
+            net.minecraft.client.MinecraftClient mc2 = net.minecraft.client.MinecraftClient.getInstance();
+            anchor = (mc2.player != null) ? mc2.player.getBlockPos() : net.minecraft.util.math.BlockPos.ORIGIN;
+        }
+        else
         {
             anchor = new net.minecraft.util.math.BlockPos(
                 (int)Math.floor(context.entity.getX()),
@@ -792,15 +817,14 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 (int)Math.floor(context.entity.getZ())
             );
         }
-        else
-        {
-            anchor = net.minecraft.util.math.BlockPos.ORIGIN;
-        }
 
         int baseDx = (int)Math.floor(-pivotX);
         int baseDy = (int)Math.floor(-pivotY);
         int baseDz = (int)Math.floor(-pivotZ);
-        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz);
+        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz)
+            .setForceMaxSkyLight(context.ui
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.PREVIEW
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
 
         for (BlockEntry entry : blocks)
         {
@@ -906,9 +930,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             .setLightsEnabled(this.form.emitLight.get())
             .setLightIntensity(this.form.lightIntensity.get());
 
-        // Ancla mundial
+        // Ancla mundial: preferir la posición del jugador en UI/ítems
         net.minecraft.util.math.BlockPos anchor;
-        if (context.entity != null)
+        boolean isItemContextTint = (context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_FP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_TP
+            || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
+        if (isItemContextTint || context.entity == null)
+        {
+            net.minecraft.client.MinecraftClient mc3 = net.minecraft.client.MinecraftClient.getInstance();
+            anchor = (mc3.player != null) ? mc3.player.getBlockPos() : net.minecraft.util.math.BlockPos.ORIGIN;
+        }
+        else
         {
             anchor = new net.minecraft.util.math.BlockPos(
                 (int)Math.floor(context.entity.getX()),
@@ -916,15 +949,14 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
                 (int)Math.floor(context.entity.getZ())
             );
         }
-        else
-        {
-            anchor = net.minecraft.util.math.BlockPos.ORIGIN;
-        }
 
         int baseDx = (int)Math.floor(-pivotX);
         int baseDy = (int)Math.floor(-pivotY);
         int baseDz = (int)Math.floor(-pivotZ);
-        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz);
+        view.setWorldAnchor(anchor, baseDx, baseDy, baseDz)
+            .setForceMaxSkyLight(context.ui
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.PREVIEW
+                || context.type == mchorse.bbs_mod.forms.renderers.FormRenderType.ITEM_INVENTORY);
 
         for (BlockEntry entry : blocks)
         {

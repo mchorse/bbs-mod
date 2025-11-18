@@ -29,6 +29,7 @@ import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Colors;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.network.PlayerListEntry;
 
 import java.util.ArrayList;
@@ -339,7 +340,10 @@ public class UIFormCategory extends UIElement
                     context.batcher.outline(cx, cy, cx + CELL_WIDTH, cy + CELL_HEIGHT, Colors.A50 | BBSSettings.primaryColor.get(), 2);
                 }
 
+                /* Evitar que la luz difusa de GUI oscurezca miniaturas 3D */
+                DiffuseLighting.disableGuiDepthLighting();
                 FormUtilsClient.renderUI(form, context, cx, cy, cx + CELL_WIDTH, cy + CELL_HEIGHT);
+                DiffuseLighting.enableGuiDepthLighting();
 
                 context.batcher.unclip(context);
 

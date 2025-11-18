@@ -48,6 +48,7 @@ public class VirtualBlockRenderView implements BlockRenderView
     private int baseDz = 0;
     private boolean lightsEnabled = true;
     private int lightIntensity = 15;
+    private boolean forceMaxSkyLight = false;
 
     public static class Entry
     {
@@ -187,6 +188,13 @@ public class VirtualBlockRenderView implements BlockRenderView
         return this;
     }
 
+    /** Fuerza luz de cielo máxima independientemente del mundo presente. */
+    public VirtualBlockRenderView setForceMaxSkyLight(boolean force)
+    {
+        this.forceMaxSkyLight = force;
+        return this;
+    }
+
     // BlockView
     @Override
     public BlockEntity getBlockEntity(BlockPos pos)
@@ -273,18 +281,28 @@ public class VirtualBlockRenderView implements BlockRenderView
     @Override
     public int getLightLevel(LightType type, BlockPos pos)
     {
-        int worldLevel = 0;
-        if (MinecraftClient.getInstance().world != null)
+        // UI o modo forzado: devolver niveles seguros y brillantes
+        // para evitar modelos oscuros. Cielo al máximo; bloque según emisores locales.
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
         {
-            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
-            worldLevel = MinecraftClient.getInstance().world.getLightLevel(type, worldPos);
+            if (type == LightType.SKY)
+            {
+                return 15;
+            }
+            else // LightType.BLOCK
+            {
+                return this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
+            }
         }
+
+        int worldLevel = 0;
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        worldLevel = MinecraftClient.getInstance().world.getLightLevel(type, worldPos);
 
         // Para luz de bloque, combinar con la emitida por bloques luminosos
         // contenidos en esta vista virtual (no presentes en el mundo real).
         if (type == LightType.BLOCK)
         {
-            // Solo contribución local de emisores virtuales; evitar "fullbright" global.
             int local = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
             return Math.max(worldLevel, local);
         }
@@ -295,30 +313,32 @@ public class VirtualBlockRenderView implements BlockRenderView
     @Override
     public int getBaseLightLevel(BlockPos pos, int ambientDarkness)
     {
-        int worldBase = 0;
-        if (MinecraftClient.getInstance().world != null)
+        // UI o modo forzado: usar brillo base máximo para evitar oscurecer.
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
         {
-            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
-            worldBase = MinecraftClient.getInstance().world.getBaseLightLevel(worldPos, ambientDarkness);
+            return 15;
         }
+
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        int worldBase = MinecraftClient.getInstance().world.getBaseLightLevel(worldPos, ambientDarkness);
 
         // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
         // local de bloque para que fuentes virtuales iluminen correctamente.
         int localBlock = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
-        // Quitar luz global uniforme para preservar iluminación por emisores.
         return Math.max(worldBase, localBlock);
     }
 
     @Override
     public boolean isSkyVisible(BlockPos pos)
     {
-        if (MinecraftClient.getInstance().world != null)
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
         {
-            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
-            return MinecraftClient.getInstance().world.isSkyVisible(worldPos);
+            // En UI, asumir visibilidad de cielo para evitar sombreado excesivo.
+            return true;
         }
 
-        return false;
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        return MinecraftClient.getInstance().world.isSkyVisible(worldPos);
     }
 
     /**
