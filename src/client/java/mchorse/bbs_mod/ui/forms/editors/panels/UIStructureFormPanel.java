@@ -38,11 +38,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
     public UIColor color;
     public UIToggle toggleLight;
     public UITrackpad lightIntensity;
-    public UIToggle autoPivot;
-    public UITrackpad pivotX;
-    public UITrackpad pivotY;
-    public UITrackpad pivotZ;
-    public UIButton calcCenter;
+    /* Pivot controls removed per request; structure pivots automatically */
 
     public UIStructureFormPanel(UIForm editor)
     {
@@ -58,16 +54,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
                 .integer()
                 .limit(1D, 15D);
 
-        // Pivote (estilo similar al panel de Transform)
-        this.autoPivot = new UIToggle(UIKeys.FORMS_EDITORS_STRUCTURE_AUTO_PIVOT, true, (t) -> this.form.autoPivot.set(t.getValue()));
-        this.pivotX = new UITrackpad((v) -> this.form.pivotX.set(v.floatValue())).block().onlyNumbers().limit(-1024D, 1024D);
-        this.pivotY = new UITrackpad((v) -> this.form.pivotY.set(v.floatValue())).block().onlyNumbers().limit(-1024D, 1024D);
-        this.pivotZ = new UITrackpad((v) -> this.form.pivotZ.set(v.floatValue())).block().onlyNumbers().limit(-1024D, 1024D);
-        // Colores X/Y/Z
-        this.pivotX.textbox.setColor(Colors.RED);
-        this.pivotY.textbox.setColor(Colors.GREEN);
-        this.pivotZ.textbox.setColor(Colors.BLUE);
-        this.calcCenter = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_CALCULATE_CENTER, (b) -> this.calculateCenter());
+        // Pivot UI removed; calculate center moved to Transform panel
 
         /* Quitar etiquetas; mostrar solo los controles */
         this.options.add(this.color);
@@ -76,13 +63,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
         this.options.add(this.toggleLight);
         this.options.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_LIGHT_INTENSITY_LABEL).marginTop(6), this.lightIntensity);
 
-        // Sección de pivote con fila X/Y/Z y un ícono
-        this.options.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE).marginTop(10));
-        this.options.add(this.autoPivot);
-        UIIcon pivotIcon = new UIIcon(Icons.SPHERE, null);
-        pivotIcon.setEnabled(false);
-        this.options.add(UI.row(pivotIcon, this.pivotX, this.pivotY, this.pivotZ));
-        this.options.add(this.calcCenter);
+        // Pivot controls removed
     }
 
     private void pickStructure()
@@ -162,69 +143,7 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
     }
 
 
-    private void calculateCenter()
-    {
-        String path = this.form.structureFile.get();
-        if (path == null || path.isEmpty())
-        {
-            return;
-        }
-
-        try (java.io.InputStream is = BBSMod.getProvider().getAsset(Link.assets(path)))
-        {
-            NbtCompound root = NbtIo.readCompressed(is, NbtTagSizeTracker.ofUnlimitedBytes());
-
-            int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
-            int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
-
-            if (root.contains("blocks", NbtElement.LIST_TYPE))
-            {
-                NbtList list = root.getList("blocks", NbtElement.COMPOUND_TYPE);
-                for (int i = 0; i < list.size(); i++)
-                {
-                    NbtCompound be = list.getCompound(i);
-                    NbtList pos = be.getList("pos", NbtElement.INT_TYPE);
-                    if (pos != null && pos.size() >= 3)
-                    {
-                        int x = pos.getInt(0);
-                        int y = pos.getInt(1);
-                        int z = pos.getInt(2);
-                        if (x < minX) minX = x;
-                        if (y < minY) minY = y;
-                        if (z < minZ) minZ = z;
-                        if (x > maxX) maxX = x;
-                        if (y > maxY) maxY = y;
-                        if (z > maxZ) maxZ = z;
-                    }
-                }
-            }
-
-            if (minX != Integer.MAX_VALUE)
-            {
-                float cx = (minX + maxX) / 2f;
-                float cy = (minY + maxY) / 2f;
-                float cz = (minZ + maxZ) / 2f;
-
-                int widthX = (maxX - minX + 1);
-                int widthY = (maxY - minY + 1);
-                int widthZ = (maxZ - minZ + 1);
-                float parityX = (widthX % 2 == 1) ? -0.5f : 0f;
-                float parityY = (widthY % 2 == 1) ? -0.5f : 0f;
-                float parityZ = (widthZ % 2 == 1) ? -0.5f : 0f;
-
-                this.form.pivotX.set(cx - parityX);
-                this.form.pivotY.set(cy - parityY);
-                this.form.pivotZ.set(cz - parityZ);
-                this.form.autoPivot.set(false);
-
-                this.pivotX.setValue(this.form.pivotX.get());
-                this.pivotY.setValue(this.form.pivotY.get());
-                this.pivotZ.setValue(this.form.pivotZ.get());
-                this.autoPivot.setValue(false);
-            }
-        }
-        catch (Throwable ignored) {}
-    }
+    /* calculate center moved to Transform panel */
 
 
     private void setStructure(Link link)
@@ -248,9 +167,6 @@ public class UIStructureFormPanel extends UIFormPanel<StructureForm>
 
         this.toggleLight.setValue(enabled);
         this.lightIntensity.setValue((double) intensity);
-        this.autoPivot.setValue(form.autoPivot.get());
-        this.pivotX.setValue((double)form.pivotX.get());
-        this.pivotY.setValue((double)form.pivotY.get());
-        this.pivotZ.setValue((double)form.pivotZ.get());
+        // Pivot controls removed
     }
 }

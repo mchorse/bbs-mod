@@ -131,13 +131,13 @@ public abstract class UITransform extends UIElement
         
         IKey rawPivot = IKey.constant("%s (%s)");
         this.px = new UITrackpad((value) -> this.internalSetP(value, Axis.X)).block().onlyNumbers();
-        this.px.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_X));
+        this.px.tooltip(rawPivot.format(UIKeys.TRANSFORMS_PIVOT_TITLE, UIKeys.GENERAL_X));
         this.px.textbox.setColor(Colors.RED);
         this.py = new UITrackpad((value) -> this.internalSetP(value, Axis.Y)).block().onlyNumbers();
-        this.py.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_Y));
+        this.py.tooltip(rawPivot.format(UIKeys.TRANSFORMS_PIVOT_TITLE, UIKeys.GENERAL_Y));
         this.py.textbox.setColor(Colors.GREEN);
         this.pz = new UITrackpad((value) -> this.internalSetP(value, Axis.Z)).block().onlyNumbers();
-        this.pz.tooltip(rawPivot.format(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE, UIKeys.GENERAL_Z));
+        this.pz.tooltip(rawPivot.format(UIKeys.TRANSFORMS_PIVOT_TITLE, UIKeys.GENERAL_Z));
         this.pz.textbox.setColor(Colors.BLUE);
 
         this.add(UI.row(this.iconP, this.px, this.py, this.pz));

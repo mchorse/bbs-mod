@@ -6,6 +6,7 @@ import mchorse.bbs_mod.forms.forms.StructureForm;
 import mchorse.bbs_mod.forms.forms.utils.PivotSettings;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
@@ -40,7 +41,7 @@ public class UIPivotSettingsKeyframeFactory extends UIKeyframeFactory<PivotSetti
 
         PivotSettings value = keyframe.getValue();
 
-        this.auto = new UIToggle(UIKeys.FORMS_EDITORS_STRUCTURE_AUTO_PIVOT, value.auto, (t) -> this.setValue(buildValue()));
+        this.auto = new UIToggle(IKey.EMPTY, value.auto, (t) -> this.setValue(buildValue()));
         this.x = new UITrackpad((v) -> this.setValue(buildValue())).block().onlyNumbers().limit(-1024D, 1024D);
         this.y = new UITrackpad((v) -> this.setValue(buildValue())).block().onlyNumbers().limit(-1024D, 1024D);
         this.z = new UITrackpad((v) -> this.setValue(buildValue())).block().onlyNumbers().limit(-1024D, 1024D);
@@ -56,7 +57,7 @@ public class UIPivotSettingsKeyframeFactory extends UIKeyframeFactory<PivotSetti
 
         this.calcCenter = new UIButton(UIKeys.FORMS_EDITORS_STRUCTURE_CALCULATE_CENTER, (b) -> calculateCenterAndApply());
 
-        this.scroll.add(UI.label(UIKeys.FORMS_EDITORS_STRUCTURE_PIVOT_TITLE).marginTop(10));
+        this.scroll.add(UI.label(UIKeys.TRANSFORMS_PIVOT_TITLE).marginTop(10));
         this.scroll.add(this.auto);
         this.scroll.add(UI.row(pivotIcon, this.x, this.y, this.z));
         this.scroll.add(this.calcCenter);

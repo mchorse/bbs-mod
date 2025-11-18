@@ -408,11 +408,6 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_ON = L10n.lang("bbs.ui.forms.editors.structure.lights.on");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHTS_OFF = L10n.lang("bbs.ui.forms.editors.structure.lights.off");
     public static final IKey FORMS_EDITORS_STRUCTURE_LIGHT_INTENSITY_LABEL = L10n.lang("bbs.ui.forms.editors.structure.light_intensity");
-    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_TITLE = L10n.lang("bbs.ui.forms.editors.structure.pivot.title");
-    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_X = L10n.lang("bbs.ui.forms.editors.structure.pivot.x");
-    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_Y = L10n.lang("bbs.ui.forms.editors.structure.pivot.y");
-    public static final IKey FORMS_EDITORS_STRUCTURE_PIVOT_Z = L10n.lang("bbs.ui.forms.editors.structure.pivot.z");
-    public static final IKey FORMS_EDITORS_STRUCTURE_AUTO_PIVOT = L10n.lang("bbs.ui.forms.editors.structure.pivot.auto");
     public static final IKey FORMS_EDITORS_STRUCTURE_CALCULATE_CENTER = L10n.lang("bbs.ui.forms.editors.structure.pivot.calculate_center");
     public static final IKey FORMS_EDITOR_BONE = L10n.lang("bbs.ui.forms.editor.bone");
     public static final IKey FORMS_EDITOR_CONTEXT_ADD = L10n.lang("bbs.ui.forms.editor.context.add");
@@ -897,6 +892,7 @@ public class UIKeys
     public static final IKey TEXTURE_URL_ERROR_FFMPEG = L10n.lang("bbs.ui.texture.url_error_ffmpeg");
     public static final IKey TEXTURE_URL_ERROR_HTTP = L10n.lang("bbs.ui.texture.url_error_http");
     public static final IKey TRACKPAD_GLOBAL_AMPLIFIER = L10n.lang("bbs.ui.trackpad.global_amplifier");
+    public static final IKey TRANSFORMS_PIVOT_TITLE = L10n.lang("bbs.ui.transforms.pivot.title");
     public static final IKey TRANSFORMS_CONTEXT_COPY = L10n.lang("bbs.ui.transforms.context.copy");
     public static final IKey TRANSFORMS_CONTEXT_PASTE = L10n.lang("bbs.ui.transforms.context.paste");
     public static final IKey TRANSFORMS_CONTEXT_PASTE_ROTATION = L10n.lang("bbs.ui.transforms.context.paste_rotation");

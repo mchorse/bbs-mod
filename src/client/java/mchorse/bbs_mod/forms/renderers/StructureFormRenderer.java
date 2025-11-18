@@ -444,45 +444,19 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
         }
 
         // Determinar pivote efectivo
-        float pivotX;
-        float pivotY;
-        float pivotZ;
-        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime = this.form.pivot.getRuntimeValue();
-        boolean useAuto = pivotSettingsRuntime != null ? pivotSettingsRuntime.auto : this.form.autoPivot.get();
-        if (useAuto)
+        // Efecto: el pivote siempre se calcula automáticamente
+        float parityXAuto = 0f;
+        float parityZAuto = 0f;
+        if (boundsMin != null && boundsMax != null)
         {
-            // Ajuste de paridad: igualar el comportamiento de render de un bloque
-            // - Bloque único se traduce -0.5 en X/Z para centrar visualmente sobre el grid
-            // - Para estructuras impares: su centro coincide con el centro de un bloque => usar -0.5
-            // - Para estructuras pares: su centro está entre dos bloques => usar 0.0 (ya está a mitad de arista)
-            float parityXAuto = 0f;
-            float parityZAuto = 0f;
-            if (boundsMin != null && boundsMax != null)
-            {
-                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
-                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
-            }
-            pivotX = cx - parityXAuto;
-            pivotY = cy;
-            pivotZ = cz - parityZAuto;
+            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+            parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
+            parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
         }
-        else
-        {
-            if (pivotSettingsRuntime != null)
-            {
-                pivotX = pivotSettingsRuntime.pivot.x;
-                pivotY = pivotSettingsRuntime.pivot.y;
-                pivotZ = pivotSettingsRuntime.pivot.z;
-            }
-            else
-            {
-                pivotX = this.form.pivotX.get();
-                pivotY = this.form.pivotY.get();
-                pivotZ = this.form.pivotZ.get();
-            }
-        }
+        float pivotX = cx - parityXAuto;
+        float pivotY = cy;
+        float pivotZ = cz - parityZAuto;
 
         for (BlockEntry entry : blocks)
         {
@@ -519,41 +493,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             cz = size.getZ() / 2f;
         }
 
-        float pivotX;
-        float pivotY;
-        float pivotZ;
-        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime2 = this.form.pivot.getRuntimeValue();
-        boolean useAuto2 = pivotSettingsRuntime2 != null ? pivotSettingsRuntime2.auto : this.form.autoPivot.get();
-        if (useAuto2)
+        float parityXAuto2 = 0f;
+        float parityZAuto2 = 0f;
+        if (boundsMin != null && boundsMax != null)
         {
-            float parityXAuto = 0f;
-            float parityZAuto = 0f;
-            if (boundsMin != null && boundsMax != null)
-            {
-                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
-                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
-            }
-            pivotX = cx - parityXAuto;
-            pivotY = cy;
-            pivotZ = cz - parityZAuto;
+            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+            parityXAuto2 = (widthX % 2 == 1) ? -0.5f : 0f;
+            parityZAuto2 = (widthZ % 2 == 1) ? -0.5f : 0f;
         }
-        else
-        {
-            if (pivotSettingsRuntime2 != null)
-            {
-                pivotX = pivotSettingsRuntime2.pivot.x;
-                pivotY = pivotSettingsRuntime2.pivot.y;
-                pivotZ = pivotSettingsRuntime2.pivot.z;
-            }
-            else
-            {
-                pivotX = this.form.pivotX.get();
-                pivotY = this.form.pivotY.get();
-                pivotZ = this.form.pivotZ.get();
-            }
-        }
+        float pivotX = cx - parityXAuto2;
+        float pivotY = cy;
+        float pivotZ = cz - parityZAuto2;
 
         // Construir vista virtual con todos los bloques
         java.util.ArrayList<mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry> entries = new java.util.ArrayList<>();
@@ -736,41 +687,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             cz = size.getZ() / 2f;
         }
 
-        float pivotX;
-        float pivotY;
-        float pivotZ;
-        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime3 = this.form.pivot.getRuntimeValue();
-        boolean useAuto3 = pivotSettingsRuntime3 != null ? pivotSettingsRuntime3.auto : this.form.autoPivot.get();
-        if (useAuto3)
+        float parityXAuto3 = 0f;
+        float parityZAuto3 = 0f;
+        if (boundsMin != null && boundsMax != null)
         {
-            float parityXAuto = 0f;
-            float parityZAuto = 0f;
-            if (boundsMin != null && boundsMax != null)
-            {
-                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
-                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
-            }
-            pivotX = cx - parityXAuto;
-            pivotY = cy;
-            pivotZ = cz - parityZAuto;
+            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+            parityXAuto3 = (widthX % 2 == 1) ? -0.5f : 0f;
+            parityZAuto3 = (widthZ % 2 == 1) ? -0.5f : 0f;
         }
-        else
-        {
-            if (pivotSettingsRuntime3 != null)
-            {
-                pivotX = pivotSettingsRuntime3.pivot.x;
-                pivotY = pivotSettingsRuntime3.pivot.y;
-                pivotZ = pivotSettingsRuntime3.pivot.z;
-            }
-            else
-            {
-                pivotX = this.form.pivotX.get();
-                pivotY = this.form.pivotY.get();
-                pivotZ = this.form.pivotZ.get();
-            }
-        }
+        float pivotX = cx - parityXAuto3;
+        float pivotY = cy;
+        float pivotZ = cz - parityZAuto3;
 
         // Vista virtual para culling/colores/luz correctos
         java.util.ArrayList<mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry> entries = new java.util.ArrayList<>();
@@ -883,41 +811,18 @@ public class StructureFormRenderer extends FormRenderer<StructureForm>
             cz = size.getZ() / 2f;
         }
 
-        float pivotX;
-        float pivotY;
-        float pivotZ;
-        mchorse.bbs_mod.forms.forms.utils.PivotSettings pivotSettingsRuntime2 = this.form.pivot.getRuntimeValue();
-        boolean useAuto2 = pivotSettingsRuntime2 != null ? pivotSettingsRuntime2.auto : this.form.autoPivot.get();
-        if (useAuto2)
+        float parityXAuto4 = 0f;
+        float parityZAuto4 = 0f;
+        if (boundsMin != null && boundsMax != null)
         {
-            float parityXAuto = 0f;
-            float parityZAuto = 0f;
-            if (boundsMin != null && boundsMax != null)
-            {
-                int widthX = boundsMax.getX() - boundsMin.getX() + 1;
-                int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
-                parityXAuto = (widthX % 2 == 1) ? -0.5f : 0f;
-                parityZAuto = (widthZ % 2 == 1) ? -0.5f : 0f;
-            }
-            pivotX = cx - parityXAuto;
-            pivotY = cy;
-            pivotZ = cz - parityZAuto;
+            int widthX = boundsMax.getX() - boundsMin.getX() + 1;
+            int widthZ = boundsMax.getZ() - boundsMin.getZ() + 1;
+            parityXAuto4 = (widthX % 2 == 1) ? -0.5f : 0f;
+            parityZAuto4 = (widthZ % 2 == 1) ? -0.5f : 0f;
         }
-        else
-        {
-            if (pivotSettingsRuntime2 != null)
-            {
-                pivotX = pivotSettingsRuntime2.pivot.x;
-                pivotY = pivotSettingsRuntime2.pivot.y;
-                pivotZ = pivotSettingsRuntime2.pivot.z;
-            }
-            else
-            {
-                pivotX = this.form.pivotX.get();
-                pivotY = this.form.pivotY.get();
-                pivotZ = this.form.pivotZ.get();
-            }
-        }
+        float pivotX = cx - parityXAuto4;
+        float pivotY = cy;
+        float pivotZ = cz - parityZAuto4;
 
         // Vista virtual para culling/colores/luz correctos
         java.util.ArrayList<mchorse.bbs_mod.forms.renderers.utils.VirtualBlockRenderView.Entry> entries = new java.util.ArrayList<>();

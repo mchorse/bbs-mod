@@ -68,6 +68,8 @@ public class StructureForm extends Form
         /* Nueva pista unificada de keyframes y ocultar pista booleana suelta */
         this.emitLight.invisible();
         this.lightIntensity.invisible();
+        /* Hide pivot track entirely; structure pivots automatically */
+        this.pivot.invisible();
         this.add(this.pivot);
         this.autoPivot.invisible();
         this.add(this.autoPivot);
