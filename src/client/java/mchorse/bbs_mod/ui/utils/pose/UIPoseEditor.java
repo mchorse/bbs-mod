@@ -3,8 +3,10 @@ package mchorse.bbs_mod.ui.utils.pose;
 import mchorse.bbs_mod.cubic.IModel;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
@@ -18,12 +20,15 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.pose.PoseManager;
 import mchorse.bbs_mod.utils.pose.PoseTransform;
+import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
+import mchorse.bbs_mod.utils.resources.LinkUtils;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class UIPoseEditor extends UIElement
 {
@@ -31,6 +36,7 @@ public class UIPoseEditor extends UIElement
 
     public UIStringList groups;
     public UITrackpad fix;
+    public UIButton pickTexture;
     public UIColor color;
     public UIToggle lighting;
     public UIPropTransform transform;
@@ -39,6 +45,8 @@ public class UIPoseEditor extends UIElement
     private Pose pose;
     protected IModel model;
     protected Map<String, String> flippedParts;
+    /** Proveedor opcional para obtener la textura base del modelo cuando no hay override por hueso. */
+    protected Supplier<Link> defaultTextureSupplier;
 
     public UIPoseEditor()
     {
@@ -69,6 +77,47 @@ public class UIPoseEditor extends UIElement
             menu.action(Icons.DOWNLOAD, UIKeys.POSE_CONTEXT_APPLY, () ->
             {
                 this.applyChildren((p) -> this.setFix(p, (float) this.fix.getValue()));
+            });
+        });
+        /* Botón para elegir textura de hueso (etiqueta fija ES/EN) */
+        this.pickTexture = new UIButton(UIKeys.TEXTURE_PICK_BONE_TEXTURE, (b) ->
+        {
+            PoseTransform poseTransform = (PoseTransform) this.transform.getTransform();
+            Link current = null;
+
+            if (poseTransform != null && poseTransform.texture != null)
+            {
+                current = poseTransform.texture;
+            }
+            else if (this.defaultTextureSupplier != null)
+            {
+                current = this.defaultTextureSupplier.get();
+            }
+
+            UITexturePicker.open(this.getContext(), current, (l) ->
+            {
+                if (this.transform.getTransform() instanceof PoseTransform pt)
+                {
+                    this.setTexture(pt, l);
+                }
+            });
+        });
+        this.pickTexture.context((menu) ->
+        {
+            menu.action(Icons.DOWNLOAD, UIKeys.POSE_CONTEXT_APPLY, () ->
+            {
+                PoseTransform t = (PoseTransform) this.transform.getTransform();
+                Link chosen = t != null ? t.texture : null;
+                this.applyChildren((p) -> this.setTexture(p, chosen));
+            });
+
+            menu.action(Icons.CLOSE, UIKeys.GENERAL_NONE, () ->
+            {
+                PoseTransform t = (PoseTransform) this.transform.getTransform();
+                if (t != null)
+                {
+                    this.setTexture(t, null);
+                }
             });
         });
         this.color = new UIColor((c) ->
@@ -105,7 +154,18 @@ public class UIPoseEditor extends UIElement
         this.transform.setModel();
 
         this.column().vertical().stretch();
-        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform);
+        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+    }
+
+    /**
+     * Establece un proveedor de textura por defecto para usar cuando no exista
+     * una textura específica del hueso. Devuelve this para permitir chaining.
+     */
+    public UIPoseEditor setDefaultTextureSupplier(Supplier<Link> supplier)
+    {
+        this.defaultTextureSupplier = supplier;
+
+        return this;
     }
 
     private void applyChildren(Consumer<PoseTransform> consumer)
@@ -239,5 +299,10 @@ public class UIPoseEditor extends UIElement
     protected void setLighting(PoseTransform poseTransform, boolean value)
     {
         poseTransform.lighting = value ? 0F : 1F;
+    }
+
+    protected void setTexture(PoseTransform transform, Link value)
+    {
+        transform.texture = LinkUtils.copy(value);
     }
 }

@@ -1,11 +1,13 @@
 package mchorse.bbs_mod.cubic.render;
 
+import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.cubic.data.model.Model;
 import mchorse.bbs_mod.cubic.data.model.ModelGroup;
 import mchorse.bbs_mod.cubic.render.vao.ModelVAO;
 import mchorse.bbs_mod.cubic.render.vao.ModelVAORenderer;
 import mchorse.bbs_mod.obj.shapes.ShapeKeys;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.interps.Lerps;
@@ -19,13 +21,19 @@ public class CubicVAORenderer extends CubicCubeRenderer
 {
     private ShaderProgram program;
     private ModelInstance model;
+    /**
+     * Optional default texture to use when a group doesn't have an override.
+     * This allows form-level textures to be respected.
+     */
+    private Link defaultTexture;
 
-    public CubicVAORenderer(ShaderProgram program, ModelInstance model, int light, int overlay, StencilMap stencilMap, ShapeKeys shapeKeys)
+    public CubicVAORenderer(ShaderProgram program, ModelInstance model, int light, int overlay, StencilMap stencilMap, ShapeKeys shapeKeys, Link defaultTexture)
     {
         super(light, overlay, stencilMap, shapeKeys);
 
         this.program = program;
         this.model = model;
+        this.defaultTexture = defaultTexture;
     }
 
     @Override
@@ -35,6 +43,20 @@ public class CubicVAORenderer extends CubicCubeRenderer
 
         if (modelVAO != null && group.visible)
         {
+            // Bind per-group texture override if present, otherwise form/default texture, then model texture
+            if (group.textureOverride != null)
+            {
+                BBSModClient.getTextures().bindTexture(group.textureOverride);
+            }
+            else if (this.defaultTexture != null)
+            {
+                BBSModClient.getTextures().bindTexture(this.defaultTexture);
+            }
+            else
+            {
+                BBSModClient.getTextures().bindTexture(this.model.texture);
+            }
+
             float r = this.r * group.color.r;
             float g = this.g * group.color.g;
             float b = this.b * group.color.b;

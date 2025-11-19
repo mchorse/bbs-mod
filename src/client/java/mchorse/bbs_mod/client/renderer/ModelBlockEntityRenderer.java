@@ -86,7 +86,8 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
         ModelProperties properties = entity.getProperties();
         Transform transform = properties.getTransform();
         BlockPos pos = entity.getPos();
-        Pose previousOverlay = null;
+        // Avoid persistent mutations during render; use runtime overlay
+        boolean appliedRuntimeOverlay = false;
 
         matrices.push();
         matrices.translate(0.5F, 0F, 0.5F);
@@ -214,14 +215,14 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
                             applied.rotate.y = baseYaw + anchorYaw;
                         }
 
-                        // Temporarily override pose overlay for this render
-                        previousOverlay = modelForm.poseOverlay.get().copy();
-                        modelForm.poseOverlay.set(overlayPose);
+                        // Apply pose overlay only for this render via runtime value (no notifications)
+                        modelForm.poseOverlay.setRuntimeValue(overlayPose);
+                        appliedRuntimeOverlay = true;
                     }
                 }
 
                 /* If we didn't apply a head/anchor overlay, rotate globally using continuous yaw */
-                if (previousOverlay == null)
+                if (!appliedRuntimeOverlay)
                 {
                     applied.rotate.y = yawCont;
                 }
@@ -270,10 +271,10 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
             renderShadow(vertexConsumers, matrices, tickDelta, x, y, z, tx, ty, tz);
         }
 
-        /* Restore pose overlay if it was temporarily overridden */
-        if (previousOverlay != null && properties.getForm() instanceof ModelForm modelForm)
+        /* Clear runtime pose overlay if it was applied */
+        if (appliedRuntimeOverlay && properties.getForm() instanceof ModelForm modelForm)
         {
-            modelForm.poseOverlay.set(previousOverlay);
+            modelForm.poseOverlay.setRuntimeValue(null);
         }
     }
 

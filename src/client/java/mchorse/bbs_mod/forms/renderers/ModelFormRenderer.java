@@ -175,6 +175,16 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 poseTransform.rotate2.add(value.rotate2);
                 poseTransform.pivot.add(value.pivot);
             }
+
+            /* También aplicar propiedades visuales del overlay (color, iluminación y textura).
+             * No se interpolan; el overlay copia sobre el destino si están presentes. */
+            poseTransform.color.copy(value.color);
+            poseTransform.lighting = value.lighting;
+
+            if (value.texture != null)
+            {
+                poseTransform.texture = mchorse.bbs_mod.utils.resources.LinkUtils.copy(value.texture);
+            }
         }
     }
 
@@ -301,7 +311,10 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
             newStack.peek().getNormalMatrix().scale(1F / Vectors.EMPTY_3F.x, -1F / Vectors.EMPTY_3F.y, 1F / Vectors.EMPTY_3F.z);
         }
 
-        model.render(newStack, program, color, light, overlay, stencilMap, this.form.shapeKeys.get());
+        /* Pass form-level texture so VAO renderer can respect it */
+        Link link = this.form.texture.get();
+        Link defaultTexture = link == null ? model.texture : link;
+        model.render(newStack, program, color, light, overlay, stencilMap, this.form.shapeKeys.get(), defaultTexture);
 
         gameRenderer.getLightmapTextureManager().disable();
         gameRenderer.getOverlayTexture().teardownOverlayColor();
