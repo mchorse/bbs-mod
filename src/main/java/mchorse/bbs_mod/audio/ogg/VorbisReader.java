@@ -35,7 +35,10 @@ public class VorbisReader
             STBVorbis.stb_vorbis_get_info(decoder, info);
 
             int channels = info.channels();
-            int size = STBVorbis.stb_vorbis_stream_length_in_samples(decoder) * channels;
+            int sampleRate = info.sample_rate();
+            int samplesLength = STBVorbis.stb_vorbis_stream_length_in_samples(decoder);
+            int size = samplesLength * channels;
+
 
             ShortBuffer samples = MemoryUtil.memAllocShort(size);
 
@@ -58,7 +61,8 @@ public class VorbisReader
                 finalBytes[i] = byteBuffer.get();
             }
 
-            Wave wave = new Wave(1, channels, info.sample_rate(), 16, finalBytes);
+            Wave wave = new Wave(1, channels, sampleRate, 16, finalBytes);
+            
 
             MemoryUtil.memFree(buffer);
             MemoryUtil.memFree(samples);

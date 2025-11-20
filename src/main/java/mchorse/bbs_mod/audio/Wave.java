@@ -100,8 +100,8 @@ public class Wave
         final int bytes = 16 / 8;
 
         int c = this.data.length / this.numChannels / this.getBytesPerSample();
-        int byteRate = c * this.numChannels * bytes ;
-        byte[] data = new byte[byteRate];
+        int byteRate = this.sampleRate * this.numChannels * bytes;
+        byte[] data = new byte[c * this.numChannels * bytes];
         boolean isFloat = this.getBytesPerSample() == 4;
 
         Wave wave = new Wave(this.audioFormat, this.numChannels, this.sampleRate, byteRate, bytes * this.numChannels, 16, data);
@@ -121,13 +121,38 @@ public class Wave
             if (isFloat)
             {
                 sample.flip();
-                dataBuffer.putShort((short) (sample.getFloat() * 0xffff / 2));
+                float floatValue = sample.getFloat();
+
+                /* Bit depth conversion for float */
+                floatValue = Math.max(-1.0f, Math.min(1.0f, floatValue));
+                dataBuffer.putShort((short) (floatValue * Short.MAX_VALUE));
             }
             else
             {
                 sample.put((byte) 0);
                 sample.flip();
-                dataBuffer.putShort((short) ((int) (sample.getInt() / (0xffffff / 2F) * (0xffff / 2F))));
+                int intValue = sample.getInt();
+                
+                /* Bit depth conversion for integer */
+                if (this.bitsPerSample == 24)
+                {
+                    double scaledValue = intValue / 8388608.0 * Short.MAX_VALUE;
+
+                    dataBuffer.putShort((short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, (long) scaledValue)));
+                }
+                else if (this.bitsPerSample == 32)
+                {
+                    double scaledValue = intValue / 2147483648.0 * Short.MAX_VALUE;
+
+                    dataBuffer.putShort((short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, (long) scaledValue)));
+                }
+                else
+                {
+                    double maxOriginalValue = Math.pow(2, this.bitsPerSample - 1) - 1;
+                    double scaledValue = intValue / maxOriginalValue * Short.MAX_VALUE;
+
+                    dataBuffer.putShort((short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, (long) scaledValue)));
+                }
             }
         }
 
@@ -158,6 +183,11 @@ public class Wave
         return cues;
     }
 
+    /**
+     * Improved sample rate conversion with linear interpolation
+     * Reduces aliasing distortion and frequency loss during audio mixing
+     * Fixed stereo to mono conversion and sample position calculation
+     */
     public void add(ByteBuffer buffer, Wave wave, float offset, float shift, float duration)
     {
         int waveStart = this.truncate((int) (shift * wave.byteRate));
@@ -166,36 +196,215 @@ public class Wave
 
         end = this.truncate(Math.min(end, this.data.length));
 
-        float ratio = (float) wave.byteRate / (float) this.byteRate;
+        /* Calculate sample rate ratio for conversion */
+        float ratio = (float) wave.sampleRate / (float) this.sampleRate;
+        
+        
+        /* Use linear interpolation for better quality when sample rates differ */
+        boolean useLinearInterpolation = Math.abs(ratio - 1.0f) > 0.01f;
 
-        for (int i = 0; start + i < end; i += 2)
+        /* Calculate step size based on channel count and sample rate ratio */
+        int targetStep = this.numChannels * this.getBytesPerSample();
+        int sourceStep = wave.numChannels * wave.getBytesPerSample();
+
+        for (int i = 0; start + i < end; i += targetStep)
         {
-            int a = this.truncate(waveStart + (int) (i * ratio));
+            /* Fixed sample position calculation to prevent duration doubling
+             * Account for channel count difference in stereo to mono conversion */
+            float sampleIndex = (i / targetStep) * ratio;
+            float exactPos = waveStart + sampleIndex * sourceStep;
+            int a = this.truncate((int) exactPos);
             int b = start + i;
 
-            if (a >= wave.data.length)
+            /* Ensure we don't go beyond the source audio data range */
+            int requiredSourceBytes = useLinearInterpolation ? sourceStep * 2 : sourceStep;
+
+            if (a + requiredSourceBytes - 1 >= wave.data.length)
             {
                 break;
             }
 
-            buffer.position(0);
-            buffer.put(wave.data[a]);
-            buffer.put(wave.data[a + 1]);
+            /* Ensure we don't go beyond the target audio data range */
+            if (b + targetStep - 1 >= this.data.length)
+            {
+                break;
+            }
 
-            int waveShort = buffer.getShort(0);
+            int waveShort;
+            
+            if (useLinearInterpolation)
+            {
+                /* Linear interpolation for better sample rate conversion */
+                waveShort = this.getLinearInterpolatedSample(wave, exactPos);
+            }
+            else
+            {
+                /* Direct sample access when sample rates match
+                 * Handle stereo to mono conversion by averaging channels */
+                if (wave.numChannels == 2 && this.numChannels == 1)
+                {
+                    /* Stereo to mono conversion: average left and right channels */
+                    buffer.position(0);
+                    buffer.put(wave.data[a]);
+                    buffer.put(wave.data[a + 1]);
+
+                    short leftSample = buffer.getShort(0);
+                    
+                    buffer.position(0);
+                    buffer.put(wave.data[a + 2]);
+                    buffer.put(wave.data[a + 3]);
+
+                    short rightSample = buffer.getShort(0);
+                    
+                    waveShort = (leftSample + rightSample) / 2;
+                }
+                else
+                {
+                    /* Direct sample access for same channel configuration */
+                    buffer.position(0);
+                    buffer.put(wave.data[a]);
+                    buffer.put(wave.data[a + 1]);
+                    waveShort = buffer.getShort(0);
+                }
+            }
 
             buffer.position(0);
             buffer.put(this.data[b]);
             buffer.put(this.data[b + 1]);
 
             int bytesShort = buffer.getShort(0);
-            int finalShort = waveShort + bytesShort;
+            
+            /* Improved audio mixing algorithm with smart volume normalization
+             * Convert to float for precise calculations */
+            float waveFloat = waveShort / (float) Short.MAX_VALUE;
+            float bytesFloat = bytesShort / (float) Short.MAX_VALUE;
+            
+            /* Calculate sum and check for clipping */
+            float sum = waveFloat + bytesFloat;
+            
+            /* Apply smart normalization only when clipping would occur */
+            float mixedFloat;
+
+            if (sum > 1F || sum < -1F)
+            {
+                /* Dynamic normalization to preserve as much volume as possible */
+                float absSum = Math.abs(sum);
+                float normalizationFactor = 1F / absSum;
+
+                /* Slight headroom */
+                mixedFloat = sum * normalizationFactor * 0.95F;
+            }
+            else
+            {
+                /* No clipping, use direct sum to preserve volume */
+                mixedFloat = sum;
+            }
+            
+            /* Convert back to short */
+            int finalShort = (int) (mixedFloat * Short.MAX_VALUE);
 
             buffer.putShort(0, (short) MathUtils.clamp(finalShort, Short.MIN_VALUE, Short.MAX_VALUE));
 
             this.data[b + 1] = buffer.get(1);
-            this.data[b] =     buffer.get(0);
+            this.data[b] = buffer.get(0);
         }
+        
+    }
+    
+    /**
+     * Linear interpolation between samples for high-quality sample rate conversion
+     * Reduces aliasing and preserves high-frequency content better than nearest neighbor
+     * Fixed fraction calculation and stereo to mono handling
+     */
+    private int getLinearInterpolatedSample(Wave wave, float exactPos)
+    {
+        int bytesPerSample = wave.getBytesPerSample();
+        int sourceStep = wave.numChannels * bytesPerSample;
+        
+        /* Calculate base index aligned to sample boundaries */
+        int baseIndex = this.truncate((int) exactPos);
+        /* Fixed fraction calculation to account for actual sample size */
+        float fraction = (exactPos - baseIndex) / sourceStep;
+
+        /* Ensure we have valid sample positions */
+        int requiredBytes = sourceStep * 2; // Need two samples for interpolation
+
+        if (baseIndex + requiredBytes - 1 >= wave.data.length || baseIndex < 0)
+        {
+            /* Return silence if out of bounds */
+            return 0;
+        }
+
+        /* Get the two surrounding samples for interpolation */
+        ByteBuffer buffer = MemoryUtil.memAlloc(4);
+        
+        /* First sample (handle stereo to mono conversion if needed) */
+        buffer.position(0);
+
+        short sample1;
+
+        if (wave.numChannels == 2 && this.numChannels == 1)
+        {
+            /* Stereo to mono: average left and right channels */
+            buffer.put(wave.data[baseIndex]);
+            buffer.put(wave.data[baseIndex + 1]);
+
+            short leftSample1 = buffer.getShort(0);
+            
+            buffer.position(0);
+            buffer.put(wave.data[baseIndex + 2]);
+            buffer.put(wave.data[baseIndex + 3]);
+
+            short rightSample1 = buffer.getShort(0);
+            
+            sample1 = (short) ((leftSample1 + rightSample1) / 2);
+        }
+        else
+        {
+            /* Direct sample access */
+            buffer.put(wave.data[baseIndex]);
+            buffer.put(wave.data[baseIndex + 1]);
+
+            sample1 = buffer.getShort(0);
+        }
+        
+        /* Second sample (handle stereo to mono conversion if needed) */
+        buffer.position(0);
+
+        int nextSampleIndex = baseIndex + sourceStep;
+        short sample2;
+
+        if (wave.numChannels == 2 && this.numChannels == 1)
+        {
+            /* Stereo to mono: average left and right channels */
+            buffer.put(wave.data[nextSampleIndex]);
+            buffer.put(wave.data[nextSampleIndex + 1]);
+
+            short leftSample2 = buffer.getShort(0);
+            
+            buffer.position(0);
+            buffer.put(wave.data[nextSampleIndex + 2]);
+            buffer.put(wave.data[nextSampleIndex + 3]);
+
+            short rightSample2 = buffer.getShort(0);
+            
+            sample2 = (short) ((leftSample2 + rightSample2) / 2);
+        }
+        else
+        {
+            /* Direct sample access */
+            buffer.put(wave.data[nextSampleIndex]);
+            buffer.put(wave.data[nextSampleIndex + 1]);
+
+            sample2 = buffer.getShort(0);
+        }
+        
+        MemoryUtil.memFree(buffer);
+        
+        /* Linear interpolation: sample1 + (sample2 - sample1) * fraction */
+        float interpolated = sample1 + (sample2 - sample1) * fraction;
+
+        return (int) MathUtils.clamp(interpolated, Short.MIN_VALUE, Short.MAX_VALUE);
     }
 
     private int truncate(int offset)

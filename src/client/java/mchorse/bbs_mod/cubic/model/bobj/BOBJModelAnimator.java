@@ -22,6 +22,39 @@ public class BOBJModelAnimator
         }
     }
 
+    public static void postAnimate(BOBJModel model, Animation animation, float frame)
+    {
+        for (BOBJBone orderedBone : model.getArmature().orderedBones)
+        {
+            AnimationPart part = animation.parts.get(orderedBone.name);
+
+            if (part == null)
+            {
+                continue;
+            }
+
+            Vector3d position = CubicModelAnimator.interpolateList(p, part.x, part.y, part.z, frame, 0D);
+            Vector3d scale = CubicModelAnimator.interpolateList(s, part.sx, part.sy, part.sz, frame, 1D);
+            Vector3d rotation = CubicModelAnimator.interpolateList(r, part.rx, part.ry, part.rz, frame, 0D);
+
+            scale.sub(1, 1, 1);
+
+            Transform current = orderedBone.transform;
+
+            current.translate.x += (float) position.x;
+            current.translate.y += (float) position.y;
+            current.translate.z += (float) position.z;
+
+            current.scale.x += (float) scale.x;
+            current.scale.y += (float) scale.y;
+            current.scale.z += (float) scale.z;
+
+            current.rotate.x += (float) rotation.x;
+            current.rotate.y += (float) rotation.y;
+            current.rotate.z += (float) rotation.z;
+        }
+    }
+
     private static void animateGroup(BOBJBone group, Animation animation, float frame, float blend, boolean skipInitial)
     {
         boolean applied = false;

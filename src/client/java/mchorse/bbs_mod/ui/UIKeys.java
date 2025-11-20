@@ -186,6 +186,15 @@ public class UIKeys
     public static final IKey CAMERA_TOOLTIPS_OPEN_VIDEOS = L10n.lang("bbs.ui.camera.tooltips.open_videos");
     public static final IKey CAMERA_TOOLTIPS_OPEN_VIDEO_SETTINGS = L10n.lang("bbs.ui.camera.tooltips.open_video_settings");
     public static final IKey CAMERA_TOOLTIPS_RECORD = L10n.lang("bbs.ui.camera.tooltips.record");
+    public static final IKey CDN_DOWNLOADING_TITLE = L10n.lang("bbs.ui.cdn.downloading-title");
+    public static final IKey CDN_STATUS_DELETED = L10n.lang("bbs.ui.cdn.status.deleted");
+    public static final IKey CDN_STATUS_DOWNLOADED = L10n.lang("bbs.ui.cdn.status.downloaded");
+    public static final IKey CDN_STATUS_FAILED_DOWNLOADING = L10n.lang("bbs.ui.cdn.status.failed_downloading");
+    public static final IKey CDN_STATUS_FAILED_FETCH = L10n.lang("bbs.ui.cdn.status.failed_fetch");
+    public static final IKey CDN_STATUS_SUCCESS_DOWNLOADING = L10n.lang("bbs.ui.cdn.status.success_downloading");
+    public static final IKey CDN_STATUS_SUCCESS_UPLOADING = L10n.lang("bbs.ui.cdn.status.success_uploading");
+    public static final IKey CDN_STATUS_UPLOADED = L10n.lang("bbs.ui.cdn.status.uploaded");
+    public static final IKey CDN_UPLOADING_TITLE = L10n.lang("bbs.ui.cdn.uploading-title");
     public static final IKey COLOR_CONTEXT_FAVORITES_ADD = L10n.lang("bbs.ui.color.context.favorites.add");
     public static final IKey COLOR_CONTEXT_FAVORITES_REMOVE = L10n.lang("bbs.ui.color.context.favorites.remove");
     public static final IKey COLOR_FAVORITE = L10n.lang("bbs.ui.color.favorite");
@@ -433,6 +442,7 @@ public class UIKeys
     public static final IKey GENERAL_CLOSE = L10n.lang("bbs.ui.close");
     public static final IKey GENERAL_CONFIRM = L10n.lang("bbs.ui.confirm");
     public static final IKey GENERAL_COPY = L10n.lang("bbs.ui.copy");
+    public static final IKey GENERAL_DOWNLOAD = L10n.lang("bbs.ui.download");
     public static final IKey GENERAL_DUPE = L10n.lang("bbs.ui.dupe");
     public static final IKey GENERAL_EDIT = L10n.lang("bbs.ui.edit");
     public static final IKey GENERAL_ERROR = L10n.lang("bbs.ui.error");
@@ -451,6 +461,7 @@ public class UIKeys
     public static final IKey GENERAL_SAVE = L10n.lang("bbs.ui.save");
     public static final IKey GENERAL_SEARCH = L10n.lang("bbs.ui.search");
     public static final IKey GENERAL_SUCCESS = L10n.lang("bbs.ui.success");
+    public static final IKey GENERAL_UPLOAD = L10n.lang("bbs.ui.download");
     public static final IKey GENERAL_WARNING = L10n.lang("bbs.ui.warning");
     public static final IKey GENERAL_X = IKey.constant("X");
     public static final IKey GENERAL_Y = IKey.constant("Y");
@@ -526,6 +537,8 @@ public class UIKeys
     public static final IKey ITEM_STACK_CONTEXT_HOTBAR = L10n.lang("bbs.ui.item_stack.context.hotbar");
     public static final IKey ITEM_STACK_CONTEXT_PASTE = L10n.lang("bbs.ui.item_stack.context.paste");
     public static final IKey ITEM_STACK_CONTEXT_RESET = L10n.lang("bbs.ui.item_stack.context.reset");
+    public static final IKey KEYFRAMES_CHANGE_COLOR = L10n.lang("bbs.ui.keyframes.change_color");
+    public static final IKey KEYFRAMES_CHANGE_SHAPE = L10n.lang("bbs.ui.keyframes.change_shape");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES = L10n.lang("bbs.ui.keyframes.context.adjust_values");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_LEFT = L10n.lang("bbs.ui.keyframes.context.adjust_values_left");
     public static final IKey KEYFRAMES_CONTEXT_ADJUST_VALUES_RIGHT = L10n.lang("bbs.ui.keyframes.context.adjust_values_right");
@@ -550,7 +563,16 @@ public class UIKeys
     public static final IKey KEYFRAMES_KEYS_STACK_KEYFRAMES = L10n.lang("bbs.ui.keyframes.keys.stack_keyframes");
     public static final IKey KEYFRAMES_KEYS_TOGGLE_INTERP = L10n.lang("bbs.ui.keyframes.keys.toggle_interp");
     public static final IKey KEYFRAMES_LEFT_HANDLE = L10n.lang("bbs.ui.keyframes.left_handle");
+    public static final IKey KEYFRAMES_RESET_COLOR = L10n.lang("bbs.ui.keyframes.reset_color");
     public static final IKey KEYFRAMES_RIGHT_HANDLE = L10n.lang("bbs.ui.keyframes.right_handle");
+    public static final IKey KEYFRAMES_SHAPES_CIRCLE = L10n.lang("bbs.ui.keyframes.shapes.circle");
+    public static final IKey KEYFRAMES_SHAPES_DIAMOND = L10n.lang("bbs.ui.keyframes.shapes.diamond");
+    public static final IKey KEYFRAMES_SHAPES_FIVE_STAR = L10n.lang("bbs.ui.keyframes.shapes.five_star");
+    public static final IKey KEYFRAMES_SHAPES_FOUR_STAR = L10n.lang("bbs.ui.keyframes.shapes.four_star");
+    public static final IKey KEYFRAMES_SHAPES_SIX_STAR = L10n.lang("bbs.ui.keyframes.shapes.six_star");
+    public static final IKey KEYFRAMES_SHAPES_SQUARE = L10n.lang("bbs.ui.keyframes.shapes.square");
+    public static final IKey KEYFRAMES_SHAPES_TRIANGLE = L10n.lang("bbs.ui.keyframes.shapes.triangle");
+    public static final IKey KEYFRAMES_SHAPES_TRI_STAR = L10n.lang("bbs.ui.keyframes.shapes.tri_star");
     public static final IKey KEYFRAMES_TICK = L10n.lang("bbs.ui.keyframes.tick");
     public static final IKey KEYFRAMES_VALUE = L10n.lang("bbs.ui.keyframes.value");
     public static final IKey KEYS_LIST = L10n.lang("bbs.ui.keys.list");

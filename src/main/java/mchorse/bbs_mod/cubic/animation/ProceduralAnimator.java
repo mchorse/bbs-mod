@@ -426,7 +426,7 @@ public class ProceduralAnimator implements IAnimator
 
         if (this.basePost != null)
         {
-            this.basePost.apply(target, armature.getModel(), transition, 1F, false);
+            this.basePost.postApply(target, armature.getModel(), transition);
         }
     }
 

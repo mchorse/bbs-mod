@@ -79,6 +79,7 @@ public class BBSSettings
     public static ValueBoolean editorClipPreview;
     public static ValueBoolean editorRewind;
     public static ValueBoolean editorHorizontalClipEditor;
+    public static ValueBoolean editorMinutesBackup;
 
     public static ValueFloat recordingCountdown;
     public static ValueBoolean recordingSwipeDamage;
@@ -100,6 +101,9 @@ public class BBSSettings
     public static ValueInt audioWaveformHeight;
     public static ValueBoolean audioWaveformFilename;
     public static ValueBoolean audioWaveformTime;
+
+    public static ValueString cdnUrl;
+    public static ValueString cdnToken;
 
     public static int primaryColor()
     {
@@ -210,6 +214,7 @@ public class BBSSettings
         editorClipPreview = builder.getBoolean("clip_preview", true);
         editorRewind = builder.getBoolean("rewind", true);
         editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
+        editorMinutesBackup = builder.getBoolean("minutes_backup", true);
 
         recordingCountdown = builder.category("recording").getFloat("countdown", 1.5F, 0F, 30F);
         recordingSwipeDamage = builder.getBoolean("swipe_damage", false);
@@ -232,5 +237,9 @@ public class BBSSettings
         audioWaveformHeight = builder.getInt("waveform_height", 24, 10, 40);
         audioWaveformFilename = builder.getBoolean("waveform_filename", false);
         audioWaveformTime = builder.getBoolean("waveform_time", false);
+
+        builder.category("cdn");
+        cdnUrl = builder.getString("url", "");
+        cdnToken = builder.getString("token", "");
     }
 }
