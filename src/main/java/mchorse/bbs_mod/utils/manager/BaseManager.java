@@ -61,10 +61,10 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
     @Override
     public boolean save(String id, MapType data)
     {
+        File file = this.getFile(id);
+
         try
         {
-            File file = this.getFile(id);
-
             if (this.backUps)
             {
                 String path = file.getParentFile().getAbsolutePath();
@@ -80,7 +80,7 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
                 }
 
                 String filename = StringUtils.fileName(id);
-                File backupFile = new File(path, "_" + StringUtils.removeExtension(filename) + "/" + filename + "." + backupFileName + ".dat");
+                File backupFile = new File(path, "_" + filename + "/" + filename + "." + backupFileName + this.getExtension());
 
                 backupFile.getParentFile().mkdirs();
 
@@ -89,7 +89,14 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
                     Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
+        try
+        {
             this.storage.save(file, data);
 
             return true;
