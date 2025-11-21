@@ -45,9 +45,9 @@ public class ItemDropActionClip extends ItemActionClip
     {
         this.applyPositionRotation(player, replay, tick);
 
-        double x = this.relative.get() ? this.posX.get() + actor.getPos().x : this.posX.get();
-        double y = this.relative.get() ? this.posY.get() + actor.getPos().y : this.posY.get();
-        double z = this.relative.get() ? this.posZ.get() + actor.getPos().z : this.posZ.get();
+        double x = this.relative.get() ? this.posX.get() + player.getPos().x : this.posX.get();
+        double y = this.relative.get() ? this.posY.get() + player.getPos().y : this.posY.get();
+        double z = this.relative.get() ? this.posZ.get() + player.getPos().z : this.posZ.get();
         ItemEntity entity = new ItemEntity(
             player.getServerWorld(),
             x, y, z, this.itemStack.get().copy(),

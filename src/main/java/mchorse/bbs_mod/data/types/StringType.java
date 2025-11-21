@@ -14,7 +14,7 @@ public class StringType extends BaseType
 
     public StringType(String value)
     {
-        this.value = value;
+        this.value = value == null ? "" : value;
     }
 
     @Override
