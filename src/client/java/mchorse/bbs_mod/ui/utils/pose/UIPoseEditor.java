@@ -15,6 +15,9 @@ import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UIDataContextMenu;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.pose.Pose;
@@ -22,6 +25,9 @@ import mchorse.bbs_mod.utils.pose.PoseManager;
 import mchorse.bbs_mod.utils.pose.PoseTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.utils.resources.LinkUtils;
+import mchorse.bbs_mod.utils.pose.Transform;
+import mchorse.bbs_mod.utils.Axis;
+import mchorse.bbs_mod.utils.MathUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +41,7 @@ public class UIPoseEditor extends UIElement
     private static String lastLimb = "";
 
     public UIStringList groups;
+    public UIStringList categories;
     public UITrackpad fix;
     public UIButton pickTexture;
     public UIColor color;
@@ -47,6 +54,8 @@ public class UIPoseEditor extends UIElement
     protected Map<String, String> flippedParts;
     /** Proveedor opcional para obtener la textura base del modelo cuando no hay override por hueso. */
     protected Supplier<Link> defaultTextureSupplier;
+    /** Gestor de categorías de huesos (por grupo de pose). */
+    protected BoneCategoriesManager boneCategories = new BoneCategoriesManager();
 
     public UIPoseEditor()
     {
@@ -63,9 +72,82 @@ public class UIPoseEditor extends UIElement
 
             return menu;
         });
+        /* Lista de categorías a la derecha */
+        this.categories = new UIStringList((l) -> {});
+        this.categories.background().h(UIStringList.DEFAULT_HEIGHT * 8 - 8);
+        this.categories.scroll.cancelScrolling();
+        this.categories.context((menu) ->
+        {
+            String selectedCategory = this.categories.getCurrentFirst();
+
+            menu.action(Icons.ADD, IKey.constant("Crear categoría"), () ->
+            {
+                UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
+                    IKey.constant("Gestionar categorías de huesos"),
+                    IKey.constant("Nombre de la categoría"),
+                    (str) ->
+                    {
+                        if (str != null && !str.isEmpty())
+                        {
+                            this.boneCategories.addCategory(this.group, str);
+                            this.refreshCategories();
+                        }
+                    }
+                );
+                UIOverlay.addOverlay(this.getContext(), panel);
+            });
+
+            if (selectedCategory != null && !selectedCategory.isEmpty())
+            {
+                menu.action(Icons.EDIT, IKey.constant("Renombrar categoría"), () ->
+                {
+                    UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
+                        IKey.constant("Gestionar categorías de huesos"),
+                        IKey.constant("Nuevo nombre"),
+                        (str) ->
+                        {
+                            if (str != null && !str.isEmpty())
+                            {
+                                this.boneCategories.renameCategory(this.group, selectedCategory, str);
+                                this.refreshCategories();
+                            }
+                        }
+                    );
+                    UIOverlay.addOverlay(this.getContext(), panel);
+                });
+
+                menu.action(Icons.TRASH, IKey.constant("Eliminar categoría"), Colors.RED, () ->
+                {
+                    this.boneCategories.removeCategory(this.group, selectedCategory);
+                    this.refreshCategories();
+                });
+
+                /* Separador visual no soportado por ContextMenuManager; omitido */
+
+                String selectedBone = this.groups.getCurrentFirst();
+                if (selectedBone != null && !selectedBone.isEmpty())
+                {
+                    menu.action(Icons.ADD, IKey.constant("Añadir hueso seleccionado"), () ->
+                    {
+                        this.boneCategories.addBone(this.group, selectedCategory, selectedBone);
+                    });
+                    menu.action(Icons.REMOVE, IKey.constant("Quitar hueso seleccionado"), () ->
+                    {
+                        this.boneCategories.removeBone(this.group, selectedCategory, selectedBone);
+                    });
+                }
+            }
+
+            menu.autoKeys();
+        });
         this.fix = new UITrackpad((v) ->
         {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
+            String selectedCategory = this.categories != null ? this.categories.getCurrentFirst() : null;
+            if (selectedCategory != null && !selectedCategory.isEmpty())
+            {
+                this.applyCategory((p) -> this.setFix(p, v.floatValue()));
+            }
+            else if (this.transform.getTransform() instanceof PoseTransform poseTransform)
             {
                 this.setFix(poseTransform, v.floatValue());
             }
@@ -77,6 +159,11 @@ public class UIPoseEditor extends UIElement
             menu.action(Icons.DOWNLOAD, UIKeys.POSE_CONTEXT_APPLY, () ->
             {
                 this.applyChildren((p) -> this.setFix(p, (float) this.fix.getValue()));
+            });
+
+            menu.action(Icons.DOWNLOAD, IKey.constant("Aplicar a categoría"), () ->
+            {
+                this.applyCategory((p) -> this.setFix(p, (float) this.fix.getValue()));
             });
         });
         /* Botón para elegir textura de hueso (etiqueta fija ES/EN) */
@@ -96,7 +183,12 @@ public class UIPoseEditor extends UIElement
 
             UITexturePicker.open(this.getContext(), current, (l) ->
             {
-                if (this.transform.getTransform() instanceof PoseTransform pt)
+                String selectedCategory = this.categories != null ? this.categories.getCurrentFirst() : null;
+                if (selectedCategory != null && !selectedCategory.isEmpty())
+                {
+                    this.applyCategory((p) -> this.setTexture(p, l));
+                }
+                else if (this.transform.getTransform() instanceof PoseTransform pt)
                 {
                     this.setTexture(pt, l);
                 }
@@ -110,6 +202,12 @@ public class UIPoseEditor extends UIElement
                 Link chosen = t != null ? t.texture : null;
                 this.applyChildren((p) -> this.setTexture(p, chosen));
             });
+            menu.action(Icons.DOWNLOAD, IKey.constant("Aplicar a categoría"), () ->
+            {
+                PoseTransform t = (PoseTransform) this.transform.getTransform();
+                Link chosen = t != null ? t.texture : null;
+                this.applyCategory((p) -> this.setTexture(p, chosen));
+            });
 
             menu.action(Icons.CLOSE, UIKeys.GENERAL_NONE, () ->
             {
@@ -122,7 +220,12 @@ public class UIPoseEditor extends UIElement
         });
         this.color = new UIColor((c) ->
         {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
+            String selectedCategory = this.categories != null ? this.categories.getCurrentFirst() : null;
+            if (selectedCategory != null && !selectedCategory.isEmpty())
+            {
+                this.applyCategory((p) -> this.setColor(p, c));
+            }
+            else if (this.transform.getTransform() instanceof PoseTransform poseTransform)
             {
                 this.setColor(poseTransform, c);
             }
@@ -134,10 +237,19 @@ public class UIPoseEditor extends UIElement
             {
                 this.applyChildren((p) -> this.setColor(p, this.color.picker.color.getARGBColor()));
             });
+            menu.action(Icons.DOWNLOAD, IKey.constant("Aplicar a categoría"), () ->
+            {
+                this.applyCategory((p) -> this.setColor(p, this.color.picker.color.getARGBColor()));
+            });
         });
         this.lighting = new UIToggle(UIKeys.FORMS_EDITORS_GENERAL_LIGHTING, (b) ->
         {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
+            String selectedCategory = this.categories != null ? this.categories.getCurrentFirst() : null;
+            if (selectedCategory != null && !selectedCategory.isEmpty())
+            {
+                this.applyCategory((p) -> this.setLighting(p, b.getValue()));
+            }
+            else if (this.transform.getTransform() instanceof PoseTransform poseTransform)
             {
                 this.setLighting(poseTransform, b.getValue());
             }
@@ -149,12 +261,16 @@ public class UIPoseEditor extends UIElement
             {
                 this.applyChildren((p) -> this.setLighting(p, this.lighting.getValue()));
             });
+            menu.action(Icons.DOWNLOAD, IKey.constant("Aplicar a categoría"), () ->
+            {
+                this.applyCategory((p) -> this.setLighting(p, this.lighting.getValue()));
+            });
         });
         this.transform = this.createTransformEditor();
         this.transform.setModel();
 
         this.column().vertical().stretch();
-        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+        this.add(UI.row(this.groups, this.categories), UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
     }
 
     /**
@@ -214,6 +330,7 @@ public class UIPoseEditor extends UIElement
     {
         this.pose = pose;
         this.group = group;
+        this.refreshCategories();
     }
 
     public void fillGroups(Collection<String> groups, boolean reset)
@@ -247,6 +364,7 @@ public class UIPoseEditor extends UIElement
 
         this.groups.setCurrentScroll(CollectionUtils.getSafe(list, i));
         this.pickBone(this.groups.getCurrentFirst());
+        this.refreshCategories();
     }
 
     public void selectBone(String bone)
@@ -255,13 +373,151 @@ public class UIPoseEditor extends UIElement
 
         this.groups.setCurrentScroll(bone);
         this.pickBone(bone);
+
+        /* Si el hueso pertenece a alguna categoría del grupo actual, seleccionarla automáticamente */
+        if (this.categories != null && this.model != null)
+        {
+            List<String> cats = this.boneCategories.getCategories(this.group);
+            for (String cat : cats)
+            {
+                List<String> bones = this.boneCategories.getBones(this.group, cat);
+                if (bones.contains(bone))
+                {
+                    this.categories.setCurrentScroll(cat);
+                    break;
+                }
+            }
+        }
     }
 
     /* Subclass overridable methods */
 
     protected UIPropTransform createTransformEditor()
     {
-        return new UIPropTransform().enableHotkeys();
+        return new CategoryPropTransform(this).enableHotkeys();
+    }
+
+    /* Transformaciones aplicables por categoría */
+    private static class CategoryPropTransform extends UIPropTransform
+    {
+        private final UIPoseEditor editor;
+
+        private CategoryPropTransform(UIPoseEditor editor)
+        {
+            this.editor = editor;
+        }
+
+        private List<String> targets()
+        {
+            String selectedCategory = this.editor.categories != null ? this.editor.categories.getCurrentFirst() : null;
+            if (selectedCategory == null || selectedCategory.isEmpty())
+            {
+                String current = this.editor.groups.getCurrentFirst();
+                return current == null ? java.util.Collections.emptyList() : java.util.Collections.singletonList(current);
+            }
+
+            return this.editor.boneCategories.getBones(this.editor.group, selectedCategory);
+        }
+
+        @Override
+        public void setT(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.translate.x);
+            float dy = (float) (y - transform.translate.y);
+            float dz = (float) (z - transform.translate.z);
+
+            for (String key : this.targets())
+            {
+                PoseTransform t = this.editor.pose.get(key);
+                if (t != null)
+                {
+                    t.translate.x += dx;
+                    t.translate.y += dy;
+                    t.translate.z += dz;
+                }
+            }
+        }
+
+        @Override
+        public void setS(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = (float) (x - transform.scale.x);
+            float dy = (float) (y - transform.scale.y);
+            float dz = (float) (z - transform.scale.z);
+
+            for (String key : this.targets())
+            {
+                PoseTransform t = this.editor.pose.get(key);
+                if (t != null)
+                {
+                    t.scale.x += dx;
+                    t.scale.y += dy;
+                    t.scale.z += dz;
+                }
+            }
+        }
+
+        @Override
+        public void setR(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate.z;
+
+            for (String key : this.targets())
+            {
+                PoseTransform t = this.editor.pose.get(key);
+                if (t != null)
+                {
+                    t.rotate.x += dx;
+                    t.rotate.y += dy;
+                    t.rotate.z += dz;
+                }
+            }
+        }
+
+        @Override
+        public void setR2(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = MathUtils.toRad((float) x) - transform.rotate2.x;
+            float dy = MathUtils.toRad((float) y) - transform.rotate2.y;
+            float dz = MathUtils.toRad((float) z) - transform.rotate2.z;
+
+            for (String key : this.targets())
+            {
+                PoseTransform t = this.editor.pose.get(key);
+                if (t != null)
+                {
+                    t.rotate2.x += dx;
+                    t.rotate2.y += dy;
+                    t.rotate2.z += dz;
+                }
+            }
+        }
+
+        @Override
+        public void setP(Axis axis, double x, double y, double z)
+        {
+            Transform transform = this.getTransform();
+            float dx = (float) x - transform.pivot.x;
+            float dy = (float) y - transform.pivot.y;
+            float dz = (float) z - transform.pivot.z;
+
+            for (String key : this.targets())
+            {
+                PoseTransform t = this.editor.pose.get(key);
+                if (t != null)
+                {
+                    t.pivot.x += dx;
+                    t.pivot.y += dy;
+                    t.pivot.z += dz;
+                }
+            }
+        }
     }
 
     protected void pickBone(String bone)
@@ -304,5 +560,41 @@ public class UIPoseEditor extends UIElement
     protected void setTexture(PoseTransform transform, Link value)
     {
         transform.texture = LinkUtils.copy(value);
+    }
+
+    /* Categorías */
+
+    protected void refreshCategories()
+    {
+        if (this.categories == null)
+        {
+            return;
+        }
+
+        this.categories.clear();
+        if (this.group != null)
+        {
+            this.categories.add(this.boneCategories.getCategories(this.group));
+            this.categories.sort();
+        }
+    }
+
+    protected void applyCategory(java.util.function.Consumer<PoseTransform> consumer)
+    {
+        String selectedCategory = this.categories.getCurrentFirst();
+        if (this.model == null || selectedCategory == null || selectedCategory.isEmpty())
+        {
+            return;
+        }
+
+        List<String> bones = this.boneCategories.getBones(this.group, selectedCategory);
+        for (String key : bones)
+        {
+            PoseTransform t = this.pose.get(key);
+            if (t != null)
+            {
+                consumer.accept(t);
+            }
+        }
     }
 }
