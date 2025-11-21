@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.utils.pose;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.cubic.IModel;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.ui.UIKeys;
@@ -17,6 +18,10 @@ import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UIDataContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
+import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -80,11 +85,11 @@ public class UIPoseEditor extends UIElement
         {
             String selectedCategory = this.categories.getCurrentFirst();
 
-            menu.action(Icons.ADD, IKey.constant("Crear categoría"), () ->
+            menu.action(Icons.ADD, L10n.lang("bbs.ui.forms.categories.context.add_category"), () ->
             {
                 UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
-                    IKey.constant("Gestionar categorías de huesos"),
-                    IKey.constant("Nombre de la categoría"),
+                    L10n.lang("bbs.ui.pose.categories.manage_title"),
+                    L10n.lang("bbs.ui.pose.categories.manage_category_name"),
                     (str) ->
                     {
                         if (str != null && !str.isEmpty())
@@ -99,11 +104,11 @@ public class UIPoseEditor extends UIElement
 
             if (selectedCategory != null && !selectedCategory.isEmpty())
             {
-                menu.action(Icons.EDIT, IKey.constant("Renombrar categoría"), () ->
+                menu.action(Icons.EDIT, L10n.lang("bbs.ui.forms.categories.context.rename_category"), () ->
                 {
                     UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
-                        IKey.constant("Gestionar categorías de huesos"),
-                        IKey.constant("Nuevo nombre"),
+                        L10n.lang("bbs.ui.pose.categories.manage_title"),
+                        L10n.lang("bbs.ui.pose.categories.manage_new_name"),
                         (str) ->
                         {
                             if (str != null && !str.isEmpty())
@@ -116,10 +121,62 @@ public class UIPoseEditor extends UIElement
                     UIOverlay.addOverlay(this.getContext(), panel);
                 });
 
-                menu.action(Icons.TRASH, IKey.constant("Eliminar categoría"), Colors.RED, () ->
+                menu.action(Icons.TRASH, L10n.lang("bbs.ui.forms.categories.context.remove_category"), Colors.RED, () ->
                 {
                     this.boneCategories.removeCategory(this.group, selectedCategory);
                     this.refreshCategories();
+                });
+
+                /* Ver huesos que pertenecen a la categoría seleccionada */
+                menu.action(Icons.LIST, L10n.lang("bbs.ui.pose.categories.context.view_bones"), () ->
+                {
+                    String group = this.group;
+                    java.util.List<String> bones = this.boneCategories.getBones(group, selectedCategory);
+
+                    UISearchList<String> search = new UISearchList<>(new UIStringList(null));
+                    UIList<String> list = search.list;
+
+                    for (String g : bones) { list.add(g); }
+
+                    UIConfirmOverlayPanel panel = new UIConfirmOverlayPanel(
+                        L10n.lang("bbs.ui.pose.categories.view_bones_title"),
+                        L10n.lang("bbs.ui.pose.categories.view_bones_description"),
+                        (confirm) ->
+                        {
+                            if (confirm)
+                            {
+                                int index = list.getIndex();
+                                String bone = CollectionUtils.getSafe(bones, index);
+                                if (bone != null)
+                                {
+                                    this.selectBone(bone);
+                                }
+                            }
+                        }
+                    );
+
+                    list.background();
+                    /* Lista más alta y sin botones adicionales */
+                    search.relative(panel.confirm).y(-5).w(1F).h(UIStringList.DEFAULT_HEIGHT * 12 + 20).anchor(0F, 1F);
+
+                    /* Click derecho para eliminar el hueso de la categoría */
+                    list.context((ctx) ->
+                    {
+                        ctx.action(Icons.TRASH, IKey.constant("Eliminar hueso"), Colors.RED, () ->
+                        {
+                            int idx = list.getIndex();
+                            String bone = CollectionUtils.getSafe(bones, idx);
+                            if (bone != null)
+                            {
+                                this.boneCategories.removeBone(group, selectedCategory, bone);
+                                list.remove(bone);
+                            }
+                        });
+                        ctx.autoKeys();
+                    });
+
+                    panel.content.add(search);
+                    UIOverlay.addOverlay(this.getContext(), panel, 340, 360);
                 });
 
                 /* Separador visual no soportado por ContextMenuManager; omitido */
@@ -270,7 +327,15 @@ public class UIPoseEditor extends UIElement
         this.transform.setModel();
 
         this.column().vertical().stretch();
-        this.add(UI.row(this.groups, this.categories), UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+        boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
+        if (categoriesEnabled)
+        {
+            this.add(UI.row(this.groups, this.categories), UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+        }
+        else
+        {
+            this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+        }
     }
 
     /**
@@ -331,6 +396,12 @@ public class UIPoseEditor extends UIElement
         this.pose = pose;
         this.group = group;
         this.refreshCategories();
+    }
+
+    /* Accesor público del grupo de pose (para fábricas y pistas) */
+    public String getPoseGroupKey()
+    {
+        return this.group;
     }
 
     public void fillGroups(Collection<String> groups, boolean reset)
@@ -409,7 +480,8 @@ public class UIPoseEditor extends UIElement
 
         private List<String> targets()
         {
-            String selectedCategory = this.editor.categories != null ? this.editor.categories.getCurrentFirst() : null;
+            boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
+            String selectedCategory = (categoriesEnabled && this.editor.categories != null) ? this.editor.categories.getCurrentFirst() : null;
             if (selectedCategory == null || selectedCategory.isEmpty())
             {
                 String current = this.editor.groups.getCurrentFirst();
@@ -581,7 +653,8 @@ public class UIPoseEditor extends UIElement
 
     protected void applyCategory(java.util.function.Consumer<PoseTransform> consumer)
     {
-        String selectedCategory = this.categories.getCurrentFirst();
+        boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
+        String selectedCategory = categoriesEnabled ? this.categories.getCurrentFirst() : null;
         if (this.model == null || selectedCategory == null || selectedCategory.isEmpty())
         {
             return;

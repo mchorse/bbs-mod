@@ -102,6 +102,7 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
         UIKeyframeSheet sheet = this.editor.getGraph().getSheet(this.keyframe);
         boolean anchoringEnabled = BBSSettings.boneAnchoringEnabled.get();
         boolean isAnchored = anchoringEnabled && sheet != null && sheet.anchoredBone != null;
+        boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
 
         if (isAnchored)
         {
@@ -140,14 +141,24 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             {
                 /* Insertar botón de textura de hueso entre la lista y el anclaje */
                 this.poseEditor.pickTexture.w(1F);
+                UIElement groupsRow = categoriesEnabled ? UI.row(this.poseEditor.groups, this.poseEditor.categories) : UI.row(this.poseEditor.groups);
                 if (anchoringEnabled)
                 {
-                    right = UI.column(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.pickTexture, this.poseEditor.anchorBone);
+                    right = UI.column(
+                        UI.label(UIKeys.FORMS_EDITOR_BONE),
+                        groupsRow,
+                        this.poseEditor.pickTexture,
+                        this.poseEditor.anchorBone
+                    );
                 }
                 else
                 {
                     /* Anclaje deshabilitado: no mostrar botón de anclar */
-                    right = UI.column(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.pickTexture);
+                    right = UI.column(
+                        UI.label(UIKeys.FORMS_EDITOR_BONE),
+                        groupsRow,
+                        this.poseEditor.pickTexture
+                    );
                 }
             }
 
@@ -164,16 +175,32 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             else
             {
                 /* En modo estrecho, también colocar el botón antes del anclaje */
+                UIElement groupsRow = categoriesEnabled ? UI.row(this.poseEditor.groups, this.poseEditor.categories) : UI.row(this.poseEditor.groups);
                 if (anchoringEnabled)
                 {
-                    this.poseEditor.add(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.pickTexture, this.poseEditor.anchorBone,
-                        UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+                    this.poseEditor.add(
+                        UI.label(UIKeys.FORMS_EDITOR_BONE),
+                        groupsRow,
+                        this.poseEditor.pickTexture,
+                        this.poseEditor.anchorBone,
+                        UI.label(UIKeys.POSE_CONTEXT_FIX),
+                        this.poseEditor.fix,
+                        UI.row(this.poseEditor.color, this.poseEditor.lighting),
+                        this.poseEditor.transform
+                    );
                 }
                 else
                 {
                     /* Anclaje deshabilitado: ocultar botón de anclar */
-                    this.poseEditor.add(UI.label(UIKeys.FORMS_EDITOR_BONE), this.poseEditor.groups, this.poseEditor.pickTexture,
-                        UI.label(UIKeys.POSE_CONTEXT_FIX), this.poseEditor.fix, UI.row(this.poseEditor.color, this.poseEditor.lighting), this.poseEditor.transform);
+                    this.poseEditor.add(
+                        UI.label(UIKeys.FORMS_EDITOR_BONE),
+                        groupsRow,
+                        this.poseEditor.pickTexture,
+                        UI.label(UIKeys.POSE_CONTEXT_FIX),
+                        this.poseEditor.fix,
+                        UI.row(this.poseEditor.color, this.poseEditor.lighting),
+                        this.poseEditor.transform
+                    );
                 }
             }
         }
@@ -324,6 +351,17 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             return CollectionUtils.getKey(this.getPose().transforms, transform);
         }
 
+        /** Acceso seguro a huesos de la categoría actual del grupo de pose. */
+        public java.util.List<String> getCategoryBones(String category)
+        {
+            if (category == null || category.isEmpty())
+            {
+                return java.util.Collections.emptyList();
+            }
+
+            return this.boneCategories.getBones(this.getPoseGroupKey(), category);
+        }
+
         @Override
         protected UIPropTransform createTransformEditor()
         {
@@ -376,52 +414,86 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             this.editor = editor;
         }
 
+        /**
+         * Targets affected by editing. If a category is selected, return all
+         * bones in that category; otherwise return the currently selected group.
+         */
+        private java.util.List<String> targets()
+        {
+            boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
+            String selectedCategory = categoriesEnabled && this.editor.categories != null ? this.editor.categories.getCurrentFirst() : null;
+            if (selectedCategory == null || selectedCategory.isEmpty())
+            {
+                return java.util.Collections.singletonList(this.editor.getGroup());
+            }
+
+            return this.editor.getCategoryBones(selectedCategory);
+        }
+
         @Override
         protected void reset()
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.translate.set(0F, 0F, 0F);
-                poseT.scale.set(1F, 1F, 1F);
-                poseT.rotate.set(0F, 0F, 0F);
-                poseT.rotate2.set(0F, 0F, 0F);
-                poseT.pivot.set(0F, 0F, 0F);
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.translate.set(0F, 0F, 0F);
+                    poseT.scale.set(1F, 1F, 1F);
+                    poseT.rotate.set(0F, 0F, 0F);
+                    poseT.rotate2.set(0F, 0F, 0F);
+                    poseT.pivot.set(0F, 0F, 0F);
+                });
+            }
             this.refillTransform();
         }
 
         @Override
         public void pasteTranslation(Vector3d translation)
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.translate.set(translation));
+            for (String key : this.targets())
+            {
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) -> poseT.translate.set(translation));
+            }
             this.refillTransform();
         }
 
         @Override
         public void pasteScale(Vector3d scale)
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.scale.set(scale));
+            for (String key : this.targets())
+            {
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) -> poseT.scale.set(scale));
+            }
             this.refillTransform();
         }
 
         @Override
         public void pasteRotation(Vector3d rotation)
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.rotate.set(Vectors.toRad(rotation)));
+            for (String key : this.targets())
+            {
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) -> poseT.rotate.set(Vectors.toRad(rotation)));
+            }
             this.refillTransform();
         }
 
         @Override
         public void pasteRotation2(Vector3d rotation)
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.rotate2.set(Vectors.toRad(rotation)));
+            for (String key : this.targets())
+            {
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) -> poseT.rotate2.set(Vectors.toRad(rotation)));
+            }
             this.refillTransform();
         }
 
         @Override
         public void pastePivot(Vector3d pivot)
         {
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) -> poseT.pivot.set((float) pivot.x, (float) pivot.y, (float) pivot.z));
+            for (String key : this.targets())
+            {
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) -> poseT.pivot.set((float) pivot.x, (float) pivot.y, (float) pivot.z));
+            }
             this.refillTransform();
         }
 
@@ -433,12 +505,15 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             float dy = (float) (y - transform.translate.y);
             float dz = (float) (z - transform.translate.z);
 
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.translate.x += dx;
-                poseT.translate.y += dy;
-                poseT.translate.z += dz;
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.translate.x += dx;
+                    poseT.translate.y += dy;
+                    poseT.translate.z += dz;
+                });
+            }
         }
 
         @Override
@@ -449,12 +524,15 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             float dy = (float) (y - transform.scale.y);
             float dz = (float) (z - transform.scale.z);
 
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.scale.x += dx;
-                poseT.scale.y += dy;
-                poseT.scale.z += dz;
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.scale.x += dx;
+                    poseT.scale.y += dy;
+                    poseT.scale.z += dz;
+                });
+            }
         }
 
         @Override
@@ -465,12 +543,15 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             float dy = MathUtils.toRad((float) y) - transform.rotate.y;
             float dz = MathUtils.toRad((float) z) - transform.rotate.z;
 
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.rotate.x += dx;
-                poseT.rotate.y += dy;
-                poseT.rotate.z += dz;
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.rotate.x += dx;
+                    poseT.rotate.y += dy;
+                    poseT.rotate.z += dz;
+                });
+            }
         }
 
         @Override
@@ -481,12 +562,15 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             float dy = MathUtils.toRad((float) y) - transform.rotate2.y;
             float dz = MathUtils.toRad((float) z) - transform.rotate2.z;
 
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.rotate2.x += dx;
-                poseT.rotate2.y += dy;
-                poseT.rotate2.z += dz;
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.rotate2.x += dx;
+                    poseT.rotate2.y += dy;
+                    poseT.rotate2.z += dz;
+                });
+            }
         }
 
         @Override
@@ -497,12 +581,15 @@ public class UIPoseKeyframeFactory extends UIKeyframeFactory<Pose>
             float dy = (float) y - transform.pivot.y;
             float dz = (float) z - transform.pivot.z;
 
-            UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, this.editor.getGroup(), (poseT) ->
+            for (String key : this.targets())
             {
-                poseT.pivot.x += dx;
-                poseT.pivot.y += dy;
-                poseT.pivot.z += dz;
-            });
+                UIPoseFactoryEditor.apply(this.editor.editor, this.editor.keyframe, key, (poseT) ->
+                {
+                    poseT.pivot.x += dx;
+                    poseT.pivot.y += dy;
+                    poseT.pivot.z += dz;
+                });
+            }
         }
     }
 }

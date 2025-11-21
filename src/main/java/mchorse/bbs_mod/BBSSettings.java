@@ -89,6 +89,8 @@ public class BBSSettings
     public static ValueBoolean clickModelBlocks;
     /** Habilitar gizmos 3D para edición de transformaciones en bloques de modelo */
     public static ValueBoolean modelBlockGizmosEnabled;
+    /** Mostrar/ocultar el panel de categorías de huesos en editores de pose */
+    public static ValueBoolean modelBlockCategoriesPanelEnabled;
     public static ValueBoolean visualizeStructures;
     /** Toggle: optimización de estructuras (VAO) vs BufferBuilder (iluminación mejor). */
     public static ValueBoolean structureOptimization;
@@ -229,6 +231,8 @@ public class BBSSettings
         clickModelBlocks = builder.getBoolean("click", true);
         /* Enable gizmos by default to make them visible in editor */
         modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", false);
+        /* Panel de categorías en editores de pose (afecta editor y timeline) */
+        modelBlockCategoriesPanelEnabled = builder.getBoolean("categories_panel_enabled", false);
 
 
         /* Estructuras: modo de renderizado */
