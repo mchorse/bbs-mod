@@ -59,6 +59,13 @@ public class ModelInstance implements IModelInstance
     public boolean onCpu;
     public String anchorGroup = "";
 
+    /* Look-at configuration (per model, from config.json) */
+    public boolean lookAtConfigured = false;
+    public String lookAtHeadBone = "head";
+    public String lookAtAnchorBone = "anchor";
+    public boolean lookAtAllowPitch = true;
+    public float lookAtHeadLimitDeg = 45F;
+
     public Vector3f scale = new Vector3f(1F);
     public float uiScale = 1F;
     public Pose sneakingPose = new Pose();
@@ -208,6 +215,18 @@ public class ModelInstance implements IModelInstance
             this.fpOffhand = new ArmorSlot();
             this.fpOffhand.fromData(config.get("fp_offhand"));
         }
+
+        /* Optional look-at configuration */
+        if (config.has("look_at", BaseType.TYPE_MAP))
+        {
+            this.lookAtConfigured = true;
+            MapType lookAt = config.getMap("look_at");
+
+            if (lookAt.has("head")) this.lookAtHeadBone = lookAt.getString("head", this.lookAtHeadBone);
+            if (lookAt.has("anchor")) this.lookAtAnchorBone = lookAt.getString("anchor", this.lookAtAnchorBone);
+            if (lookAt.has("pitch")) this.lookAtAllowPitch = lookAt.getBool("pitch", this.lookAtAllowPitch);
+            if (lookAt.has("head_limit")) this.lookAtHeadLimitDeg = lookAt.getFloat("head_limit", this.lookAtHeadLimitDeg);
+        }
     }
 
     public void setup()
@@ -287,6 +306,16 @@ public class ModelInstance implements IModelInstance
                 );
                 matrix.rotateY(MathUtils.PI);
                 bones.put(group.id, matrix);
+
+                /* Also provide origin matrix captured before rotation/scale at the group's pivot */
+                Matrix4f origin = new Matrix4f(renderer.origins.get(group.index));
+                origin.translate(
+                    group.initial.translate.x / 8192,
+                    group.initial.translate.y / 8192,
+                    group.initial.translate.z / 8192
+                );
+                origin.rotateY(MathUtils.PI);
+                bones.put(group.id + "#origin", origin);
             }
         }
         else if (this.model instanceof BOBJModel model)
@@ -299,17 +328,29 @@ public class ModelInstance implements IModelInstance
 
                 value.rotateY(MathUtils.PI).mul(orderedBone.mat);
                 bones.put(orderedBone.name, value);
+
+                /* Origin matrix for BOBJ bones: parent transform + translation (no bone rotation/scale) */
+                Matrix4f origin = new Matrix4f();
+                origin.rotateY(MathUtils.PI);
+
+                if (orderedBone.parentBone != null)
+                {
+                    origin.mul(new Matrix4f(orderedBone.parentBone.mat));
+                }
+
+                origin.translate(orderedBone.transform.translate);
+                bones.put(orderedBone.name + "#origin", origin);
             }
         }
     }
 
-    public void render(MatrixStack stack, Supplier<ShaderProgram> program, Color color, int light, int overlay, StencilMap stencilMap, ShapeKeys keys)
+    public void render(MatrixStack stack, Supplier<ShaderProgram> program, Color color, int light, int overlay, StencilMap stencilMap, ShapeKeys keys, Link defaultTexture)
     {
         if (this.model instanceof Model model)
         {
             boolean isVao = this.isVAORendered();
             CubicCubeRenderer renderProcessor = isVao
-                ? new CubicVAORenderer(program.get(), this, light, overlay, stencilMap, keys)
+                ? new CubicVAORenderer(program.get(), this, light, overlay, stencilMap, keys, defaultTexture)
                 : new CubicCubeRenderer(light, overlay, stencilMap, keys);
 
             renderProcessor.setColor(color.r, color.g, color.b, color.a);

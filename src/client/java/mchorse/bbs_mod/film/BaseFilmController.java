@@ -16,6 +16,8 @@ import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.mixin.client.ClientPlayerEntityAccessor;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
@@ -152,13 +154,26 @@ public abstract class BaseFilmController
             Form root = FormUtils.getRoot(form);
             Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(entity, context.local ? null : context.bone, transition);
 
-            Matrix4f matrix = map.get(context.bone);
+            // Preferir el origen del hueso para dibujar ejes/gizmo en el pivot real
+            Matrix4f matrix = map.get(context.bone + "#origin");
+
+            if (matrix == null)
+            {
+                matrix = map.get(context.bone);
+            }
 
             if (matrix != null)
             {
                 stack.push();
                 MatrixStackUtils.multiply(stack, matrix);
-                Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+                if (BBSSettings.modelBlockGizmosEnabled.get())
+                {
+                    BoneGizmoSystem.get().render3D(stack);
+                }
+                else
+                {
+                    Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+                }
                 RenderSystem.enableDepthTest();
                 stack.pop();
             }
@@ -251,7 +266,13 @@ public abstract class BaseFilmController
                 }
 
                 Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, transition);
-                Matrix4f matrix = map.get(anchor.attachment);
+                // Preferir el origen del hueso para anclajes en replays/overlays
+                Matrix4f matrix = map.get(anchor.attachment + "#origin");
+
+                if (matrix == null)
+                {
+                    matrix = map.get(anchor.attachment);
+                }
 
                 if (matrix != null)
                 {

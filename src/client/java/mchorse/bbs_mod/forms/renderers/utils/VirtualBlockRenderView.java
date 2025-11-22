@@ -1,0 +1,369 @@
+package mchorse.bbs_mod.forms.renderers.utils;
+
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.util.Identifier;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockRenderView;
+import net.minecraft.world.LightType;
+import net.minecraft.world.chunk.light.LightingProvider;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.Blocks;
+import net.minecraft.world.biome.ColorResolver;
+import net.minecraft.world.biome.Biome;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Vista de mundo mínima para permitir render de bloques con culling.
+ *
+ * Provee estados de bloque y métodos básicos requeridos por BlockRenderView.
+ * Iluminación y color se delegan al ClientWorld si existe; en ausencia de mundo
+ * se retornan valores seguros (brillo máximo y luz base cero) para evitar NPE.
+ */
+public class VirtualBlockRenderView implements BlockRenderView
+{
+    private final Map<BlockPos, BlockState> states = new HashMap<>();
+    // Luz de bloque local precomputada (máximo por posición)
+    private final Map<BlockPos, Integer> localBlockLight = new HashMap<>();
+    private int bottomY = 0;
+    private int topY = 256;
+
+    // Biome override, if provided by the UI
+    private Identifier biomeOverrideId = null;
+    private Biome biomeOverride = null;
+
+    // Ancla mundial y offsets base para traducir posiciones locales de la estructura
+    // a coordenadas reales del mundo al consultar iluminación y color.
+    private net.minecraft.util.math.BlockPos worldAnchor = net.minecraft.util.math.BlockPos.ORIGIN;
+    private int baseDx = 0;
+    private int baseDy = 0;
+    private int baseDz = 0;
+    private boolean lightsEnabled = true;
+    private int lightIntensity = 15;
+    private boolean forceMaxSkyLight = false;
+
+    public static class Entry
+    {
+        public final BlockState state;
+        public final BlockPos pos;
+
+        public Entry(BlockState state, BlockPos pos)
+        {
+            this.state = state;
+            this.pos = pos;
+        }
+    }
+
+    public VirtualBlockRenderView(List<Entry> entries)
+    {
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+        java.util.ArrayList<BlockPos> emitters = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> emitterLevels = new java.util.ArrayList<>();
+
+        for (Entry e : entries)
+        {
+            this.states.put(e.pos, e.state == null ? Blocks.AIR.getDefaultState() : e.state);
+
+            // Registrar emisores de luz para precomputación
+            BlockState st = this.states.get(e.pos);
+            int lum = st == null ? 0 : st.getLuminance();
+            if (lum > 0)
+            {
+                emitters.add(e.pos);
+                emitterLevels.add(lum);
+            }
+
+            if (e.pos.getY() < minY) minY = e.pos.getY();
+            if (e.pos.getY() > maxY) maxY = e.pos.getY();
+        }
+
+        if (minY != Integer.MAX_VALUE && maxY != Integer.MIN_VALUE)
+        {
+            this.bottomY = minY;
+            this.topY = maxY;
+        }
+
+        // Precomputar contribución de luz local en posiciones presentes
+        if (!emitters.isEmpty() && !this.states.isEmpty())
+        {
+            for (Map.Entry<BlockPos, BlockState> target : this.states.entrySet())
+            {
+                BlockPos tp = target.getKey();
+                int max = 0;
+                for (int i = 0; i < emitters.size(); i++)
+                {
+                    BlockPos sp = emitters.get(i);
+                    int L = emitterLevels.get(i);
+                    int dist = Math.abs(sp.getX() - tp.getX()) + Math.abs(sp.getY() - tp.getY()) + Math.abs(sp.getZ() - tp.getZ());
+                    int contrib = L - dist;
+                    if (contrib > max)
+                    {
+                        max = contrib;
+                        if (max >= 15)
+                        {
+                            max = 15;
+                            break;
+                        }
+                    }
+                }
+                if (max > 0)
+                {
+                    this.localBlockLight.put(tp, max);
+                }
+            }
+        }
+    }
+
+    /**
+     * Establece ancla de mundo y offset base (derivado del centrado/paridad) para
+     * mapear las posiciones locales a posiciones absolutas del mundo.
+     */
+    public VirtualBlockRenderView setWorldAnchor(net.minecraft.util.math.BlockPos anchor, int baseDx, int baseDy, int baseDz)
+    {
+        this.worldAnchor = anchor == null ? net.minecraft.util.math.BlockPos.ORIGIN : anchor;
+        this.baseDx = baseDx;
+        this.baseDy = baseDy;
+        this.baseDz = baseDz;
+        return this;
+    }
+
+    /**
+     * Establece un bioma a usar para consultas de color. Pasa null o "" para limpiar.
+     */
+    public VirtualBlockRenderView setBiomeOverride(String biomeId)
+    {
+        if (biomeId == null || biomeId.isEmpty())
+        {
+            this.biomeOverrideId = null;
+            this.biomeOverride = null;
+            return this;
+        }
+
+        try
+        {
+            this.biomeOverrideId = new Identifier(biomeId);
+            // Resolver preferentemente desde el mundo del cliente
+            if (MinecraftClient.getInstance().world != null)
+            {
+                Registry<Biome> reg = MinecraftClient.getInstance().world.getRegistryManager().get(RegistryKeys.BIOME);
+                this.biomeOverride = reg.get(this.biomeOverrideId);
+            }
+            else
+            {
+                this.biomeOverride = null;
+            }
+        }
+        catch (Throwable t)
+        {
+            this.biomeOverrideId = null;
+            this.biomeOverride = null;
+        }
+
+        return this;
+    }
+
+    /** Habilita o deshabilita la contribución de luz de bloques locales. */
+    public VirtualBlockRenderView setLightsEnabled(boolean enabled)
+    {
+        this.lightsEnabled = enabled;
+        return this;
+    }
+
+    /** Establece el tope de intensidad de luz (1-15) para la luz local. */
+    public VirtualBlockRenderView setLightIntensity(int level)
+    {
+        if (level < 1) level = 1;
+        if (level > 15) level = 15;
+        this.lightIntensity = level;
+        return this;
+    }
+
+    /** Fuerza luz de cielo máxima independientemente del mundo presente. */
+    public VirtualBlockRenderView setForceMaxSkyLight(boolean force)
+    {
+        this.forceMaxSkyLight = force;
+        return this;
+    }
+
+    // BlockView
+    @Override
+    public BlockEntity getBlockEntity(BlockPos pos)
+    {
+        return null;
+    }
+
+    @Override
+    public BlockState getBlockState(BlockPos pos)
+    {
+        BlockState state = this.states.get(pos);
+        return state != null ? state : Blocks.AIR.getDefaultState();
+    }
+
+    @Override
+    public FluidState getFluidState(BlockPos pos)
+    {
+        return Fluids.EMPTY.getDefaultState();
+    }
+
+    @Override
+    public int getLuminance(BlockPos pos)
+    {
+        if (!this.lightsEnabled)
+        {
+            return 0;
+        }
+        BlockState s = getBlockState(pos);
+        int lum = s == null ? 0 : s.getLuminance();
+        return Math.min(lum, this.lightIntensity);
+    }
+
+    @Override
+    public int getMaxLightLevel()
+    {
+        return 15;
+    }
+
+    // BlockRenderView
+    @Override
+    public float getBrightness(Direction direction, boolean shaded)
+    {
+        if (MinecraftClient.getInstance().world != null)
+        {
+            return MinecraftClient.getInstance().world.getBrightness(direction, shaded);
+        }
+
+        return 1.0F;
+    }
+
+    @Override
+    public LightingProvider getLightingProvider()
+    {
+        if (MinecraftClient.getInstance().world != null)
+        {
+            return MinecraftClient.getInstance().world.getLightingProvider();
+        }
+
+        // Sin mundo: devolver null no es ideal, pero la ruta de UI mantiene render as entity.
+        // Esta clase se usa únicamente en render 3D donde hay mundo.
+        return null;
+    }
+
+    @Override
+    public int getColor(BlockPos pos, ColorResolver colorResolver)
+    {
+        // Si hay bioma forzado, usarlo para resolver el color
+        if (this.biomeOverride != null)
+        {
+            int wx = this.worldAnchor.getX() + this.baseDx + pos.getX();
+            int wz = this.worldAnchor.getZ() + this.baseDz + pos.getZ();
+            return colorResolver.getColor(this.biomeOverride, wx, wz);
+        }
+
+        if (MinecraftClient.getInstance().world != null)
+        {
+            BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+            return MinecraftClient.getInstance().world.getColor(worldPos, colorResolver);
+        }
+
+        return 0xFFFFFF;
+    }
+
+    @Override
+    public int getLightLevel(LightType type, BlockPos pos)
+    {
+        // UI o modo forzado: devolver niveles seguros y brillantes
+        // para evitar modelos oscuros. Cielo al máximo; bloque según emisores locales.
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
+        {
+            if (type == LightType.SKY)
+            {
+                return 15;
+            }
+            else // LightType.BLOCK
+            {
+                return this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
+            }
+        }
+
+        int worldLevel = 0;
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        worldLevel = MinecraftClient.getInstance().world.getLightLevel(type, worldPos);
+
+        // Para luz de bloque, combinar con la emitida por bloques luminosos
+        // contenidos en esta vista virtual (no presentes en el mundo real).
+        if (type == LightType.BLOCK)
+        {
+            int local = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
+            return Math.max(worldLevel, local);
+        }
+
+        return worldLevel;
+    }
+
+    @Override
+    public int getBaseLightLevel(BlockPos pos, int ambientDarkness)
+    {
+        // UI o modo forzado: usar brillo base máximo para evitar oscurecer.
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
+        {
+            return 15;
+        }
+
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        int worldBase = MinecraftClient.getInstance().world.getBaseLightLevel(worldPos, ambientDarkness);
+
+        // El nivel base es el máximo entre cielo/bloque. Incorporar la contribución
+        // local de bloque para que fuentes virtuales iluminen correctamente.
+        int localBlock = this.lightsEnabled ? Math.min(this.localBlockLight.getOrDefault(pos, 0), this.lightIntensity) : 0;
+        return Math.max(worldBase, localBlock);
+    }
+
+    @Override
+    public boolean isSkyVisible(BlockPos pos)
+    {
+        if (this.forceMaxSkyLight || MinecraftClient.getInstance().world == null)
+        {
+            // En UI, asumir visibilidad de cielo para evitar sombreado excesivo.
+            return true;
+        }
+
+        BlockPos worldPos = this.worldAnchor.add(this.baseDx + pos.getX(), this.baseDy + pos.getY(), this.baseDz + pos.getZ());
+        return MinecraftClient.getInstance().world.isSkyVisible(worldPos);
+    }
+
+    /**
+     * Calcula luz de bloque local emitida por estados dentro de esta vista.
+     * Aproximación: atenuación por distancia Manhattan como en propagación clásica.
+     * Ignora oclusión para mantener costo bajo y evitar rutas complejas.
+     */
+    // Método retirado: ahora usamos el mapa precomputado O(1)
+
+    // HeightLimitView
+    @Override
+    public int getBottomY()
+    {
+        return this.bottomY;
+    }
+
+    @Override
+    public int getTopY()
+    {
+        return this.topY;
+    }
+
+    @Override
+    public int getHeight()
+    {
+        return this.topY - this.bottomY + 1;
+    }
+}

@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input;
 
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.IValueNotifier;
@@ -142,12 +143,72 @@ public class UIPropTransform extends UITransform
         IKey category = UIKeys.TRANSFORMS_KEYS_CATEGORY;
         Supplier<Boolean> active = () -> this.editing;
 
-        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, () -> this.enableMode(0)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_SCALE, () -> this.enableMode(1)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_ROTATE, () -> this.enableMode(2)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(active).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(active).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(active).category(category);
+        /* Cuando el toggle de Gizmos está ON, las teclas T/R/S cambian el modo del gizmo
+         * y se desactiva el flujo de edición por teclado/ratón de UIPropTransform. */
+        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.TRANSLATE);
+            }
+            else
+            {
+                this.enableMode(0);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.TRANSFORMATIONS_SCALE, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.SCALE);
+            }
+            else
+            {
+                this.enableMode(1);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.TRANSFORMATIONS_ROTATE, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.ROTATE);
+            }
+            else
+            {
+                this.enableMode(2);
+            }
+        }).category(category);
+
+        /* Alternar modo de gizmo (ciclo entre Trasladar/Escalar/Rotar) */
+        this.keys().register(Keys.TRANSFORMATIONS_CYCLE_GIZMO, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().cycleMode(true);
+            }
+            else
+            {
+                this.enableMode((this.mode + 1) % 3);
+            }
+        }).category(category);
+
+        /* Toggle entre canal de rotación principal (R) y secundario (R2) para el gizmo */
+        this.keys().register(Keys.GIZMOS_TOGGLE_ROTATION_CHANNEL, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().toggleRotationChannel();
+            }
+        }).active(() -> BBSSettings.modelBlockGizmosEnabled.get()).category(UIKeys.GIZMOS_KEYS_CATEGORY);
+
+        /* Las teclas de eje X/Y/Z solo aplican cuando se está editando
+         * y los gizmos están desactivados (flujo clásico). */
+        Supplier<Boolean> axisActive = () -> this.editing && !BBSSettings.modelBlockGizmosEnabled.get();
+        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(axisActive).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(axisActive).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(axisActive).category(category);
 
         return this;
     }
@@ -183,6 +244,7 @@ public class UIPropTransform extends UITransform
         this.fillS(transform.scale.x, transform.scale.y, transform.scale.z);
         this.fillR(MathUtils.toDeg(transform.rotate.x), MathUtils.toDeg(transform.rotate.y), MathUtils.toDeg(transform.rotate.z));
         this.fillR2(MathUtils.toDeg(transform.rotate2.x), MathUtils.toDeg(transform.rotate2.y), MathUtils.toDeg(transform.rotate2.z));
+        this.fillP(transform.pivot.x, transform.pivot.y, transform.pivot.z);
     }
 
     private void enableMode(int mode)
@@ -313,6 +375,14 @@ public class UIPropTransform extends UITransform
     {
         this.preCallback();
         this.transform.rotate2.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
+        this.postCallback();
+    }
+
+    @Override
+    public void setP(Axis axis, double x, double y, double z)
+    {
+        this.preCallback();
+        this.transform.pivot.set((float) x, (float) y, (float) z);
         this.postCallback();
     }
 

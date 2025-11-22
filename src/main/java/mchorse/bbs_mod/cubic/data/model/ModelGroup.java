@@ -5,6 +5,7 @@ import mchorse.bbs_mod.data.IMapSerializable;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.pose.Transform;
 
@@ -24,6 +25,8 @@ public class ModelGroup implements IMapSerializable
 
     public float lighting = 0F;
     public Color color = new Color().set(1F, 1F, 1F);
+    /** Optional texture override applied at render-time (e.g., per-bone). */
+    public Link textureOverride;
     public Transform initial = new Transform();
     public Transform current = new Transform();
 
@@ -36,6 +39,7 @@ public class ModelGroup implements IMapSerializable
     {
         this.lighting = 0F;
         this.color.set(1F, 1F, 1F);
+        this.textureOverride = null;
         this.current.copy(this.initial);
     }
 
@@ -45,6 +49,8 @@ public class ModelGroup implements IMapSerializable
         /* Setup initial transformations */
         if (data.has("origin")) this.initial.translate.set(DataStorageUtils.vector3fFromData(data.getList("origin")));
         if (data.has("rotate")) this.initial.rotate.set(DataStorageUtils.vector3fFromData(data.getList("rotate")));
+        if (data.has("pivot")) this.initial.pivot.set(DataStorageUtils.vector3fFromData(data.getList("pivot")));
+        else this.initial.pivot.set(this.initial.translate);
 
         /* Setup cubes and meshes */
         if (data.has("cubes"))
@@ -78,6 +84,7 @@ public class ModelGroup implements IMapSerializable
     {
         data.put("origin", DataStorageUtils.vector3fToData(this.initial.translate));
         data.put("rotate", DataStorageUtils.vector3fToData(this.initial.rotate));
+        data.put("pivot", DataStorageUtils.vector3fToData(this.initial.pivot));
 
         if (!this.cubes.isEmpty())
         {

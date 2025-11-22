@@ -7,6 +7,7 @@ import mchorse.bbs_mod.importers.types.PNGImporter;
 import mchorse.bbs_mod.importers.types.ToPNGImporter;
 import mchorse.bbs_mod.importers.types.ToWAVImporter;
 import mchorse.bbs_mod.importers.types.WAVImporter;
+import mchorse.bbs_mod.importers.types.StructureImporter;
 import mchorse.bbs_mod.ui.UIKeys;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class Importers
         importers.add(new OldSkinImporter());
         importers.add(new PNGImporter());
         importers.add(new WAVImporter());
+        importers.add(new StructureImporter());
     }
 
     public static List<IImporter> getImporters()

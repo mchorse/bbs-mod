@@ -25,6 +25,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.utils.Batcher2D;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIUtils;
@@ -466,6 +467,8 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
         {
             this.renderHighlight(context.batcher, icon.area);
         }
+
+        /* Gizmo removido del menú del editor de bloque de modelo */
     }
 
     private void renderHighlight(Batcher2D batcher, Area area)

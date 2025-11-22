@@ -160,6 +160,7 @@ public abstract class FormRenderer <T extends Form>
         transform.scale.add(overlay.scale).sub(1, 1, 1);
         transform.rotate.add(overlay.rotate);
         transform.rotate2.add(overlay.rotate2);
+        transform.pivot.add(overlay.pivot);
     }
 
     protected Supplier<ShaderProgram> getShader(FormRenderingContext context, Supplier<ShaderProgram> normal, Supplier<ShaderProgram> picking)

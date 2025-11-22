@@ -39,12 +39,15 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     public UITrackpad relativeOffsetZ;
 
     private Consumer<Replay> callback;
+    private UIFilmPanel filmPanel;
+    /* Se eliminan campos de edición/filtrado de grupo para evitar duplicación */
 
     public UIReplaysOverlayPanel(UIFilmPanel filmPanel, Consumer<Replay> callback)
     {
         super(UIKeys.FILM_REPLAY_TITLE);
 
         this.callback = callback;
+        this.filmPanel = filmPanel;
         this.replays = new UIReplayList((l) -> this.callback.accept(l.isEmpty() ? null : l.get(0)), this, filmPanel);
 
         this.pickEdit = new UINestedEdit((editing) ->
@@ -135,6 +138,7 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.relativeOffsetX.setValue(replay.relativeOffset.get().x);
             this.relativeOffsetY.setValue(replay.relativeOffset.get().y);
             this.relativeOffsetZ.setValue(replay.relativeOffset.get().z);
+            /* Sin sincronización de grupo en panel: usar menú de lista */
         }
     }
 

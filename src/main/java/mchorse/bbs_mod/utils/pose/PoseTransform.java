@@ -1,11 +1,13 @@
 package mchorse.bbs_mod.utils.pose;
 
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.IInterp;
 import mchorse.bbs_mod.utils.interps.Lerps;
+import mchorse.bbs_mod.utils.resources.LinkUtils;
 
 public class PoseTransform extends Transform
 {
@@ -14,6 +16,8 @@ public class PoseTransform extends Transform
     public float fix;
     public final Color color = new Color().set(Colors.WHITE);
     public float lighting;
+    /** Optional texture override for this transform (per-bone texture). */
+    public Link texture;
 
     @Override
     public void identity()
@@ -23,6 +27,7 @@ public class PoseTransform extends Transform
         this.fix = 0F;
         this.color.set(Colors.WHITE);
         this.lighting = 0F;
+        this.texture = null;
     }
 
     @Override
@@ -77,6 +82,7 @@ public class PoseTransform extends Transform
             result = result && this.fix == poseTransform.fix;
             result = result && this.color.equals(poseTransform.color);
             result = result && this.lighting == poseTransform.lighting;
+            result = result && ((this.texture == null && poseTransform.texture == null) || (this.texture != null && this.texture.equals(poseTransform.texture)));
         }
 
         return result;
@@ -100,6 +106,7 @@ public class PoseTransform extends Transform
             this.fix = poseTransform.fix;
             this.color.copy(poseTransform.color);
             this.lighting = poseTransform.lighting;
+            this.texture = LinkUtils.copy(poseTransform.texture);
         }
 
         super.copy(transform);
@@ -113,6 +120,10 @@ public class PoseTransform extends Transform
         data.putFloat("fix", this.fix);
         data.putInt("color", this.color.getARGBColor());
         data.putFloat("lighting", this.lighting);
+        if (this.texture != null)
+        {
+            data.put("texture", LinkUtils.toData(this.texture));
+        }
     }
 
     @Override
@@ -123,6 +134,10 @@ public class PoseTransform extends Transform
         this.fix = data.getFloat("fix");
         this.color.set(data.getInt("color", Colors.WHITE));
         this.lighting = data.getFloat("lighting");
+        if (data.has("texture"))
+        {
+            this.texture = LinkUtils.create(data.get("texture"));
+        }
     }
 
     @Override

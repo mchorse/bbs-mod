@@ -9,6 +9,8 @@ import mchorse.bbs_mod.camera.CameraUtils;
 import mchorse.bbs_mod.camera.clips.misc.AudioClip;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.cubic.data.animation.Animation;
+import mchorse.bbs_mod.cubic.data.animation.AnimationPart;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
@@ -20,6 +22,8 @@ import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.window.Window;
+import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.math.molang.expressions.MolangExpression;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
@@ -27,20 +31,23 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIClipsPanel;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.clips.renderer.IUIClipRenderer;
-import mchorse.bbs_mod.ui.film.replays.overlays.UIAnimationToPoseOverlayPanel;
-import mchorse.bbs_mod.ui.film.replays.overlays.UIKeyframeSheetFilterOverlayPanel;
-import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIKeyframeSheetFilterOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.overlays.UIAnimationToPoseOverlayPanel;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
+import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -52,7 +59,9 @@ import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
+import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -62,12 +71,15 @@ import net.minecraft.world.World;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class UIReplaysEditor extends UIElement
 {
@@ -117,6 +129,7 @@ public class UIReplaysEditor extends UIElement
         COLORS.put("transform_overlay", 0xaaff00);
         COLORS.put("color", Colors.INACTIVE);
         COLORS.put("lighting", Colors.YELLOW);
+        COLORS.put("structure_light", Colors.YELLOW);
         COLORS.put("shape_keys", Colors.PINK);
         COLORS.put("actions", Colors.MAGENTA);
 
@@ -152,6 +165,7 @@ public class UIReplaysEditor extends UIElement
         ICONS.put("transform", Icons.ALL_DIRECTIONS);
         ICONS.put("color", Icons.BUCKET);
         ICONS.put("lighting", Icons.LIGHT);
+        ICONS.put("structure_light", Icons.LIGHT);
         ICONS.put("actions", Icons.CONVERT);
         ICONS.put("shape_keys", Icons.HEART_ALT);
         ICONS.put("text", Icons.FONT);
@@ -170,6 +184,9 @@ public class UIReplaysEditor extends UIElement
         ICONS.put("count", Icons.BUCKET);
 
         ICONS.put("settings", Icons.GEAR);
+
+        /* Structure selection icon for structure_file property */
+        ICONS.put("structure_file", Icons.FILE);
     }
 
     public static Icon getIcon(String key)
@@ -183,10 +200,56 @@ public class UIReplaysEditor extends UIElement
     {
         String topLevel = StringUtils.fileName(key);
 
-        if (key.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
-        if (key.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
+        if (topLevel.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
+        if (topLevel.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
 
         return COLORS.getOrDefault(topLevel, Colors.ACTIVE);
+    }
+
+    public static void offerAdjacent(UIContext context, Form form, String bone, Consumer<String> consumer)
+    {
+        if (!bone.isEmpty() && form instanceof ModelForm modelForm)
+        {
+            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+            if (model == null)
+            {
+                return;
+            }
+
+            context.replaceContextMenu((menu) ->
+            {
+                for (String modelGroup : model.model.getAdjacentGroups(bone))
+                {
+                    menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
+                }
+
+                menu.autoKeys();
+            });
+        }
+    }
+
+    public static void offerHierarchy(UIContext context, Form form, String bone, Consumer<String> consumer)
+    {
+        if (!bone.isEmpty() && form instanceof ModelForm modelForm)
+        {
+            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+            if (model == null)
+            {
+                return;
+            }
+
+            context.replaceContextMenu((menu) ->
+            {
+                for (String modelGroup : model.model.getHierarchyGroups(bone))
+                {
+                    menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
+                }
+
+                menu.autoKeys();
+            });
+        }
     }
 
     public static boolean renderBackground(UIContext context, UIKeyframes keyframes, Clips camera, int clipOffset)
@@ -330,20 +393,165 @@ public class UIReplaysEditor extends UIElement
             BaseValue value = this.replay.keyframes.get(key);
             KeyframeChannel channel = (KeyframeChannel) value;
 
-            sheets.add(new UIKeyframeSheet(getColor(key), false, channel, null).icon(ICONS.get(key)));
+            String customTitle = this.replay.getCustomSheetTitle(key);
+            UIKeyframeSheet sheet = customTitle != null && !customTitle.isEmpty()
+                ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, channel, null)
+                : new UIKeyframeSheet(getColor(key), false, channel, null);
+
+            /* Restaurar estado de anclaje desde título personalizado para canales de pose */
+            if (customTitle != null && !customTitle.isEmpty() && channel.getFactory() == KeyframeFactories.POSE)
+            {
+                sheet.anchoredBone = customTitle;
+            }
+
+            sheets.add(sheet.icon(ICONS.get(key)));
         }
 
         /* Form properties */
         for (String key : FormUtils.collectPropertyPaths(this.replay.form.get()))
         {
+            /* Ocultar/omitir la pista tint_block_entities */
+            if (key.endsWith("tint_block_entities"))
+            {
+                continue;
+            }
             KeyframeChannel property = this.replay.properties.getOrCreate(this.replay.form.get(), key);
 
             if (property != null)
             {
                 BaseValueBasic formProperty = FormUtils.getProperty(this.replay.form.get(), key);
-                UIKeyframeSheet sheet = new UIKeyframeSheet(getColor(key), false, property, formProperty);
+                String customTitle = this.replay.getCustomSheetTitle(key);
+                UIKeyframeSheet sheet = customTitle != null && !customTitle.isEmpty()
+                    ? new UIKeyframeSheet(key, IKey.constant(customTitle), getColor(key), false, property, formProperty)
+                    : new UIKeyframeSheet(getColor(key), false, property, formProperty);
+
+                /* Restaurar estado de anclaje desde título personalizado para propiedades de pose */
+                if (customTitle != null && !customTitle.isEmpty() && property.getFactory() == KeyframeFactories.POSE)
+                {
+                    sheet.anchoredBone = customTitle;
+                }
 
                 sheets.add(sheet.icon(getIcon(key)));
+            }
+        }
+
+        /* Reordenar propiedades de StructureForm por grupo de formulario:
+           - Mantener transform/transform_overlay arriba
+           - Colocar las dems debajo en orden: anchor, structure_file, pivot, biome_id, structure_light, color */
+        java.util.Map<Object, java.util.List<Integer>> groupIndices = new java.util.HashMap<>();
+        java.util.Map<Object, java.util.List<UIKeyframeSheet>> groupSheets = new java.util.HashMap<>();
+
+        for (int i = 0; i < sheets.size(); i++)
+        {
+            UIKeyframeSheet sheet = sheets.get(i);
+            Object form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
+
+            if (form instanceof mchorse.bbs_mod.forms.forms.StructureForm)
+            {
+                groupIndices.computeIfAbsent(form, k -> new ArrayList<>()).add(i);
+                groupSheets.computeIfAbsent(form, k -> new ArrayList<>()).add(sheet);
+            }
+        }
+
+        if (!groupSheets.isEmpty())
+        {
+            // Orden no-transform específico para StructureForm
+            java.util.Map<String, Integer> nonTransformOrder = new java.util.HashMap<>();
+            nonTransformOrder.put("anchor", 0);
+            nonTransformOrder.put("structure_file", 1);
+            nonTransformOrder.put("pivot", 2);
+            nonTransformOrder.put("biome_id", 3);
+            nonTransformOrder.put("structure_light", 4);
+            nonTransformOrder.put("color", 5);
+
+            // Orden prioritario arriba del todo
+            java.util.Map<String, Integer> topOrder = new java.util.HashMap<>();
+            topOrder.put("visible", 0);
+            topOrder.put("lighting", 1);
+
+            java.util.function.Function<String, Integer> toIndex = (id) ->
+            {
+                Integer v = nonTransformOrder.get(id);
+                return v == null ? 1000 : v;
+            };
+
+            for (java.util.Map.Entry<Object, java.util.List<UIKeyframeSheet>> entry : groupSheets.entrySet())
+            {
+                Object form = entry.getKey();
+                java.util.List<UIKeyframeSheet> group = entry.getValue();
+                java.util.List<Integer> indices = groupIndices.get(form);
+
+                if (indices == null || indices.isEmpty())
+                {
+                    continue;
+                }
+
+                java.util.List<UIKeyframeSheet> top = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> transforms = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> overlays = new ArrayList<>();
+                java.util.List<UIKeyframeSheet> nonTransforms = new ArrayList<>();
+
+                for (UIKeyframeSheet s : group)
+                {
+                    if ("visible".equals(s.id) || "lighting".equals(s.id))
+                    {
+                        top.add(s);
+                    }
+                    else if ("transform".equals(s.id))
+                    {
+                        transforms.add(s);
+                    }
+                    else if (s.id != null && s.id.startsWith("transform_overlay"))
+                    {
+                        overlays.add(s);
+                    }
+                    else
+                    {
+                        nonTransforms.add(s);
+                    }
+                }
+
+                // Ordenar top: visible, luego lighting
+                top.sort((a, b) -> Integer.compare(
+                    topOrder.getOrDefault(a.id, 1000),
+                    topOrder.getOrDefault(b.id, 1000)
+                ));
+
+                // Ordenar overlays por sufijo numrico (default primero)
+                overlays.sort((a, b) -> {
+                    java.util.function.ToIntFunction<String> parseIndex = (id) ->
+                    {
+                        String suffix = id.substring("transform_overlay".length());
+                        if (suffix.isEmpty()) return -1; // default overlay primero
+                        try { return Integer.parseInt(suffix); } catch (Exception e) { return 999; }
+                    };
+                    return Integer.compare(parseIndex.applyAsInt(a.id), parseIndex.applyAsInt(b.id));
+                });
+
+                // Ordenar no-transform segn mapa
+                nonTransforms.sort((a, b) -> Integer.compare(toIndex.apply(a.id), toIndex.apply(b.id)));
+
+                // Posicin base del grupo y recolocacin contigua
+                int start = indices.stream().min(Integer::compareTo).get();
+
+                // Eliminar en orden descendente para evitar el corrimiento de indices
+                indices.sort(java.util.Collections.reverseOrder());
+                for (int idx : indices)
+                {
+                    sheets.remove(idx);
+                }
+
+                // Insertar: top (visible, lighting), transform, overlays, luego no-transforms
+                java.util.List<UIKeyframeSheet> newGroup = new ArrayList<>();
+                newGroup.addAll(top);
+                newGroup.addAll(transforms);
+                newGroup.addAll(overlays);
+                newGroup.addAll(nonTransforms);
+
+                for (int j = 0; j < newGroup.size(); j++)
+                {
+                    sheets.add(start + j, newGroup.get(j));
+                }
             }
         }
 
@@ -427,22 +635,29 @@ public class UIReplaysEditor extends UIElement
 
                     if (sheet != null && sheet.channel.getFactory() == KeyframeFactories.POSE && sheet.id.equals("pose"))
                     {
-                        menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () ->
-                        {
-                            ModelInstance model = ModelFormRenderer.getModel(modelForm);
-
-                            if (model != null)
-                            {
-                                UIOverlay.addOverlay(this.getContext(), new UIAnimationToPoseOverlayPanel((animationKey, onlyKeyframes, length, step) ->
-                                {
-                                    int current = this.filmPanel.getCursor();
-                                    IEntity entity = this.filmPanel.getController().getCurrentEntity();
-
-                                    UIReplaysEditorUtils.animationToPoseKeyframes(this.keyframeEditor, sheet, modelForm, entity, current, animationKey, onlyKeyframes, length, step);
-                                }, modelForm, sheet), 200, 197);
-                            }
-                        });
+                        menu.action(Icons.POSE, UIKeys.FILM_REPLAY_CONTEXT_ANIMATION_TO_KEYFRAMES, () -> this.animationToPoses(modelForm, sheet));
                     }
+                }
+
+                int mouseY2 = this.getContext().mouseY;
+                UIKeyframeSheet clickedSheet = this.keyframeEditor.view.getGraph().getSheet(mouseY2);
+                if (clickedSheet != null)
+                {
+                    menu.action(Icons.FONT, UIKeys.FILM_REPLAY_RENAME_SHEET, () ->
+                    {
+                        UIPromptOverlayPanel panel = new UIPromptOverlayPanel(
+                            UIKeys.FILM_REPLAY_RENAME_SHEET_TITLE,
+                            UIKeys.FILM_REPLAY_RENAME_SHEET_MESSAGE,
+                            (str) ->
+                            {
+                                this.replay.setCustomSheetTitle(clickedSheet.id, str);
+                                this.updateChannelsList();
+                            }
+                        );
+
+                        panel.text.setText(clickedSheet.title.get());
+                        UIOverlay.addOverlay(this.getContext(), panel, 300, 0.25F);
+                    });
                 }
 
                 if (this.keyframeEditor.view.getGraph() instanceof UIKeyframeDopeSheet)
@@ -478,14 +693,201 @@ public class UIReplaysEditor extends UIElement
         }
     }
 
+    private void animationToPoses(ModelForm modelForm, UIKeyframeSheet sheet)
+    {
+        ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+        if (model != null)
+        {
+            UIAnimationToPoseOverlayPanel.IUIAnimationPoseCallback cb = (animationKey, onlyKeyframes, length, step) ->
+                this.animationToPoseKeyframes(modelForm, sheet, animationKey, onlyKeyframes, length, step);
+
+            UIOverlay.addOverlay(this.getContext(), new UIAnimationToPoseOverlayPanel(cb, modelForm, sheet), 200, 197);
+        }
+    }
+
+    public void animationToPoseKeyframes(ModelForm modelForm, UIKeyframeSheet sheet, String animationKey, boolean onlyKeyframes, int length, int step)
+    {
+        ModelInstance model = ModelFormRenderer.getModel(modelForm);
+        Animation animation = model.animations.get(animationKey);
+
+        if (animation != null)
+        {
+            int current = this.filmPanel.getCursor();
+            IEntity entity = this.filmPanel.getController().getCurrentEntity();
+
+            this.keyframeEditor.view.getDopeSheet().clearSelection();
+
+            if (onlyKeyframes)
+            {
+                List<Float> list = this.getTicks(animation);
+
+                for (float i : list)
+                {
+                    this.fillAnimationPose(sheet, i, model, entity, animation, current);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < length; i += step)
+                {
+                    this.fillAnimationPose(sheet, i, model, entity, animation, current);
+                }
+            }
+
+            this.keyframeEditor.view.getDopeSheet().pickSelected();
+        }
+    }
+
+    private List<Float> getTicks(Animation animation)
+    {
+        Set<Float> integers = new HashSet<>();
+
+        for (AnimationPart value : animation.parts.values())
+        {
+            for (KeyframeChannel<MolangExpression> channel : value.channels)
+            {
+                for (Keyframe<MolangExpression> keyframe : channel.getKeyframes())
+                {
+                    integers.add(keyframe.getTick());
+                }
+            }
+        }
+
+        ArrayList<Float> ticks = new ArrayList<>(integers);
+
+        Collections.sort(ticks);
+
+        return ticks;
+    }
+
+    private void fillAnimationPose(UIKeyframeSheet sheet, float i, ModelInstance model, IEntity entity, Animation animation, int current)
+    {
+        model.model.resetPose();
+        model.model.apply(entity, animation, i, 1F, 0F, false);
+
+        int insert = sheet.channel.insert(current + i, model.model.createPose());
+
+        sheet.selection.add(insert);
+    }
+
     public void pickForm(Form form, String bone)
     {
-        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, form, bone);
+        String path = FormUtils.getPath(form);
+
+        if (this.keyframeEditor == null || bone.isEmpty())
+        {
+            return;
+        }
+
+        Keyframe selected = this.keyframeEditor.view.getGraph().getSelected();
+        String type = "pose";
+
+        if (selected != null)
+        {
+            String id = selected.getParent().getId();
+            int index = id.indexOf("pose_overlay");
+
+            if (index >= 0)
+            {
+                type = id.substring(index);
+            }
+        }
+
+        this.pickProperty(bone, StringUtils.combinePaths(path, type), false);
     }
 
     public void pickFormProperty(Form form, String bone)
     {
-        UIReplaysEditorUtils.pickFormProperty(this.getContext(), this.keyframeEditor, this.filmPanel, form, bone);
+        String path = FormUtils.getPath(form);
+        boolean shift = Window.isShiftPressed();
+        ContextMenuManager manager = new ContextMenuManager();
+
+        manager.autoKeys();
+
+        for (BaseValueBasic formProperty : form.getAllMap().values())
+        {
+            if (!formProperty.isVisible())
+            {
+                continue;
+            }
+
+            manager.action(getIcon(formProperty.getId()), IKey.constant(formProperty.getId()), () ->
+            {
+                this.pickProperty(bone, StringUtils.combinePaths(path, formProperty.getId()), shift);
+            });
+        }
+
+        this.getContext().replaceContextMenu(manager.create());
+    }
+
+    private void pickProperty(String bone, String key, boolean insert)
+    {
+        /* Redirección al sheet anclado si el hueso seleccionado está anclado y no hay override */
+        if (bone != null && !bone.isEmpty() && BBSSettings.boneAnchoringEnabled.get() && !BBSSettings.anchorOverrideEnabled.get())
+        {
+            for (UIKeyframeSheet s : this.keyframeEditor.view.getGraph().getSheets())
+            {
+                if (s.anchoredBone != null && s.anchoredBone.equals(bone))
+                {
+                    this.pickProperty(bone, s, insert);
+                    return;
+                }
+            }
+        }
+
+        for (UIKeyframeSheet sheet : this.keyframeEditor.view.getGraph().getSheets())
+        {
+            BaseValueBasic property = sheet.property;
+
+            if (property != null && FormUtils.getPropertyPath(property).equals(key))
+            {
+                this.pickProperty(bone, sheet, insert);
+
+                break;
+            }
+        }
+    }
+
+    private void pickProperty(String bone, UIKeyframeSheet sheet, boolean insert)
+    {
+        int tick = this.filmPanel.getRunner().ticks;
+
+        if (insert)
+        {
+            Keyframe keyframe = this.keyframeEditor.view.getGraph().addKeyframe(sheet, tick, null);
+
+            this.keyframeEditor.view.getGraph().selectKeyframe(keyframe);
+
+            return;
+        }
+
+        KeyframeSegment segment = sheet.channel.find(tick);
+
+        if (segment != null)
+        {
+            Keyframe closest = segment.getClosest();
+
+            if (this.keyframeEditor.view.getGraph().getSelected() != closest)
+            {
+                this.keyframeEditor.view.getGraph().selectKeyframe(closest);
+            }
+
+            if (this.keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+            {
+                String targetBone = bone;
+
+                if (BBSSettings.boneAnchoringEnabled.get() && sheet.anchoredBone != null)
+                {
+                    /* Redirigir siempre al hueso anclado cuando la pista está anclada */
+                    targetBone = sheet.anchoredBone;
+                }
+
+                poseFactory.poseEditor.selectBone(targetBone);
+            }
+
+            this.filmPanel.setCursor((int) closest.getTick());
+        }
     }
 
     public boolean clickViewport(UIContext context, Area area)
@@ -510,8 +912,8 @@ public class UIReplaysEditor extends UIElement
 
                 if (context.mouseButton == 0)
                 {
-                    if (Window.isCtrlPressed()) UIReplaysEditorUtils.offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
-                    else if (Window.isShiftPressed()) UIReplaysEditorUtils.offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
+                    if (Window.isCtrlPressed()) offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
+                    else if (Window.isShiftPressed()) offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> this.pickForm(pair.a, bone));
                     else this.pickForm(pair.a, pair.b);
 
                     return true;
@@ -625,7 +1027,7 @@ public class UIReplaysEditor extends UIElement
 
     @Override
     public void collectUndoData(MapType data)
-     {
+    {
         super.collectUndoData(data);
 
         int index = this.film.replays.getList().indexOf(this.getReplay());

@@ -348,6 +348,14 @@ public class BBSMod implements ModInitializer
         return films;
     }
 
+    /**
+     * Expose current world's root folder. Returns null when no world is loaded.
+     */
+    public static File getWorldFolder()
+    {
+        return worldFolder;
+    }
+
     public static MapFactory<Clip, ClipFactoryData> getFactoryCameraClips()
     {
         return factoryCameraClips;
@@ -374,23 +382,26 @@ public class BBSMod implements ModInitializer
         dynamicSourcePack = new DynamicSourcePack(originalSourcePack);
         provider = new AssetProvider();
         provider.register(dynamicSourcePack);
+        /* Registrar primero el pack de estructuras del mundo para priorizar archivos del mundo */
+        provider.registerFirst(new mchorse.bbs_mod.resources.packs.WorldStructuresSourcePack());
         provider.register(new InternalAssetsSourcePack());
 
         settings = new SettingsManager();
         forms = new FormArchitect();
         forms
-            .register(Link.bbs("billboard"), BillboardForm.class, null)
-            .register(Link.bbs("label"), LabelForm.class, null)
-            .register(Link.bbs("model"), ModelForm.class, null)
-            .register(Link.bbs("particle"), ParticleForm.class, null)
-            .register(Link.bbs("extruded"), ExtrudedForm.class, null)
-            .register(Link.bbs("block"), BlockForm.class, null)
-            .register(Link.bbs("item"), ItemForm.class, null)
-            .register(Link.bbs("anchor"), AnchorForm.class, null)
-            .register(Link.bbs("mob"), MobForm.class, null)
-            .register(Link.bbs("vanilla_particles"), VanillaParticleForm.class, null)
-            .register(Link.bbs("trail"), TrailForm.class, null)
-            .register(Link.bbs("framebuffer"), FramebufferForm.class, null);
+        .register(Link.bbs("billboard"), BillboardForm.class, null)
+        .register(Link.bbs("label"), LabelForm.class, null)
+        .register(Link.bbs("model"), ModelForm.class, null)
+        .register(Link.bbs("particle"), ParticleForm.class, null)
+        .register(Link.bbs("extruded"), ExtrudedForm.class, null)
+        .register(Link.bbs("block"), BlockForm.class, null)
+        .register(Link.bbs("item"), ItemForm.class, null)
+        .register(Link.bbs("anchor"), AnchorForm.class, null)
+        .register(Link.bbs("mob"), MobForm.class, null)
+        .register(Link.bbs("vanilla_particles"), VanillaParticleForm.class, null)
+        .register(Link.bbs("trail"), TrailForm.class, null)
+        .register(Link.bbs("framebuffer"), FramebufferForm.class, null)
+        .register(Link.bbs("structure"), mchorse.bbs_mod.forms.forms.StructureForm.class, null);
 
         films = new FilmManager(() -> new File(worldFolder, "bbs/films"));
 

@@ -120,6 +120,52 @@ public class Batcher2D
         this.context.draw();
     }
 
+    /**
+     * Draw an anti-aliased-looking line segment by rendering a thin quad between two points.
+     * The line is axis-independent (supports arbitrary angle) with given thickness in pixels.
+     */
+    public void line(float x1, float y1, float x2, float y2, float thickness, int color)
+    {
+        Matrix4f matrix4f = this.context.getMatrices().peek().getPositionMatrix();
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+
+        if (len <= 0.0001f)
+        {
+            // Fallback to a small box when points overlap
+            this.box(x1 - thickness * 0.5f, y1 - thickness * 0.5f, x1 + thickness * 0.5f, y1 + thickness * 0.5f, color);
+            return;
+        }
+
+        float nx = -dy / len; // perpendicular
+        float ny =  dx / len;
+        float hw = thickness * 0.5f;
+
+        float x1a = x1 + nx * hw;
+        float y1a = y1 + ny * hw;
+        float x1b = x1 - nx * hw;
+        float y1b = y1 - ny * hw;
+        float x2a = x2 + nx * hw;
+        float y2a = y2 + ny * hw;
+        float x2b = x2 - nx * hw;
+        float y2b = y2 - ny * hw;
+
+        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        builder.vertex(matrix4f, x1a, y1a, 0).color(color).next();
+        builder.vertex(matrix4f, x1b, y1b, 0).color(color).next();
+        builder.vertex(matrix4f, x2b, y2b, 0).color(color).next();
+        builder.vertex(matrix4f, x2a, y2a, 0).color(color).next();
+
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+
+        this.context.draw();
+    }
+
     public void fillRect(BufferBuilder builder, Matrix4f matrix4f, float x, float y, float w, float h, int color1, int color2, int color3, int color4)
     {
         /* c1 ---- c2

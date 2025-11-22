@@ -23,6 +23,8 @@ public class KeyframeFactories
     public static final ActionsConfigKeyframeFactory ACTIONS_CONFIG = new ActionsConfigKeyframeFactory();
     public static final ShapeKeysKeyframeFactory SHAPE_KEYS = new ShapeKeysKeyframeFactory();
     public static final ParticleSettingsKeyframeFactory PARTICLE_SETTINGS = new ParticleSettingsKeyframeFactory();
+    public static final PivotSettingsKeyframeFactory PIVOT_SETTINGS = new PivotSettingsKeyframeFactory();
+    public static final mchorse.bbs_mod.utils.keyframes.factories.StructureLightSettingsKeyframeFactory STRUCTURE_LIGHT_SETTINGS = new mchorse.bbs_mod.utils.keyframes.factories.StructureLightSettingsKeyframeFactory();
 
     public static boolean isNumeric(IKeyframeFactory factory)
     {
@@ -49,5 +51,7 @@ public class KeyframeFactories
         FACTORIES.put("actions_config", ACTIONS_CONFIG);
         FACTORIES.put("shape_keys", SHAPE_KEYS);
         FACTORIES.put("particle_settings", PARTICLE_SETTINGS);
+        FACTORIES.put("pivot_settings", PIVOT_SETTINGS);
+        FACTORIES.put("structure_light_settings", STRUCTURE_LIGHT_SETTINGS);
     }
 }
