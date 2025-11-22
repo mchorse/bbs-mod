@@ -121,6 +121,7 @@ public class UIKeyframeClip extends UIClip<KeyframeClip>
         {
             keyframe.get(insert).getInterpolation().copy(segment.a.getInterpolation());
             keyframe.get(insert).setShape(segment.a.getShape());
+            keyframe.get(insert).setColor(segment.a.getColor());
         }
     }
 

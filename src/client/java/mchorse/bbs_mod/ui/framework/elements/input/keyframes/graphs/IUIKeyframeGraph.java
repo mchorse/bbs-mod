@@ -6,6 +6,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.utils.Pair;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -98,6 +99,7 @@ public interface IUIKeyframeGraph
         KeyframeSegment segment = sheet.channel.find(tick);
         Interpolation interpolation = null;
         KeyframeShape shape = null;
+        Color color = null;
         BaseValueBasic property = sheet.property;
 
         if (value == null)
@@ -107,6 +109,7 @@ public interface IUIKeyframeGraph
                 value = segment.createInterpolated();
                 interpolation = segment.a.getInterpolation();
                 shape = segment.a.getShape();
+                color = segment.a.getColor();
             }
             else if (property != null)
             {
@@ -129,6 +132,11 @@ public interface IUIKeyframeGraph
         if(shape != null)
         {
             keyframe.setShape(shape);
+        }
+
+        if(color != null)
+        {
+            keyframe.setColor(color);
         }
 
         this.clearSelection();
