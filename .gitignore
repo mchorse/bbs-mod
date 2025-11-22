@@ -40,3 +40,7 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+.gitignore
+build.gradle
+gradle.properties
