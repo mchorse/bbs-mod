@@ -120,6 +120,7 @@ public class UIKeyframeClip extends UIClip<KeyframeClip>
         if (segment != null)
         {
             keyframe.get(insert).getInterpolation().copy(segment.a.getInterpolation());
+            keyframe.get(insert).setShape(segment.a.getShape());
         }
     }
 

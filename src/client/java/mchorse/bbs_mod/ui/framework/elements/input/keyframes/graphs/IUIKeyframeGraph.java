@@ -10,6 +10,7 @@ import mchorse.bbs_mod.utils.interps.Interpolation;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 
 import java.util.List;
@@ -96,6 +97,7 @@ public interface IUIKeyframeGraph
     {
         KeyframeSegment segment = sheet.channel.find(tick);
         Interpolation interpolation = null;
+        KeyframeShape shape = null;
         BaseValueBasic property = sheet.property;
 
         if (value == null)
@@ -104,6 +106,7 @@ public interface IUIKeyframeGraph
             {
                 value = segment.createInterpolated();
                 interpolation = segment.a.getInterpolation();
+                shape = segment.a.getShape();
             }
             else if (property != null)
             {
@@ -121,6 +124,11 @@ public interface IUIKeyframeGraph
         if (interpolation != null)
         {
             keyframe.getInterpolation().copy(interpolation);
+        }
+
+        if(shape != null)
+        {
+            keyframe.setShape(shape);
         }
 
         this.clearSelection();
