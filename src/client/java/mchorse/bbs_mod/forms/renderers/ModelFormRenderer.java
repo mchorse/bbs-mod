@@ -348,17 +348,45 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         {
             CustomVertexConsumerProvider consumers = FormUtilsClient.getProvider();
 
+            ItemStack stackItem = target.getEquipmentStack(type.slot);
+
+            /* If this is a proper ArmorItem, render via vanilla armor renderer.
+             * Otherwise, fall back to rendering the item model attached to the armor bone. */
+            boolean isArmor = stackItem != null && !stackItem.isEmpty() && stackItem.getItem() instanceof net.minecraft.item.ArmorItem;
+
             stack.push();
             MatrixStackUtils.multiply(stack, matrix);
             MatrixStackUtils.applyTransform(stack, armorSlot.transform);
-            stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180F));
 
-            CustomVertexConsumerProvider.hijackVertexFormat((l) -> RenderSystem.enableBlend());
+            if (isArmor)
+            {
+                stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180F));
 
-            ActorEntityRenderer.armorRenderer.renderArmorSlot(stack, consumers, target, type.slot, type, light);
-            consumers.draw();
+                CustomVertexConsumerProvider.hijackVertexFormat((l) -> RenderSystem.enableBlend());
 
-            CustomVertexConsumerProvider.clearRunnables();
+                ActorEntityRenderer.armorRenderer.renderArmorSlot(stack, consumers, target, type.slot, type, light);
+                consumers.draw();
+
+                CustomVertexConsumerProvider.clearRunnables();
+            }
+            else if (stackItem != null && !stackItem.isEmpty())
+            {
+                /* Fallback: render the item stack bound to the armor bone.
+                 * This improves compatibility for custom armor items that don't extend ArmorItem. */
+                CustomVertexConsumerProvider.hijackVertexFormat((l) -> RenderSystem.enableBlend());
+
+                consumers.setSubstitute(BBSRendering.getColorConsumer(color));
+
+                // Orient item similarly to hand items but without extra offsets
+                stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90F));
+                stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180F));
+
+                MinecraftClient.getInstance().getItemRenderer().renderItem(null, stackItem, ModelTransformationMode.FIXED, false, stack, consumers, target.getWorld(), light, overlay, 0);
+                consumers.draw();
+                consumers.setSubstitute(null);
+
+                CustomVertexConsumerProvider.clearRunnables();
+            }
 
             stack.pop();
 
