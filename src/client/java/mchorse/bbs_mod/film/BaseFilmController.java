@@ -154,7 +154,13 @@ public abstract class BaseFilmController
             Form root = FormUtils.getRoot(form);
             Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(entity, context.local ? null : context.bone, transition);
 
-            Matrix4f matrix = map.get(context.bone);
+            // Preferir el origen del hueso para dibujar ejes/gizmo en el pivot real
+            Matrix4f matrix = map.get(context.bone + "#origin");
+
+            if (matrix == null)
+            {
+                matrix = map.get(context.bone);
+            }
 
             if (matrix != null)
             {
@@ -260,7 +266,13 @@ public abstract class BaseFilmController
                 }
 
                 Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, transition);
-                Matrix4f matrix = map.get(anchor.attachment);
+                // Preferir el origen del hueso para anclajes en replays/overlays
+                Matrix4f matrix = map.get(anchor.attachment + "#origin");
+
+                if (matrix == null)
+                {
+                    matrix = map.get(anchor.attachment);
+                }
 
                 if (matrix != null)
                 {

@@ -13,16 +13,19 @@ import java.util.Objects;
 public class CubicMatrixRenderer implements ICubicRenderer
 {
     public List<Matrix4f> matrices;
+    public List<Matrix4f> origins;
     public String target;
 
     public CubicMatrixRenderer(Model model, String target)
     {
         this.matrices = new ArrayList<>();
+        this.origins = new ArrayList<>();
         this.target = target;
 
         for (int i = 0; i < model.getAllGroupKeys().size(); i++)
         {
             this.matrices.add(new Matrix4f());
+            this.origins.add(new Matrix4f());
         }
     }
 
@@ -31,6 +34,9 @@ public class CubicMatrixRenderer implements ICubicRenderer
     {
         ICubicRenderer.translateGroup(stack, group);
         ICubicRenderer.moveToGroupPivot(stack, group);
+
+        /* Capture matrix at the group's pivot before rotation/scale */
+        this.origins.get(group.index).set(stack.peek().getPositionMatrix());
 
         if (!Objects.equals(group.id, this.target))
         {

@@ -302,8 +302,11 @@ public class UIAnimationStateEditor extends UIElement
 
         Form root = FormUtils.getRoot(this.editor.form);
         Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), bone.b ? null : bone.a, transition);
-
-        Matrix4f matrix = map.get(bone.a);
+        Matrix4f matrix = map.get(bone.a + "#origin");
+        if (matrix == null)
+        {
+            matrix = map.get(bone.a);
+        }
 
         return matrix == null ? Matrices.EMPTY_4F : matrix;
     }

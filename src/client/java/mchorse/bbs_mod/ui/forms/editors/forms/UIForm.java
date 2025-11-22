@@ -54,7 +54,11 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
     {
         Form root = FormUtils.getRoot(this.form);
         Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), local ? null : path, transition);
-        Matrix4f matrix = map.get(path);
+        Matrix4f matrix = map.get(path + "#origin");
+        if (matrix == null)
+        {
+            matrix = map.get(path);
+        }
 
         return matrix == null ? Matrices.EMPTY_4F : matrix;
     }
