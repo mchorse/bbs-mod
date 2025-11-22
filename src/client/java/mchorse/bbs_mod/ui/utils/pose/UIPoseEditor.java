@@ -431,7 +431,7 @@ public class UIPoseEditor extends UIElement
         this.transform.setVisible(!groups.isEmpty());
 
         List<String> list = this.groups.getList();
-        int i = reset ? 0 : list.indexOf(lastLimb);
+        int i = Math.max(reset ? 0 : list.indexOf(lastLimb), 0);
 
         this.groups.setCurrentScroll(CollectionUtils.getSafe(list, i));
         this.pickBone(this.groups.getCurrentFirst());

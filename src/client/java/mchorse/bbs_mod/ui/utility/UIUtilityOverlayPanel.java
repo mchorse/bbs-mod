@@ -2,6 +2,8 @@ package mchorse.bbs_mod.ui.utility;
 
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
+import mchorse.bbs_mod.BBSResources;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.l10n.L10nUtils;
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -15,11 +17,14 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageFolderOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIStatusLogOverlayPanel;
 import mchorse.bbs_mod.ui.utility.audio.UIAudioEditorPanel;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
+import mchorse.bbs_mod.utils.resources.CDNAssetSyncService;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 
@@ -106,12 +111,76 @@ public class UIUtilityOverlayPanel extends UIOverlayPanel
         UIButton openAudioEditor = new UIButton(UIKeys.UTILITY_OPEN_AUDIO_EDITOR, (b) -> this.openAudioEditor());
         UIButton defaultCommands = new UIButton(UIKeys.UTILITY_EXECUTE_DEFAULT_COMMANDS, (b) -> this.executeDefaultCommands());
 
+        UIButton cdnDownload = new UIButton(UIKeys.GENERAL_DOWNLOAD, (b) ->
+        {
+            UIStatusLogOverlayPanel panel = new UIStatusLogOverlayPanel(UIKeys.CDN_DOWNLOADING_TITLE);
+
+            UIOverlay.addOverlay(this.getContext(), panel);
+
+            Thread thread = new Thread(() ->
+            {
+                BBSResources.stopWatchdog();
+
+                try
+                {
+                    CDNAssetSyncService syncService = new CDNAssetSyncService(BBSSettings.cdnUrl.get(), BBSMod.getAssetsFolder().toPath(), (p) ->
+                    {
+                        MinecraftClient.getInstance().execute(() -> panel.list.add(new Pair<>(p.a.color, p.b)));
+                    });
+
+                    syncService.syncOnce();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                BBSResources.setupWatchdog();
+                
+                MinecraftClient.getInstance().execute(() ->
+                {
+                    BBSModClient.getTextures().delete();
+                    BBSModClient.getSounds().deleteSounds();
+                    BBSModClient.getModels().reload();
+                });
+            }, "CDNDownloadThread");
+
+            thread.start();
+        });
+
+        UIButton cdnUpload = new UIButton(UIKeys.GENERAL_UPLOAD, (b) ->
+        {
+            UIStatusLogOverlayPanel panel = new UIStatusLogOverlayPanel(UIKeys.CDN_UPLOADING_TITLE);
+
+            UIOverlay.addOverlay(this.getContext(), panel);
+
+            Thread thread = new Thread(() ->
+            {
+                try
+                {
+                    CDNAssetSyncService syncService = new CDNAssetSyncService(BBSSettings.cdnUrl.get(), BBSMod.getAssetsFolder().toPath(), (p) ->
+                    {
+                        MinecraftClient.getInstance().execute(() -> panel.list.add(new Pair<>(p.a.color, p.b)));
+                    });
+
+                    syncService.pushChangedFiles(BBSSettings.cdnToken.get());
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }, "CDNUploadThread");
+
+            thread.start();
+        });
+
         this.view.add(UI.label(UIKeys.UTILITY_OPEN_FOLDER), UI.row(openGameDirectory, openModelsDirectory, openAudioDirectory).marginBottom(8));
         this.view.add(UI.label(UIKeys.UTILITY_RELOAD_LABEL), UI.row(textures, language, models, sounds, terrain));
         this.view.add(defaultCommands.marginBottom(8));
         this.view.add(UI.column(UI.label(UIKeys.UTILITY_RESIZE_WINDOW), UI.row(this.width, this.height)).marginBottom(8));
         this.view.add(UI.label(UIKeys.UTILITY_LANG_LABEL), UI.row(analyze, compile), langEditor.marginBottom(8));
-        this.view.add(UI.label(UIKeys.UTILITY_AUDIO), openAudioEditor);
+        this.view.add(UI.label(UIKeys.UTILITY_AUDIO), openAudioEditor.marginBottom(8));
+        this.view.add(UI.label(IKey.raw("CDN")), UI.row(cdnDownload, cdnUpload));
         this.content.add(this.view);
     }
 

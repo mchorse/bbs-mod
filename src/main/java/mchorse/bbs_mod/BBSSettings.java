@@ -79,6 +79,7 @@ public class BBSSettings
     public static ValueBoolean editorClipPreview;
     public static ValueBoolean editorRewind;
     public static ValueBoolean editorHorizontalClipEditor;
+    public static ValueBoolean editorMinutesBackup;
 
     public static ValueFloat recordingCountdown;
     public static ValueBoolean recordingSwipeDamage;
@@ -111,6 +112,9 @@ public class BBSSettings
     /* Pose track bone anchoring */
     public static ValueBoolean boneAnchoringEnabled;
     public static ValueBoolean anchorOverrideEnabled;
+
+    public static ValueString cdnUrl;
+    public static ValueString cdnToken;
 
     public static int primaryColor()
     {
@@ -221,6 +225,7 @@ public class BBSSettings
         editorClipPreview = builder.getBoolean("clip_preview", true);
         editorRewind = builder.getBoolean("rewind", true);
         editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
+        editorMinutesBackup = builder.getBoolean("minutes_backup", true);
 
         recordingCountdown = builder.category("recording").getFloat("countdown", 1.5F, 0F, 30F);
         recordingSwipeDamage = builder.getBoolean("swipe_damage", false);
@@ -259,5 +264,8 @@ public class BBSSettings
         builder.category("pose_track_selection");
         boneAnchoringEnabled = builder.getBoolean("bone_anchoring_enabled", false);
         anchorOverrideEnabled = builder.getBoolean("anchor_override_enabled", false);
+        builder.category("cdn");
+        cdnUrl = builder.getString("url", "");
+        cdnToken = builder.getString("token", "");
     }
 }

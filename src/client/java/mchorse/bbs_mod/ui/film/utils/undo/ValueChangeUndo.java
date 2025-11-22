@@ -37,7 +37,7 @@ public class ValueChangeUndo extends FilmEditorUndo
 
     public void cacheAfter(UIElement editor)
     {
-        this.uiAfter = editor.getRoot().collectAllUndoData();
+        this.uiAfter = editor.getRoot() == null ? new MapType() : editor.getRoot().collectAllUndoData();
     }
 
     public DataPath getName()

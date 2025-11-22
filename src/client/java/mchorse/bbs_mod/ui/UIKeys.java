@@ -186,6 +186,15 @@ public class UIKeys
     public static final IKey CAMERA_TOOLTIPS_OPEN_VIDEOS = L10n.lang("bbs.ui.camera.tooltips.open_videos");
     public static final IKey CAMERA_TOOLTIPS_OPEN_VIDEO_SETTINGS = L10n.lang("bbs.ui.camera.tooltips.open_video_settings");
     public static final IKey CAMERA_TOOLTIPS_RECORD = L10n.lang("bbs.ui.camera.tooltips.record");
+    public static final IKey CDN_DOWNLOADING_TITLE = L10n.lang("bbs.ui.cdn.downloading-title");
+    public static final IKey CDN_STATUS_DELETED = L10n.lang("bbs.ui.cdn.status.deleted");
+    public static final IKey CDN_STATUS_DOWNLOADED = L10n.lang("bbs.ui.cdn.status.downloaded");
+    public static final IKey CDN_STATUS_FAILED_DOWNLOADING = L10n.lang("bbs.ui.cdn.status.failed_downloading");
+    public static final IKey CDN_STATUS_FAILED_FETCH = L10n.lang("bbs.ui.cdn.status.failed_fetch");
+    public static final IKey CDN_STATUS_SUCCESS_DOWNLOADING = L10n.lang("bbs.ui.cdn.status.success_downloading");
+    public static final IKey CDN_STATUS_SUCCESS_UPLOADING = L10n.lang("bbs.ui.cdn.status.success_uploading");
+    public static final IKey CDN_STATUS_UPLOADED = L10n.lang("bbs.ui.cdn.status.uploaded");
+    public static final IKey CDN_UPLOADING_TITLE = L10n.lang("bbs.ui.cdn.uploading-title");
     public static final IKey COLOR_CONTEXT_FAVORITES_ADD = L10n.lang("bbs.ui.color.context.favorites.add");
     public static final IKey COLOR_CONTEXT_FAVORITES_REMOVE = L10n.lang("bbs.ui.color.context.favorites.remove");
     public static final IKey COLOR_FAVORITE = L10n.lang("bbs.ui.color.favorite");
@@ -446,6 +455,7 @@ public class UIKeys
     public static final IKey GENERAL_CLOSE = L10n.lang("bbs.ui.close");
     public static final IKey GENERAL_CONFIRM = L10n.lang("bbs.ui.confirm");
     public static final IKey GENERAL_COPY = L10n.lang("bbs.ui.copy");
+    public static final IKey GENERAL_DOWNLOAD = L10n.lang("bbs.ui.download");
     public static final IKey GENERAL_DUPE = L10n.lang("bbs.ui.dupe");
     public static final IKey GENERAL_EDIT = L10n.lang("bbs.ui.edit");
     public static final IKey GENERAL_ERROR = L10n.lang("bbs.ui.error");
@@ -464,6 +474,7 @@ public class UIKeys
     public static final IKey GENERAL_SAVE = L10n.lang("bbs.ui.save");
     public static final IKey GENERAL_SEARCH = L10n.lang("bbs.ui.search");
     public static final IKey GENERAL_SUCCESS = L10n.lang("bbs.ui.success");
+    public static final IKey GENERAL_UPLOAD = L10n.lang("bbs.ui.download");
     public static final IKey GENERAL_WARNING = L10n.lang("bbs.ui.warning");
     public static final IKey GENERAL_X = IKey.constant("X");
     public static final IKey GENERAL_Y = IKey.constant("Y");

@@ -45,7 +45,7 @@ public class MapType extends BaseType implements Iterable<Map.Entry<String, Base
 
     public void put(String key, BaseType type)
     {
-        if (type == null)
+        if (key == null || type == null)
         {
             return;
         }

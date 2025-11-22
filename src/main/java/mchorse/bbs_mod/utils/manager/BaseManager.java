@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.utils.manager;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.StringUtils;
@@ -60,16 +61,26 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
     @Override
     public boolean save(String id, MapType data)
     {
+        File file = this.getFile(id);
+
         try
         {
-            File file = this.getFile(id);
-
             if (this.backUps)
             {
                 String path = file.getParentFile().getAbsolutePath();
-                String backupFileName = new SimpleDateFormat("yyyy_MM_dd_HH").format(new Date());
+                Date date = new Date();
+                String backupFileName = new SimpleDateFormat("yyyy_MM_dd_HH").format(date);
+
+                if (BBSSettings.editorMinutesBackup.get())
+                {
+                    String minutes = new SimpleDateFormat("mm").format(date);
+                    int m = (int) Math.floor(Integer.parseInt(minutes) / 10F);
+
+                    backupFileName += "_" + m + "0";
+                }
+
                 String filename = StringUtils.fileName(id);
-                File backupFile = new File(path, "_" + StringUtils.removeExtension(filename) + "/" + filename + "." + backupFileName + ".dat");
+                File backupFile = new File(path, "_" + filename + "/" + filename + "." + backupFileName + this.getExtension());
 
                 backupFile.getParentFile().mkdirs();
 
@@ -78,7 +89,14 @@ public abstract class BaseManager <T extends ValueGroup> extends FolderManager<T
                     Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
+        try
+        {
             this.storage.save(file, data);
 
             return true;
