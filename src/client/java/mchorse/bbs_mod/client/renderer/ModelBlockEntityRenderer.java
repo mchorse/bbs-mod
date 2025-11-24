@@ -155,7 +155,7 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
             return false;
         }
 
-        if (!BBSSettings.renderAllModelBlocks.get())
+        if (!BBSSettings.modelBlocksRenderAll.get())
         {
             return false;
         }

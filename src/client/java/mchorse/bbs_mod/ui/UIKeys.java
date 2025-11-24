@@ -26,7 +26,6 @@ public class UIKeys
     public static final IKey ACTIONS_BLOCK_STATE = L10n.lang("bbs.ui.actions.block.state");
     public static final IKey ACTIONS_CHAT_MESSAGE = L10n.lang("bbs.ui.actions.chat.message");
     public static final IKey ACTIONS_COMMAND_COMMAND = L10n.lang("bbs.ui.actions.command.command");
-    public static final IKey ACTIONS_FORM_TRIGGER_PICK = L10n.lang("bbs.ui.actions.form_trigger.pick");
     public static final IKey ACTIONS_FREQUENCY = L10n.lang("bbs.ui.actions.frequency");
     public static final IKey ACTIONS_ITEM_MAIN_HAND = L10n.lang("bbs.ui.actions.item.main_hand");
     public static final IKey ACTIONS_ITEM_POSITION = L10n.lang("bbs.ui.actions.item.position");
@@ -334,6 +333,7 @@ public class UIKeys
     public static final IKey FORMS_CATEGORIES_REMOVE_CATEGORY_TITLE = L10n.lang("bbs.ui.forms.categories.remove_category-title");
     public static final IKey FORMS_CATEGORIES_RENAME_CATEGORY_DESCRIPTION = L10n.lang("bbs.ui.forms.categories.rename_category-description");
     public static final IKey FORMS_CATEGORIES_RENAME_CATEGORY_TITLE = L10n.lang("bbs.ui.forms.categories.rename_category-title");
+    public static final IKey FORMS_CATEGORIES_STRUCTURES = L10n.lang("bbs.ui.forms.categories.structures");
     public static final IKey FORMS_CROP_BOTTOM = L10n.lang("bbs.ui.forms.crop.bottom");
     public static final IKey FORMS_CROP_LEFT = L10n.lang("bbs.ui.forms.crop.left");
     public static final IKey FORMS_CROP_RIGHT = L10n.lang("bbs.ui.forms.crop.right");
@@ -390,6 +390,13 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_MOB_TITLE = L10n.lang("bbs.ui.forms.editors.mob.title");
     public static final IKey FORMS_EDITORS_MODEL_ACTIONS = L10n.lang("bbs.ui.forms.editors.model.actions");
     public static final IKey FORMS_EDITORS_MODEL_POSE = L10n.lang("bbs.ui.forms.editors.model.pose");
+    public static final IKey FORMS_EDITORS_STRUCTURE_LIGHT = L10n.lang("bbs.ui.forms.editors.structure.light");
+    public static final IKey FORMS_EDITORS_STRUCTURE_LIGHT_INTENSITY = L10n.lang("bbs.ui.forms.editors.structure.light_intensity");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PICK_BIOME = L10n.lang("bbs.ui.forms.editors.structure.pick_biome");
+    public static final IKey FORMS_EDITORS_STRUCTURE_PICK_STRUCTURE = L10n.lang("bbs.ui.forms.editors.structure.pick_structure");
+    public static final IKey FORMS_EDITORS_STRUCTURE_SAVE_STRUCTURE = L10n.lang("bbs.ui.forms.editors.structure.save_structure");
+    public static final IKey FORMS_EDITORS_STRUCTURE_SAVE_STRUCTURE_NOTIFICATION = L10n.lang("bbs.ui.forms.editors.structure.save_structure-notification");
+    public static final IKey FORMS_EDITORS_STRUCTURE_TITLE = L10n.lang("bbs.ui.forms.editors.structure.title");
     public static final IKey FORMS_EDITORS_TRAIL_LENGTH = L10n.lang("bbs.ui.forms.editors.trail.length");
     public static final IKey FORMS_EDITORS_TRAIL_LOOP = L10n.lang("bbs.ui.forms.editors.trail.loop");
     public static final IKey FORMS_EDITORS_TRAIL_TITLE = L10n.lang("bbs.ui.forms.editors.trail.title");
@@ -528,6 +535,7 @@ public class UIKeys
     public static final IKey IMPORTER_OGG = L10n.lang("bbs.ui.importer.ogg");
     public static final IKey IMPORTER_OLD_SKIN = L10n.lang("bbs.ui.importer.old_skin");
     public static final IKey IMPORTER_PNG = L10n.lang("bbs.ui.importer.png");
+    public static final IKey IMPORTER_STRUCTURE_NBT = L10n.lang("bbs.ui.importer.structure");
     public static final IKey IMPORTER_SUCCESS_NOTIFICATION = L10n.lang("bbs.ui.importer.success-notification");
     public static final IKey IMPORTER_WAV = L10n.lang("bbs.ui.importer.wav");
     public static final IKey IMPORTER_WEBP = L10n.lang("bbs.ui.importer.webp");

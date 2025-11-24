@@ -124,7 +124,8 @@ public class Wave
                 float floatValue = sample.getFloat();
 
                 /* Bit depth conversion for float */
-                floatValue = Math.max(-1.0f, Math.min(1.0f, floatValue));
+                floatValue = MathUtils.clamp(floatValue, -1F, 1F);
+
                 dataBuffer.putShort((short) (floatValue * Short.MAX_VALUE));
             }
             else
@@ -198,10 +199,9 @@ public class Wave
 
         /* Calculate sample rate ratio for conversion */
         float ratio = (float) wave.sampleRate / (float) this.sampleRate;
-        
-        
+
         /* Use linear interpolation for better quality when sample rates differ */
-        boolean useLinearInterpolation = Math.abs(ratio - 1.0f) > 0.01f;
+        boolean useLinearInterpolation = Math.abs(ratio - 1F) > 0.01F;
 
         /* Calculate step size based on channel count and sample rate ratio */
         int targetStep = this.numChannels * this.getBytesPerSample();

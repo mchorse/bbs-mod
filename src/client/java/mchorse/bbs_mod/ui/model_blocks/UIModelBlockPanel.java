@@ -340,7 +340,7 @@ public class UIModelBlockPanel extends UIDashboardPanel implements IFlightSuppor
             return true;
         }
 
-        if (this.hovered != null && context.mouseButton == 0 && BBSSettings.clickModelBlocks.get())
+        if (this.hovered != null && context.mouseButton == 0 && BBSSettings.modelBlocksClick.get())
         {
             this.fill(this.hovered, true);
         }

@@ -56,6 +56,7 @@ import mchorse.bbs_mod.forms.forms.LabelForm;
 import mchorse.bbs_mod.forms.forms.MobForm;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.forms.ParticleForm;
+import mchorse.bbs_mod.forms.forms.StructureForm;
 import mchorse.bbs_mod.forms.forms.TrailForm;
 import mchorse.bbs_mod.forms.forms.VanillaParticleForm;
 import mchorse.bbs_mod.items.GunItem;
@@ -67,6 +68,7 @@ import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.resources.packs.DynamicSourcePack;
 import mchorse.bbs_mod.resources.packs.ExternalAssetsSourcePack;
 import mchorse.bbs_mod.resources.packs.InternalAssetsSourcePack;
+import mchorse.bbs_mod.resources.packs.WorldStructuresSourcePack;
 import mchorse.bbs_mod.settings.Settings;
 import mchorse.bbs_mod.settings.SettingsBuilder;
 import mchorse.bbs_mod.settings.SettingsManager;
@@ -313,6 +315,11 @@ public class BBSMod implements ModInitializer
         return getGamePath("export");
     }
 
+    public static File getWorldFolder()
+    {
+        return worldFolder;
+    }
+
     public static ActionManager getActions()
     {
         return actions;
@@ -373,6 +380,7 @@ public class BBSMod implements ModInitializer
         originalSourcePack = new ExternalAssetsSourcePack(Link.ASSETS, assetsFolder).providesFiles();
         dynamicSourcePack = new DynamicSourcePack(originalSourcePack);
         provider = new AssetProvider();
+        provider.register(new WorldStructuresSourcePack());
         provider.register(dynamicSourcePack);
         provider.register(new InternalAssetsSourcePack());
 
@@ -390,7 +398,8 @@ public class BBSMod implements ModInitializer
             .register(Link.bbs("mob"), MobForm.class, null)
             .register(Link.bbs("vanilla_particles"), VanillaParticleForm.class, null)
             .register(Link.bbs("trail"), TrailForm.class, null)
-            .register(Link.bbs("framebuffer"), FramebufferForm.class, null);
+            .register(Link.bbs("framebuffer"), FramebufferForm.class, null)
+            .register(Link.bbs("structure"), StructureForm.class, null);;
 
         films = new FilmManager(() -> new File(worldFolder, "bbs/films"));
 
@@ -488,7 +497,7 @@ public class BBSMod implements ModInitializer
             }
         });
 
-        ServerLifecycleEvents.SERVER_STARTED.register((event) -> worldFolder = event.getSavePath(WorldSavePath.ROOT).toFile());
+        ServerLifecycleEvents.SERVER_STARTED.register((event) -> worldFolder = event.getSavePath(WorldSavePath.GENERATED).getParent().toFile());
         ServerPlayConnectionEvents.JOIN.register((a, b, c) -> ServerNetwork.sendHandshake(c, b));
 
         ActionHandler.registerHandlers(actions);
