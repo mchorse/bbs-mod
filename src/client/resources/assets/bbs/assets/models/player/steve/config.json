@@ -1,4 +1,5 @@
 {
+	"texture": "assets:models/player/steve/steve.png",
 	"procedural": true,
 	"culling": false,
 	"items_main": ["right_arm_item"],
