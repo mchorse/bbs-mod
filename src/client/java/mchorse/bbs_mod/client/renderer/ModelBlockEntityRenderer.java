@@ -5,16 +5,23 @@ import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
+import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.entity.ActorEntity;
 import mchorse.bbs_mod.forms.FormUtilsClient;
+import mchorse.bbs_mod.forms.entities.IEntity;
+import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.forms.MobForm;
+import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
+import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.mixin.client.EntityRendererDispatcherInvoker;
 import mchorse.bbs_mod.ui.dashboard.UIDashboard;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.ui.framework.UIScreen;
 import mchorse.bbs_mod.ui.model_blocks.UIModelBlockPanel;
+import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.client.MinecraftClient;
@@ -26,6 +33,12 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockEntity>
 {
@@ -65,6 +78,23 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
         matrices.pop();
     }
 
+    private static float getHeadYaw(float constraint, float yawDelta, float travel)
+    {
+        float headLimit = (float) Math.toRadians(constraint);
+        float headYawBase = MathUtils.clamp(yawDelta, -headLimit, headLimit);
+
+        float syncStart = (float) Math.toRadians(315D);
+        float syncRange = (float) Math.toRadians(45D);
+        float t = 0F;
+
+        if (travel >= syncStart)
+        {
+            t = Math.min(1F, (travel - syncStart) / syncRange);
+        }
+
+        return headYawBase * (1F - t);
+    }
+
     public ModelBlockEntityRenderer(BlockEntityRendererFactory.Context ctx)
     {}
 
@@ -77,6 +107,7 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
     @Override
     public void render(ModelBlockEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay)
     {
+        MinecraftClient mc = MinecraftClient.getInstance();
         ModelProperties properties = entity.getProperties();
         Transform transform = properties.getTransform();
         BlockPos pos = entity.getPos();
@@ -88,10 +119,27 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
         {
             matrices.push();
 
-            MatrixStackUtils.applyTransform(matrices, transform);
+            Transform applied = transform;
+
+            if (properties.isLookAt())
+            {
+                applied = this.applyLookingAnimation(mc, entity, properties, tickDelta);
+            }
+            else
+            {
+                IEntity iEntity = entity.getEntity();
+
+                entity.resetLookYaw();
+                iEntity.setHeadYaw(0F);
+                iEntity.setPrevHeadYaw(0F);
+                iEntity.setPitch(0F);
+                iEntity.setPrevPitch(0F);
+            }
+
+            MatrixStackUtils.applyTransform(matrices, applied);
 
             int lightAbove = WorldRenderer.getLightmapCoordinates(entity.getWorld(), pos.add((int) transform.translate.x, (int) transform.translate.y, (int) transform.translate.z));
-            Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+            Camera camera = mc.gameRenderer.getCamera();
 
             RenderSystem.enableDepthTest();
             FormUtilsClient.render(properties.getForm(), new FormRenderingContext()
@@ -112,7 +160,7 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
 
         RenderSystem.disableDepthTest();
 
-        if (MinecraftClient.getInstance().getDebugHud().shouldShowDebugHud())
+        if (mc.getDebugHud().shouldShowDebugHud())
         {
             Draw.renderBox(matrices, -0.5D, 0, -0.5D, 1, 1, 1, 0, 0.5F, 1F, 0.5F);
         }
@@ -132,10 +180,99 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
         }
     }
 
+    private Transform applyLookingAnimation(MinecraftClient mc, ModelBlockEntity entity, ModelProperties properties, float tickDelta)
+    {
+        Transform transform = properties.getTransform();
+        Camera camera = mc.gameRenderer.getCamera();
+        Vec3d position = !mc.options.getPerspective().isFirstPerson() && mc.player != null
+            ? mc.player.getCameraPosVec(tickDelta)
+            : camera.getPos();
+
+        BlockPos pos = entity.getPos();
+        double x = pos.getX() + 0.5D + transform.translate.x;
+        double y = pos.getY() + transform.translate.y;
+        double z = pos.getZ() + 0.5D + transform.translate.z;
+
+        double dx = position.x - x;
+        double dz = position.z - z;
+        double distance = Math.sqrt(dx * dx + dz * dz);
+
+        float initialYaw = transform.rotate.y;
+        float yaw = (float) Math.atan2(dx, dz);
+        float yawContinuous = entity.updateLookYawContinuous(yaw);
+        float yawDelta = yawContinuous - initialYaw;
+        float travel = Math.abs(yawDelta) % (MathUtils.PI * 2F);
+
+        Transform finalTransform = transform.copy();
+        Form form = properties.getForm();
+        boolean lookAt = form instanceof MobForm;
+        float headHeight = form.hitboxHeight.get() * form.hitboxEyeHeight.get() * finalTransform.scale.y;
+        float constraint = 45F;
+        boolean isPitching = true;
+
+        if (form instanceof ModelForm modelForm)
+        {
+            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+            if (model != null && model.view != null)
+            {
+                String headKey = model.view.headBone;
+
+                lookAt = true;
+                constraint = model.view.constraint;
+                isPitching = model.view.pitch;
+
+                if (FormUtilsClient.getBones(modelForm).contains(headKey))
+                {
+                    Map<String, Matrix4f> matrices = new HashMap<>();
+
+                    model.captureMatrices(matrices, headKey);
+
+                    Matrix4f matrix = matrices.get(headKey);
+
+                    if (matrix != null)
+                    {
+                        headHeight = matrix.getTranslation(new Vector3f()).y * finalTransform.scale.y;
+                    }
+                }
+            }
+        }
+
+        finalTransform.rotate.y = yawContinuous;
+
+        if (lookAt)
+        {
+            IEntity iEntity = entity.getEntity();
+            double deltaHead = position.y - (y + headHeight);
+            float pitch = MathUtils.clamp((float) Math.atan2(deltaHead, distance), -MathUtils.PI / 2F, MathUtils.PI / 2F);
+            float headYaw = getHeadYaw(constraint, yawDelta, travel);
+            float anchorYaw = yawDelta - headYaw;
+
+            if (travel >= (float) Math.toRadians(359D))
+            {
+                headYaw = 0F;
+                anchorYaw = 0F;
+
+                entity.snapLookYawToBase(yaw, initialYaw);
+            }
+
+            finalTransform.rotate.y = initialYaw + anchorYaw;
+            headYaw = -MathUtils.toDeg(headYaw);
+            pitch = -MathUtils.toDeg(isPitching ? pitch : 0F);
+
+            iEntity.setHeadYaw(headYaw);
+            iEntity.setPrevHeadYaw(headYaw);
+            iEntity.setPitch(pitch);
+            iEntity.setPrevPitch(pitch);
+        }
+
+        return finalTransform;
+    }
+
     @Override
     public int getRenderDistance()
     {
-        return 196;
+        return 512;
     }
 
     private boolean canRenderAxes(ModelBlockEntity entity)

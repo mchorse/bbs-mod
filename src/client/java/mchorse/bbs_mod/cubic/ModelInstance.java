@@ -7,6 +7,7 @@ import mchorse.bbs_mod.cubic.data.model.Model;
 import mchorse.bbs_mod.cubic.data.model.ModelGroup;
 import mchorse.bbs_mod.cubic.model.ArmorSlot;
 import mchorse.bbs_mod.cubic.model.ArmorType;
+import mchorse.bbs_mod.cubic.model.View;
 import mchorse.bbs_mod.cubic.model.bobj.BOBJModel;
 import mchorse.bbs_mod.cubic.render.CubicCubeRenderer;
 import mchorse.bbs_mod.cubic.render.CubicMatrixRenderer;
@@ -58,6 +59,8 @@ public class ModelInstance implements IModelInstance
     public boolean culling = true;
     public boolean onCpu;
     public String anchorGroup = "";
+
+    public View view;
 
     public Vector3f scale = new Vector3f(1F);
     public float uiScale = 1F;
@@ -208,6 +211,14 @@ public class ModelInstance implements IModelInstance
             this.fpOffhand = new ArmorSlot();
             this.fpOffhand.fromData(config.get("fp_offhand"));
         }
+
+        /* Optional look-at configuration */
+        if (config.has("look_at", BaseType.TYPE_MAP))
+        {
+            this.view = new View();
+
+            this.view.fromData(config.getMap("look_at"));
+        }
     }
 
     public void setup()
@@ -299,6 +310,18 @@ public class ModelInstance implements IModelInstance
 
                 value.rotateY(MathUtils.PI).mul(orderedBone.mat);
                 bones.put(orderedBone.name, value);
+
+                /* Origin matrix for BOBJ bones: parent transform + translation (no bone rotation/scale) */
+                Matrix4f origin = new Matrix4f();
+                origin.rotateY(MathUtils.PI);
+
+                if (orderedBone.parentBone != null)
+                {
+                    origin.mul(new Matrix4f(orderedBone.parentBone.mat));
+                }
+
+                origin.translate(orderedBone.transform.translate);
+                bones.put(orderedBone.name + "#origin", origin);
             }
         }
     }

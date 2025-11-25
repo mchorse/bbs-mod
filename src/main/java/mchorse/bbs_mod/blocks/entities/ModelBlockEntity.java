@@ -24,6 +24,9 @@ public class ModelBlockEntity extends BlockEntity
     private ModelProperties properties = new ModelProperties();
     private IEntity entity = new StubEntity();
 
+    private float lastYaw = Float.NaN;
+    private float currentYaw = Float.NaN;
+
     public ModelBlockEntity(BlockPos pos, BlockState state)
     {
         super(BBSMod.MODEL_BLOCK_ENTITY, pos, state);
@@ -51,6 +54,43 @@ public class ModelBlockEntity extends BlockEntity
     public IEntity getEntity()
     {
         return this.entity;
+    }
+
+    public void setLookYaw(float yaw)
+    {
+        this.lastYaw = yaw;
+        this.currentYaw = yaw;
+    }
+
+    public float updateLookYawContinuous(float yaw)
+    {
+        if (Float.isNaN(this.currentYaw))
+        {
+            this.setLookYaw(yaw);
+
+            return this.currentYaw;
+        }
+
+        float diff = yaw - this.lastYaw;
+
+        while (diff > Math.PI) diff -= (float) (Math.PI * 2);
+        while (diff < -Math.PI) diff += (float) (Math.PI * 2);
+
+        this.currentYaw += diff;
+        this.lastYaw = yaw;
+
+        return this.currentYaw;
+    }
+
+    public void resetLookYaw()
+    {
+        this.lastYaw = this.currentYaw = Float.NaN;
+    }
+
+    public void snapLookYawToBase(float lastYaw, float currentYaw)
+    {
+        this.lastYaw = lastYaw;
+        this.currentYaw = currentYaw;
     }
 
     public void tick(World world, BlockPos pos, BlockState state)

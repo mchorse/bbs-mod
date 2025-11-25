@@ -23,6 +23,7 @@ public class ModelProperties implements IMapSerializable
     private boolean enabled = true;
     private boolean global;
     private boolean shadow;
+    private boolean lookAt;
 
     public Form getForm()
     {
@@ -124,6 +125,16 @@ public class ModelProperties implements IMapSerializable
         this.shadow = shadow;
     }
 
+    public boolean isLookAt()
+    {
+        return this.lookAt;
+    }
+
+    public void setLookAt(boolean lookAt)
+    {
+        this.lookAt = lookAt;
+    }
+
     public Form getForm(ModelTransformationMode mode)
     {
         Form form = this.form;
@@ -180,6 +191,7 @@ public class ModelProperties implements IMapSerializable
         if (data.has("enabled")) this.enabled = data.getBool("enabled");
         this.shadow = data.getBool("shadow");
         this.global = data.getBool("global");
+        this.lookAt = data.getBool("look_at");
     }
 
     @Override
@@ -198,6 +210,7 @@ public class ModelProperties implements IMapSerializable
         data.putBool("enabled", this.enabled);
         data.putBool("shadow", this.shadow);
         data.putBool("global", this.global);
+        data.putBool("look_at", this.lookAt);
     }
 
     public void update(IEntity entity)
