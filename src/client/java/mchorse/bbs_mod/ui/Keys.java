@@ -103,7 +103,7 @@ public class Keys
     public static final KeyCombo TRANSFORMATIONS_Y = new KeyCombo("y", UIKeys.GENERAL_Y, GLFW.GLFW_KEY_Y).categoryKey("transformations");
     public static final KeyCombo TRANSFORMATIONS_Z = new KeyCombo("z", UIKeys.GENERAL_Z, GLFW.GLFW_KEY_Z).categoryKey("transformations");
     public static final KeyCombo TRANSFORMATIONS_TOGGLE_AXES = new KeyCombo("toggle_axes", UIKeys.TRANSFORMS_KEYS_TOGGLE_AXES, GLFW.GLFW_KEY_F8).categoryKey("transformations");
-    public static final KeyCombo TRANSFORMATIONS_CYCLE_GIZMO = new KeyCombo("cycle_gizmo", UIKeys.TRANSFORMS_KEYS_CYCLE_GIZMO, GLFW.GLFW_KEY_U).categoryKey("transformations");
+    /* Moved cycle gizmo to Gizmos category (U) */
 
     /* Film controller */
     public static final KeyCombo FILM_CONTROLLER_START_RECORDING = new KeyCombo("start_recording", UIKeys.FILM_CONTROLLER_KEYS_START_RECORDING, GLFW.GLFW_KEY_R, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("film_controller");
@@ -140,4 +140,11 @@ public class Keys
     
     /* Gizmos */
     public static final KeyCombo GIZMOS_TOGGLE_ROTATION_CHANNEL = new KeyCombo("toggle_rotation_channel", UIKeys.GIZMOS_KEYS_TOGGLE_ROTATION_CHANNEL, GLFW.GLFW_KEY_Q).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_TOGGLE_ENABLED = new KeyCombo("toggle_enabled", UIKeys.GIZMOS_KEYS_TOGGLE_ENABLED, GLFW.GLFW_KEY_U).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_TRANSLATE = new KeyCombo("translate", UIKeys.GIZMOS_KEYS_TRANSLATE, GLFW.GLFW_KEY_G).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_ROTATE = new KeyCombo("rotate", UIKeys.GIZMOS_KEYS_ROTATE, GLFW.GLFW_KEY_R).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_SCALE = new KeyCombo("scale", UIKeys.GIZMOS_KEYS_SCALE, GLFW.GLFW_KEY_S).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_PIVOT = new KeyCombo("pivot", UIKeys.GIZMOS_KEYS_PIVOT, GLFW.GLFW_KEY_P).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_FREE_ROTATE_XY = new KeyCombo("free_rotate_xy", UIKeys.GIZMOS_KEYS_FREE_ROTATE_XY, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_FREE_ROTATE_ZY = new KeyCombo("free_rotate_zy", UIKeys.GIZMOS_KEYS_FREE_ROTATE_ZY, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("gizmos");
 }

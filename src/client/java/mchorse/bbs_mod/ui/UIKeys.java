@@ -962,6 +962,13 @@ public class UIKeys
     public static final IKey WORLD_KEYS_CYCLE_PANELS = L10n.lang("bbs.ui.world.keys.cycle_panels");
     public static final IKey GIZMOS_KEYS_CATEGORY = L10n.lang("bbs.ui.gizmos.keys.category");
     public static final IKey GIZMOS_KEYS_TOGGLE_ROTATION_CHANNEL = L10n.lang("bbs.ui.gizmos.keys.toggle_rotation_channel");
+    public static final IKey GIZMOS_KEYS_TOGGLE_ENABLED = L10n.lang("bbs.ui.gizmos.keys.toggle_enabled");
+    public static final IKey GIZMOS_KEYS_TRANSLATE = L10n.lang("bbs.ui.gizmos.keys.translate");
+    public static final IKey GIZMOS_KEYS_ROTATE = L10n.lang("bbs.ui.gizmos.keys.rotate");
+    public static final IKey GIZMOS_KEYS_SCALE = L10n.lang("bbs.ui.gizmos.keys.scale");
+    public static final IKey GIZMOS_KEYS_PIVOT = L10n.lang("bbs.ui.gizmos.keys.pivot");
+    public static final IKey GIZMOS_KEYS_FREE_ROTATE_XY = L10n.lang("bbs.ui.gizmos.keys.free_rotate_xy");
+    public static final IKey GIZMOS_KEYS_FREE_ROTATE_ZY = L10n.lang("bbs.ui.gizmos.keys.free_rotate_zy");
     /* Gizmo design mode labels */
     public static final IKey GIZMOS_DESIGN_DEFAULT = L10n.lang("bbs.gizmos.design.default");
     public static final IKey GIZMOS_DESIGN_CLASSIC = L10n.lang("bbs.gizmos.design.classic");

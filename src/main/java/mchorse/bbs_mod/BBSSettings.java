@@ -250,13 +250,13 @@ public class BBSSettings
         /* Activado: visibilidad/uso de gizmos 3D */
         modelBlockGizmosEnabled = builder.getBoolean("enabled", false);
         /* Gizmo dinámico: escala según distancia */
-        gizmoDynamic = builder.getBoolean("dynamic", true);
+        gizmoDynamic = builder.getBoolean("dynamic", false);
         /* Escala de gizmo: usado cuando dinámico está apagado */
         gizmoScale = builder.getFloat("scale", 1F, 0.1F, 4F);
         /* Diseño del gizmo (int con modos) */
         gizmoDesign = builder.getInt("design", 0);
         /* Planos de desplazamiento visibles */
-        gizmoPlanes = builder.getBoolean("planes", true);
+        gizmoPlanes = builder.getBoolean("planes", false);
 
 
         /* Estructuras: modo de renderizado */

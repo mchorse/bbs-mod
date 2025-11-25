@@ -140,12 +140,12 @@ public class UIPropTransform extends UITransform
 
     public UIPropTransform enableHotkeys()
     {
-        IKey category = UIKeys.TRANSFORMS_KEYS_CATEGORY;
+        IKey category = UIKeys.GIZMOS_KEYS_CATEGORY;
         Supplier<Boolean> active = () -> this.editing;
 
         /* Cuando el toggle de Gizmos está ON, las teclas T/R/S cambian el modo del gizmo
          * y se desactiva el flujo de edición por teclado/ratón de UIPropTransform. */
-        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, () ->
+        this.keys().register(Keys.GIZMOS_TRANSLATE, () ->
         {
             if (BBSSettings.modelBlockGizmosEnabled.get())
             {
@@ -157,7 +157,7 @@ public class UIPropTransform extends UITransform
             }
         }).category(category);
 
-        this.keys().register(Keys.TRANSFORMATIONS_SCALE, () ->
+        this.keys().register(Keys.GIZMOS_SCALE, () ->
         {
             if (BBSSettings.modelBlockGizmosEnabled.get())
             {
@@ -169,7 +169,7 @@ public class UIPropTransform extends UITransform
             }
         }).category(category);
 
-        this.keys().register(Keys.TRANSFORMATIONS_ROTATE, () ->
+        this.keys().register(Keys.GIZMOS_ROTATE, () ->
         {
             if (BBSSettings.modelBlockGizmosEnabled.get())
             {
@@ -182,7 +182,7 @@ public class UIPropTransform extends UITransform
         }).category(category);
 
         /* Alternar modo de gizmo (ciclo entre Trasladar/Escalar/Rotar) */
-        this.keys().register(Keys.TRANSFORMATIONS_CYCLE_GIZMO, () ->
+        this.keys().register(Keys.GIZMOS_TOGGLE_ENABLED, () ->
         {
             if (BBSSettings.modelBlockGizmosEnabled.get())
             {
@@ -193,6 +193,15 @@ public class UIPropTransform extends UITransform
                 this.enableMode((this.mode + 1) % 3);
             }
         }).category(category);
+
+        /* Pivote (solo cuando gizmos están activados) */
+        this.keys().register(Keys.GIZMOS_PIVOT, () ->
+        {
+            if (BBSSettings.modelBlockGizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.PIVOT);
+            }
+        }).active(() -> BBSSettings.modelBlockGizmosEnabled.get()).category(UIKeys.GIZMOS_KEYS_CATEGORY);
 
         /* Toggle entre canal de rotación principal (R) y secundario (R2) para el gizmo */
         this.keys().register(Keys.GIZMOS_TOGGLE_ROTATION_CHANNEL, () ->
@@ -206,9 +215,9 @@ public class UIPropTransform extends UITransform
         /* Las teclas de eje X/Y/Z solo aplican cuando se está editando
          * y los gizmos están desactivados (flujo clásico). */
         Supplier<Boolean> axisActive = () -> this.editing && !BBSSettings.modelBlockGizmosEnabled.get();
-        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(axisActive).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(axisActive).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(axisActive).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(axisActive).category(UIKeys.TRANSFORMS_KEYS_CATEGORY);
+        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(axisActive).category(UIKeys.TRANSFORMS_KEYS_CATEGORY);
+        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(axisActive).category(UIKeys.TRANSFORMS_KEYS_CATEGORY);
 
         return this;
     }
