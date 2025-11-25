@@ -7,6 +7,8 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.UIRenderingContext;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.Keys;
+import mchorse.bbs_mod.ui.utils.keys.KeyCombo;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -158,8 +160,8 @@ public class BoneGizmoSystem
             this.lastY = input.mouseY;
             this.accumDx = 0F;
             this.accumDy = 0F;
-            this.lastCtrlPressedWhileDragging = Window.isCtrlPressed();
-            this.lastShiftPressedWhileDragging = Window.isShiftPressed();
+            this.lastCtrlPressedWhileDragging = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+            this.lastShiftPressedWhileDragging = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
             if (this.target != null && this.target.getTransform() != null)
             {
                 this.dragStart.copy(this.target.getTransform());
@@ -231,8 +233,8 @@ public class BoneGizmoSystem
             /* If CTRL/SHIFT state toggled mid-drag, rebase rotation start to current values
              * so free-rotation edits are preserved when switching modes. SHIFT only matters
              * for free rotation when CTRL is held. */
-            boolean ctrlNow = Window.isCtrlPressed();
-            boolean shiftNow = Window.isShiftPressed();
+            boolean ctrlNow = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+            boolean shiftNow = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
             boolean ctrlChanged = ctrlNow != this.lastCtrlPressedWhileDragging;
             boolean shiftChanged = ctrlNow && (shiftNow != this.lastShiftPressedWhileDragging);
             if (ctrlChanged || shiftChanged)
@@ -352,24 +354,24 @@ public class BoneGizmoSystem
                     rz = (float) Math.toDegrees(this.dragStart.rotate.z);
                 }
 
-                /* Rotación libre basada en vista con CTRL: combinar yaw/pitch usando
-                 * acumulado de mouse para acumular correctamente durante el arrastre. */
-                if (Window.isCtrlPressed())
+                /* Rotación libre basada en combos configurables (Keybinds): CTRL o CTRL+SHIFT
+                 * usando acumulado de mouse para conservar continuidad durante el arrastre. */
+                boolean xyHeld = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+                boolean zyHeld = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
+
+                if (zyHeld)
                 {
-                    if (Window.isShiftPressed())
-                    {
-                        float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z (roll)
-                        float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
-                        rz = rz + zDelta;
-                        ry = ry + yDelta;
-                    }
-                    else
-                    {
-                        float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y (yaw)
-                        float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X (pitch)
-                        ry = ry + yDelta;
-                        rx = rx + xDelta;
-                    }
+                    float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z (roll)
+                    float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
+                    rz = rz + zDelta;
+                    ry = ry + yDelta;
+                }
+                else if (xyHeld)
+                {
+                    float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y (yaw)
+                    float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X (pitch)
+                    ry = ry + yDelta;
+                    rx = rx + xDelta;
                 }
                 else
                 {
@@ -475,8 +477,8 @@ public class BoneGizmoSystem
                     this.lastY = input.mouseY;
                     this.accumDx = 0F;
                     this.accumDy = 0F;
-                    this.lastCtrlPressedWhileDragging = Window.isCtrlPressed();
-                    this.lastShiftPressedWhileDragging = Window.isShiftPressed();
+                    this.lastCtrlPressedWhileDragging = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+                    this.lastShiftPressedWhileDragging = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
                     if (this.target != null && this.target.getTransform() != null)
                     {
                         this.dragStart.copy(this.target.getTransform());
@@ -537,9 +539,9 @@ public class BoneGizmoSystem
 
                 if (this.dragging && this.target != null && this.target.getTransform() != null)
                 {
-                    /* Rebase rotation start if CTRL/SHIFT toggled mid-drag to preserve free-rotation edits */
-                    boolean ctrlNow = Window.isCtrlPressed();
-                    boolean shiftNow = Window.isShiftPressed();
+                    /* Rebase rotation start if configurable combos toggled mid-drag to preserve free-rotation edits */
+                    boolean ctrlNow = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+                    boolean shiftNow = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
                     boolean ctrlChanged = ctrlNow != this.lastCtrlPressedWhileDragging;
                     boolean shiftChanged = ctrlNow && (shiftNow != this.lastShiftPressedWhileDragging);
                     if (ctrlChanged || shiftChanged)
@@ -650,25 +652,22 @@ public class BoneGizmoSystem
                             rz = (float) Math.toDegrees(this.dragStart.rotate.z);
                         }
 
-                        if (Window.isCtrlPressed())
+                        boolean xyHeld = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+                        boolean zyHeld = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
+
+                        if (zyHeld)
                         {
-                            /* Combinaciones:
-                             * - CTRL        -> XY (horizontal->Y, vertical->X)
-                             * - CTRL+SHIFT  -> ZY (horizontal->Z, vertical->Y) */
-                            if (Window.isShiftPressed())
-                            {
-                                float zDelta = this.accumDx * factor * 10F;    // Z
-                                float yDelta = -this.accumDy * factor * 10F;   // Y
-                                rz = rz + zDelta;
-                                ry = ry + yDelta;
-                            }
-                            else
-                            {
-                                float yDelta = this.accumDx * factor * 10F;    // Y
-                                float xDelta = -this.accumDy * factor * 10F;   // X
-                                ry = ry + yDelta;
-                                rx = rx + xDelta;
-                            }
+                            float zDelta = this.accumDx * factor * 10F;    // Z
+                            float yDelta = -this.accumDy * factor * 10F;   // Y
+                            rz = rz + zDelta;
+                            ry = ry + yDelta;
+                        }
+                        else if (xyHeld)
+                        {
+                            float yDelta = this.accumDx * factor * 10F;    // Y
+                            float xDelta = -this.accumDy * factor * 10F;   // X
+                            ry = ry + yDelta;
+                            rx = rx + xDelta;
                         }
                         else
                         {
@@ -1015,24 +1014,22 @@ public class BoneGizmoSystem
                     rz = (float) Math.toDegrees(this.dragStart.rotate.z);
                 }
 
-                /* Rotación libre desde la vista con CTRL: combina yaw/pitch usando dx/dy.
-                 * En 3D se siente natural porque el gizmo está en el pivote del hueso. */
-                if (Window.isCtrlPressed())
+                boolean xyHeld3D = isComboHeld(Keys.GIZMOS_FREE_ROTATE_XY);
+                boolean zyHeld3D = isComboHeld(Keys.GIZMOS_FREE_ROTATE_ZY);
+
+                if (zyHeld3D)
                 {
-                    if (Window.isShiftPressed())
-                    {
-                        float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z
-                        float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
-                        rz = rz + zDelta;
-                        ry = ry + yDelta;
-                    }
-                    else
-                    {
-                        float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y
-                        float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X
-                        ry = ry + yDelta;
-                        rx = rx + xDelta;
-                    }
+                    float zDelta = this.accumDx * factor * 10F;    // horizontal -> Z
+                    float yDelta = -this.accumDy * factor * 10F;   // vertical   -> Y
+                    rz = rz + zDelta;
+                    ry = ry + yDelta;
+                }
+                else if (xyHeld3D)
+                {
+                    float yDelta = this.accumDx * factor * 10F;    // horizontal -> Y
+                    float xDelta = -this.accumDy * factor * 10F;   // vertical   -> X
+                    ry = ry + yDelta;
+                    rx = rx + xDelta;
                 }
                 else
                 {
@@ -1054,6 +1051,25 @@ public class BoneGizmoSystem
         }
 
         this.lastMouseDown = mouseDown;
+    }
+
+    /** Returns true when all keys in the combo are currently held down. */
+    private boolean isComboHeld(KeyCombo combo)
+    {
+        if (combo == null)
+        {
+            return false;
+        }
+
+        for (int key : combo.keys)
+        {
+            if (!Window.isKeyPressed(key))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private float clampScale(float v)

@@ -146,5 +146,5 @@ public class Keys
     public static final KeyCombo GIZMOS_SCALE = new KeyCombo("scale", UIKeys.GIZMOS_KEYS_SCALE, GLFW.GLFW_KEY_S).categoryKey("gizmos");
     public static final KeyCombo GIZMOS_PIVOT = new KeyCombo("pivot", UIKeys.GIZMOS_KEYS_PIVOT, GLFW.GLFW_KEY_P).categoryKey("gizmos");
     public static final KeyCombo GIZMOS_FREE_ROTATE_XY = new KeyCombo("free_rotate_xy", UIKeys.GIZMOS_KEYS_FREE_ROTATE_XY, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("gizmos");
-    public static final KeyCombo GIZMOS_FREE_ROTATE_ZY = new KeyCombo("free_rotate_zy", UIKeys.GIZMOS_KEYS_FREE_ROTATE_ZY, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("gizmos");
+    public static final KeyCombo GIZMOS_FREE_ROTATE_ZY = new KeyCombo("free_rotate_zy", UIKeys.GIZMOS_KEYS_FREE_ROTATE_ZY, GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("gizmos");
 }
