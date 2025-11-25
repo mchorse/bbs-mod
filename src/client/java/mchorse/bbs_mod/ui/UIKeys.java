@@ -962,6 +962,10 @@ public class UIKeys
     public static final IKey WORLD_KEYS_CYCLE_PANELS = L10n.lang("bbs.ui.world.keys.cycle_panels");
     public static final IKey GIZMOS_KEYS_CATEGORY = L10n.lang("bbs.ui.gizmos.keys.category");
     public static final IKey GIZMOS_KEYS_TOGGLE_ROTATION_CHANNEL = L10n.lang("bbs.ui.gizmos.keys.toggle_rotation_channel");
+    /* Gizmo design mode labels */
+    public static final IKey GIZMOS_DESIGN_DEFAULT = L10n.lang("bbs.gizmos.design.default");
+    public static final IKey GIZMOS_DESIGN_CLASSIC = L10n.lang("bbs.gizmos.design.classic");
+    public static final IKey GIZMOS_DESIGN_BLOCKBENCH = L10n.lang("bbs.gizmos.design.blockbench");
 
     /* Key collections */
     public static final KeyCollection C_CLIP = new KeyCollection("bbs.ui.camera.clips.^")

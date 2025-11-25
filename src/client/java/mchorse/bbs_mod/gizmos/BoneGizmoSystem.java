@@ -428,32 +428,37 @@ public class BoneGizmoSystem
                     this.centerY = viewport.y + (int) (((-ndcYc + 1F) * 0.5F) * viewport.h);
                 }
 
-                /* Calcular escala dinámica del gizmo en función de la distancia
-                 * entre la cámara y el pivote (origen). Esto mantiene un tamaño
-                 * visual relativamente constante en pantalla al alejar/acercar. */
-                try
+                /* Escala del gizmo: dinámica (según distancia) o estática desde ajustes */
+                if (BBSSettings.gizmoDynamic.get())
                 {
-                    org.joml.Vector4f camW4 = new org.joml.Vector4f(0, 0, 0, 1);
-                    org.joml.Vector4f camWorld = new Matrix4f(view).invert(new Matrix4f()).transform(camW4);
-                    camWorld.div(camWorld.w);
+                    try
+                    {
+                        org.joml.Vector4f camW4 = new org.joml.Vector4f(0, 0, 0, 1);
+                        org.joml.Vector4f camWorld = new Matrix4f(view).invert(new Matrix4f()).transform(camW4);
+                        camWorld.div(camWorld.w);
 
-                    org.joml.Vector4f pivotW4 = new org.joml.Vector4f(0, 0, 0, 1);
-                    org.joml.Vector4f pivotWorld = new Matrix4f(origin).transform(pivotW4);
-                    pivotWorld.div(pivotWorld.w);
+                        org.joml.Vector4f pivotW4 = new org.joml.Vector4f(0, 0, 0, 1);
+                        org.joml.Vector4f pivotWorld = new Matrix4f(origin).transform(pivotW4);
+                        pivotWorld.div(pivotWorld.w);
 
-                    float dx = camWorld.x - pivotWorld.x;
-                    float dy = camWorld.y - pivotWorld.y;
-                    float dz = camWorld.z - pivotWorld.z;
-                    float dist = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+                        float dx = camWorld.x - pivotWorld.x;
+                        float dy = camWorld.y - pivotWorld.y;
+                        float dz = camWorld.z - pivotWorld.z;
+                        float dist = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                    float s = dist * scaleSlope;
-                    if (s < minGizmoScale) s = minGizmoScale;
-                    if (s > maxGizmoScale) s = maxGizmoScale;
-                    this.gizmoScale = s;
+                        float s = dist * scaleSlope;
+                        if (s < minGizmoScale) s = minGizmoScale;
+                        if (s > maxGizmoScale) s = maxGizmoScale;
+                        this.gizmoScale = s;
+                    }
+                    catch (Throwable t)
+                    {
+                        this.gizmoScale = 1F;
+                    }
                 }
-                catch (Throwable t)
+                else
                 {
-                    this.gizmoScale = 1F;
+                    this.gizmoScale = clampScale(BBSSettings.gizmoScale.get());
                 }
 
                 // Iniciar/terminar arrastre basado en 3D hover
@@ -1078,11 +1083,14 @@ public class BoneGizmoSystem
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
-        float baseLength = 0.25F;
+        int design = BBSSettings.gizmoDesign.get();
+        boolean blockbench = (design == 2);
+        boolean thinDesign = (design == 1) || blockbench;
+        float baseLength = blockbench ? 0.35F : 0.25F;
         float length = baseLength * this.gizmoScale;     // longitud de cada eje
-        float thickness = 0.02F * this.gizmoScale;       // grosor de las barras (similar a coolerAxes)
-        float outlinePad = 0.01F * this.gizmoScale;      // pad para contorno negro tipo coolerAxes
-        float slabThick = 0.018F * this.gizmoScale;      // grosor de las losas de escala (a lo largo del eje)
+        float thickness = (blockbench ? 0.010F : (thinDesign ? 0.012F : 0.02F)) * this.gizmoScale;   // barras más delgadas en Blockbench
+        float outlinePad = (thinDesign ? 0F : 0.01F) * this.gizmoScale;          // contorno negro opcional (no en Classic/Blockbench)
+        float slabThick = (blockbench ? 0.010F : (thinDesign ? 0.012F : 0.018F)) * this.gizmoScale;  // losas más delgadas en Blockbench
 
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
         // Usamos el tamaño del cubo del extremo + el grosor de la barra para
@@ -1131,8 +1139,8 @@ public class BoneGizmoSystem
         if (this.mode == Mode.TRANSLATE || this.mode == Mode.PIVOT)
         {
             // Conos en las puntas de cada eje (estilo DCCs)
-            float headLen = 0.08F * this.gizmoScale;       // altura del cono (más grueso)
-            float headWidth = 0.06F * this.gizmoScale;     // diámetro aproximado de la base (más grueso)
+            float headLen = (blockbench ? 0.06F : 0.08F) * this.gizmoScale;       // cono más delgado en Blockbench
+            float headWidth = (blockbench ? 0.04F : 0.06F) * this.gizmoScale;     // base más estrecha en Blockbench
             float headRadius = headWidth * 0.5F;
             // Radio de esfera para modo PIVOT (ligeramente más pequeño por petición)
             float sphereR = 0.045F * this.gizmoScale;
@@ -1169,7 +1177,7 @@ public class BoneGizmoSystem
             }
 
             // Manejadores en la punta: flechas para TRANSLATE, esferas para PIVOT
-            if (this.mode == Mode.TRANSLATE)
+            if (this.mode == Mode.TRANSLATE || (this.mode == Mode.PIVOT && blockbench))
             {
                 if (showX)
                 {
@@ -1187,7 +1195,7 @@ public class BoneGizmoSystem
                     drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 0F, 0F, 1F, 1F);
                 }
             }
-            else // PIVOT: usar esferas para evitar confusión con TRASLADAR
+            else // PIVOT normal: usar esferas (excepto Blockbench)
             {
                 if (showX)
                 {
@@ -1209,28 +1217,38 @@ public class BoneGizmoSystem
 
             // Cubo de pivote en el origen como referencia (con contorno negro)
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall + outlinePad, 0F, 0F, 0F);
-            drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+            if (blockbench && this.mode == Mode.PIVOT)
+            {
+                // Color pivote Blockbench: #1bbbf5
+                drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 27F/255F, 187F/255F, 245F/255F);
+            }
+            else
+            {
+                drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
+            }
 
             // Halo suave en el eje hovered
             if (hx && showX)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                if (this.mode == Mode.TRANSLATE) drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                if (this.mode == Mode.TRANSLATE || (this.mode == Mode.PIVOT && blockbench)) drawCone3D(builder, stack, 'X', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
                 else drawSphere3D(builder, stack, 'X', lengthBar, sphereR, 1F, 1F, 1F, 0.35F);
             }
             if (hy && showY)
             {
                 Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, thickness * 2F, 1F, 1F, 1F, 0.25F);
-                if (this.mode == Mode.TRANSLATE) drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                if (this.mode == Mode.TRANSLATE || (this.mode == Mode.PIVOT && blockbench)) drawCone3D(builder, stack, 'Y', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
                 else drawSphere3D(builder, stack, 'Y', lengthBar, sphereR, 1F, 1F, 1F, 0.35F);
             }
             if (hz && showZ)
             {
                 Draw.fillBox(builder, stack, -thickness, -thickness, 0F, thickness, thickness, barEnd, 1F, 1F, 1F, 0.25F);
-                if (this.mode == Mode.TRANSLATE) drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
+                if (this.mode == Mode.TRANSLATE || (this.mode == Mode.PIVOT && blockbench)) drawCone3D(builder, stack, 'Z', lengthBar, headLen, headRadius, 1F, 1F, 1F, 0.35F);
                 else drawSphere3D(builder, stack, 'Z', lengthBar, sphereR, 1F, 1F, 1F, 0.35F);
             }
             // Controladores de plano como losas planas separadas del pivote y de las barras
+            if (BBSSettings.gizmoPlanes.get())
+            {
             float offset = 0.08F * this.gizmoScale;    // mitad de la distancia previa
             float planeHalf = 0.020F * this.gizmoScale; // semitamaño del cuadrado
             float planeThick = 0.004F * this.gizmoScale; // grosor perpendicular
@@ -1243,10 +1261,10 @@ public class BoneGizmoSystem
             boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
 
             // XY -> azul (perpendicular Z)
-            if (showPlaneXY) { Draw.fillBox(builder, stack,
-                offset - planeHalf, offset - planeHalf, -planeThick,
-                offset + planeHalf, offset + planeHalf,  planeThick,
-                0F, 0F, 0F, 1F); }
+                if (!thinDesign && showPlaneXY) { Draw.fillBox(builder, stack,
+                    offset - planeHalf, offset - planeHalf, -planeThick,
+                    offset + planeHalf, offset + planeHalf,  planeThick,
+                    0F, 0F, 0F, 1F); }
             if (showPlaneXY) { Draw.fillBox(builder, stack,
                 offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F),
                 offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),  (planeThick - 0.002F),
@@ -1257,10 +1275,10 @@ public class BoneGizmoSystem
                 1F, 1F, 1F, 0.30F);
 
             // ZX -> verde (perpendicular Y)
-            if (showPlaneZX) { Draw.fillBox(builder, stack,
-                offset - planeHalf, -planeThick, offset - planeHalf,
-                offset + planeHalf,  planeThick, offset + planeHalf,
-                0F, 0F, 0F, 1F); }
+                if (!thinDesign && showPlaneZX) { Draw.fillBox(builder, stack,
+                    offset - planeHalf, -planeThick, offset - planeHalf,
+                    offset + planeHalf,  planeThick, offset + planeHalf,
+                    0F, 0F, 0F, 1F); }
             if (showPlaneZX) { Draw.fillBox(builder, stack,
                 offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F),
                 offset + (planeHalf - 0.002F),  (planeThick - 0.002F), offset + (planeHalf - 0.002F),
@@ -1271,18 +1289,19 @@ public class BoneGizmoSystem
                 1F, 1F, 1F, 0.30F);
 
             // YZ -> rojo (perpendicular X)
-            if (showPlaneYZ) { Draw.fillBox(builder, stack,
-                -planeThick, offset - planeHalf, offset - planeHalf,
-                 planeThick, offset + planeHalf, offset + planeHalf,
-                0F, 0F, 0F, 1F); }
+                if (!thinDesign && showPlaneYZ) { Draw.fillBox(builder, stack,
+                    -planeThick, offset - planeHalf, offset - planeHalf,
+                    planeThick, offset + planeHalf, offset + planeHalf,
+                    0F, 0F, 0F, 1F); }
             if (showPlaneYZ) { Draw.fillBox(builder, stack,
                 -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F),
                  (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F),
                 1F, 0F, 0F, 1F); }
-            if (hYZ && showPlaneYZ) Draw.fillBox(builder, stack,
-                -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F),
-                 (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),
-                1F, 1F, 1F, 0.30F);
+                if (hYZ && showPlaneYZ) Draw.fillBox(builder, stack,
+                    -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F),
+                     (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F),
+                    1F, 1F, 1F, 0.30F);
+            }
         }
         else if (this.mode == Mode.SCALE)
         {
@@ -1422,7 +1441,7 @@ public class BoneGizmoSystem
             // Anillos de rotación — iguales al gizmo de ROTATE
             if (usingSub == null || usingSub == Mode.ROTATE)
             {
-                float radius = 0.22F; float thicknessRing = 0.01F; float sweep = 360F;
+                float radius = 0.22F; float thicknessRing = ((BBSSettings.gizmoDesign.get() == 1) ? 0.006F : 0.01F); float sweep = 360F;
                 RenderSystem.disableCull();
                 drawEndCube(builder, stack, 0, 0, 0, 0.022F + outlinePad, 0F, 0F, 0F);
                 drawEndCube(builder, stack, 0, 0, 0, 0.022F, 1F, 1F, 1F);
@@ -1441,15 +1460,15 @@ public class BoneGizmoSystem
             boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
             boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
             // XY -> azul
-            if (showPlaneXY) Draw.fillBox(builder, stack, offset - planeHalf, offset - planeHalf, -planeThick, offset + planeHalf, offset + planeHalf, planeThick, 0F, 0F, 0F, 1F);
+            if (!thinDesign && showPlaneXY) Draw.fillBox(builder, stack, offset - planeHalf, offset - planeHalf, -planeThick, offset + planeHalf, offset + planeHalf, planeThick, 0F, 0F, 0F, 1F);
             if (showPlaneXY) Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), 0F, 0F, 1F, 1F);
             if (hXY && showPlaneXY) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), 1F, 1F, 1F, 0.30F);
             // ZX -> verde
-            if (showPlaneZX) Draw.fillBox(builder, stack, offset - planeHalf, -planeThick, offset - planeHalf, offset + planeHalf, planeThick, offset + planeHalf, 0F, 0F, 0F, 1F);
+            if (!thinDesign && showPlaneZX) Draw.fillBox(builder, stack, offset - planeHalf, -planeThick, offset - planeHalf, offset + planeHalf, planeThick, offset + planeHalf, 0F, 0F, 0F, 1F);
             if (showPlaneZX) Draw.fillBox(builder, stack, offset - (planeHalf - 0.002F), -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset + (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), 0F, 1F, 0F, 1F);
             if (hZX && showPlaneZX) Draw.fillBox(builder, stack, offset - (planeHalf + 0.004F), -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset + (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
             // YZ -> rojo
-            if (showPlaneYZ) Draw.fillBox(builder, stack, -planeThick, offset - planeHalf, offset - planeHalf, planeThick, offset + planeHalf, offset + planeHalf, 0F, 0F, 0F, 1F);
+            if (!thinDesign && showPlaneYZ) Draw.fillBox(builder, stack, -planeThick, offset - planeHalf, offset - planeHalf, planeThick, offset + planeHalf, offset + planeHalf, 0F, 0F, 0F, 1F);
             if (showPlaneYZ) Draw.fillBox(builder, stack, -(planeThick - 0.002F), offset - (planeHalf - 0.002F), offset - (planeHalf - 0.002F), (planeThick - 0.002F), offset + (planeHalf - 0.002F), offset + (planeHalf - 0.002F), 1F, 0F, 0F, 1F);
             if (hYZ && showPlaneYZ) Draw.fillBox(builder, stack, -(planeThick + 0.004F), offset - (planeHalf + 0.004F), offset - (planeHalf + 0.004F), (planeThick + 0.004F), offset + (planeHalf + 0.004F), offset + (planeHalf + 0.004F), 1F, 1F, 1F, 0.30F);
         }
@@ -1914,9 +1933,11 @@ public class BoneGizmoSystem
         }
 
         // Definir AABB por eje (mover/escalar)
-        float length = 0.25F * this.gizmoScale;
-        // En escala el cubo del extremo es más grande; ampliamos sección transversal del AABB
-        float thickness = ((this.mode == Mode.SCALE) ? 0.045F : 0.015F) * this.gizmoScale;
+        int design = BBSSettings.gizmoDesign.get();
+        boolean blockbenchDesign = (design == 2);
+        float length = (blockbenchDesign ? 0.35F : 0.25F) * this.gizmoScale; // igual al render
+        // Grosor de picking más generoso en Blockbench para facilitar clics
+        float thickness = ((this.mode == Mode.SCALE) ? 0.045F : ((blockbenchDesign && (this.mode == Mode.TRANSLATE || this.mode == Mode.PIVOT)) ? 0.025F : 0.015F)) * this.gizmoScale;
         float fudge = (((this.mode == Mode.TRANSLATE) || (this.mode == Mode.PIVOT)) ? 0.06F : ((this.mode == Mode.SCALE) ? 0.045F : 0.02F)) * this.gizmoScale;
 
         float[] tx = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -thickness/2F, -thickness/2F), new Vector3f(length + fudge, thickness/2F, thickness/2F));
@@ -1940,10 +1961,12 @@ public class BoneGizmoSystem
                     new Vector3f(po - ps, -pt, po - ps), new Vector3f(po + ps, pt, po + ps));
             float[] pYZ = rayBoxIntersect(rayO, rayD,
                     new Vector3f(-pt, po - ps, po - ps), new Vector3f(pt, po + ps, po + ps));
-
-            if (pXY != null && pXY[0] >= 0 && pXY[0] < bestT) { bestT = pXY[0]; best = Axis.X; this.hoveredPlane = Plane.XY; }
-            if (pZX != null && pZX[0] >= 0 && pZX[0] < bestT) { bestT = pZX[0]; best = Axis.Z; this.hoveredPlane = Plane.ZX; }
-            if (pYZ != null && pYZ[0] >= 0 && pYZ[0] < bestT) { bestT = pYZ[0]; best = Axis.Y; this.hoveredPlane = Plane.YZ; }
+            if (BBSSettings.gizmoPlanes.get())
+            {
+                if (pXY != null && pXY[0] >= 0 && pXY[0] < bestT) { bestT = pXY[0]; best = Axis.X; this.hoveredPlane = Plane.XY; }
+                if (pZX != null && pZX[0] >= 0 && pZX[0] < bestT) { bestT = pZX[0]; best = Axis.Z; this.hoveredPlane = Plane.ZX; }
+                if (pYZ != null && pYZ[0] >= 0 && pYZ[0] < bestT) { bestT = pYZ[0]; best = Axis.Y; this.hoveredPlane = Plane.YZ; }
+            }
         }
 
         return best;
@@ -1954,7 +1977,8 @@ public class BoneGizmoSystem
     {
         float radius = 0.22F * this.gizmoScale;
         // Grosor coherente con el render
-        float baseThickness = ((this.mode == Mode.ROTATE) ? 0.015F : 0.01F) * this.gizmoScale;
+        boolean thinDesign = (BBSSettings.gizmoDesign.get() == 1);
+        float baseThickness = ((this.mode == Mode.ROTATE) ? (thinDesign ? 0.008F : 0.015F) : (thinDesign ? 0.007F : 0.01F)) * this.gizmoScale;
         float thickness = baseThickness;        // ancho visual del anillo
         float band = thickness * 0.5F + (0.002F * this.gizmoScale); // cubrir todo el color del anillo
 
@@ -2152,29 +2176,32 @@ public class BoneGizmoSystem
                 drawSphereHandle(context, this.endZx, this.endZy, zColor, hz);
             }
 
-            // Controladores de plano (cubos en overlay) usando colores XYZ
-            int[] cXY = planeCenterScreen(Plane.XY);
-            int[] cZX = planeCenterScreen(Plane.ZX);
-            int[] cYZ = planeCenterScreen(Plane.YZ);
-            int ps = 7;
-            boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
-            boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
-            boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
-            // XY -> azul (eje perpendicular Z)
-            int colXY = Colors.A100 | Colors.BLUE;
-            // ZX -> verde (eje perpendicular Y)
-            int colZX = Colors.A100 | Colors.GREEN;
-            // YZ -> rojo (eje perpendicular X)
-            int colYZ = Colors.A100 | Colors.RED;
-            boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
-            boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
-            boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
-            if (showPlaneXY) context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
-            if (showPlaneZX) context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
-            if (showPlaneYZ) context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
-            if (hXY && showPlaneXY) context.batcher.box(cXY[0] - (ps + 2), cXY[1] - (ps + 2), cXY[0] + (ps + 2), cXY[1] + (ps + 2), Colors.A50 | Colors.WHITE);
-            if (hZX && showPlaneZX) context.batcher.box(cZX[0] - (ps + 2), cZX[1] - (ps + 2), cZX[0] + (ps + 2), cZX[1] + (ps + 2), Colors.A50 | Colors.WHITE);
-            if (hYZ && showPlaneYZ) context.batcher.box(cYZ[0] - (ps + 2), cYZ[1] - (ps + 2), cYZ[0] + (ps + 2), cYZ[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            if (BBSSettings.gizmoPlanes.get())
+            {
+                // Controladores de plano (cubos en overlay) usando colores XYZ
+                int[] cXY = planeCenterScreen(Plane.XY);
+                int[] cZX = planeCenterScreen(Plane.ZX);
+                int[] cYZ = planeCenterScreen(Plane.YZ);
+                int ps = 7;
+                boolean hXY = (this.hoveredPlane == Plane.XY) || (this.activePlane == Plane.XY);
+                boolean hZX = (this.hoveredPlane == Plane.ZX) || (this.activePlane == Plane.ZX);
+                boolean hYZ = (this.hoveredPlane == Plane.YZ) || (this.activePlane == Plane.YZ);
+                // XY -> azul (eje perpendicular Z)
+                int colXY = Colors.A100 | Colors.BLUE;
+                // ZX -> verde (eje perpendicular Y)
+                int colZX = Colors.A100 | Colors.GREEN;
+                // YZ -> rojo (eje perpendicular X)
+                int colYZ = Colors.A100 | Colors.RED;
+                boolean showPlaneXY = !this.dragging || this.activePlane == Plane.XY;
+                boolean showPlaneZX = !this.dragging || this.activePlane == Plane.ZX;
+                boolean showPlaneYZ = !this.dragging || this.activePlane == Plane.YZ;
+                if (showPlaneXY) context.batcher.box(cXY[0] - ps, cXY[1] - ps, cXY[0] + ps, cXY[1] + ps, Colors.mulRGB(colXY, hXY ? 0.95F : 0.6F));
+                if (showPlaneZX) context.batcher.box(cZX[0] - ps, cZX[1] - ps, cZX[0] + ps, cZX[1] + ps, Colors.mulRGB(colZX, hZX ? 0.95F : 0.6F));
+                if (showPlaneYZ) context.batcher.box(cYZ[0] - ps, cYZ[1] - ps, cYZ[0] + ps, cYZ[1] + ps, Colors.mulRGB(colYZ, hYZ ? 0.95F : 0.6F));
+                if (hXY && showPlaneXY) context.batcher.box(cXY[0] - (ps + 2), cXY[1] - (ps + 2), cXY[0] + (ps + 2), cXY[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+                if (hZX && showPlaneZX) context.batcher.box(cZX[0] - (ps + 2), cZX[1] - (ps + 2), cZX[0] + (ps + 2), cZX[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+                if (hYZ && showPlaneYZ) context.batcher.box(cYZ[0] - (ps + 2), cYZ[1] - (ps + 2), cYZ[0] + (ps + 2), cYZ[1] + (ps + 2), Colors.A50 | Colors.WHITE);
+            }
 
             // Halo blanco suave en el eje hovered
             int halo = Colors.A100 | Colors.WHITE;
@@ -2314,7 +2341,10 @@ public class BoneGizmoSystem
 
         /* Centro del pivote: dibujar un cuadrado más visible */
         int half = 5; // tamaño total 10px
-        context.batcher.box(cx - half, cy - half, cx + half, cy + half, Colors.A100 | Colors.WHITE);
+        int designIdx = BBSSettings.gizmoDesign.get();
+        boolean bbMode = (designIdx == 2) && (this.mode == Mode.PIVOT);
+        int pivotColor = (Colors.A100 | (bbMode ? Colors.BLUE : Colors.WHITE));
+        context.batcher.box(cx - half, cy - half, cx + half, cy + half, pivotColor);
 
         /* Restaurar el depth test tras dibujar el overlay */
         RenderSystem.enableDepthTest();

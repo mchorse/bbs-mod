@@ -92,6 +92,14 @@ public class BBSSettings
     public static ValueBoolean modelBlockGizmosEnabled;
     /** Mostrar/ocultar el panel de categorías de huesos en editores de pose */
     public static ValueBoolean modelBlockCategoriesPanelEnabled;
+    /** Escalado dinámico del gizmo basado en distancia cámara↔pivote */
+    public static ValueBoolean gizmoDynamic;
+    /** Escala base del gizmo cuando el modo dinámico está desactivado */
+    public static ValueFloat gizmoScale;
+    /** Diseño del gizmo: 0=Predeterminado (con contorno), 1=Clásico (delgado) */
+    public static ValueInt gizmoDesign;
+    /** Mostrar controladores de planos (XY, ZX, YZ) en TRANSLATE/PIVOT */
+    public static ValueBoolean gizmoPlanes;
     public static ValueBoolean visualizeStructures;
     /** Toggle: optimización de estructuras (VAO) vs BufferBuilder (iluminación mejor). */
     public static ValueBoolean structureOptimization;
@@ -234,10 +242,21 @@ public class BBSSettings
 
         renderAllModelBlocks = builder.category("model_blocks").getBoolean("render_all", true);
         clickModelBlocks = builder.getBoolean("click", true);
-        /* Enable gizmos by default to make them visible in editor */
-        modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", false);
         /* Panel de categorías en editores de pose (afecta editor y timeline) */
         modelBlockCategoriesPanelEnabled = builder.getBoolean("categories_panel_enabled", false);
+
+        /* Nueva categoría: Gizmos */
+        builder.category("gizmos");
+        /* Activado: visibilidad/uso de gizmos 3D */
+        modelBlockGizmosEnabled = builder.getBoolean("enabled", false);
+        /* Gizmo dinámico: escala según distancia */
+        gizmoDynamic = builder.getBoolean("dynamic", true);
+        /* Escala de gizmo: usado cuando dinámico está apagado */
+        gizmoScale = builder.getFloat("scale", 1F, 0.1F, 4F);
+        /* Diseño del gizmo (int con modos) */
+        gizmoDesign = builder.getInt("design", 0);
+        /* Planos de desplazamiento visibles */
+        gizmoPlanes = builder.getBoolean("planes", true);
 
 
         /* Estructuras: modo de renderizado */

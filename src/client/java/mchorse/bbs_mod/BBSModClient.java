@@ -369,6 +369,13 @@ public class BBSModClient implements ClientModInitializer
             UIKeys.ENGINE_KEYSTROKES_POSITION_TOP_LEFT
         );
 
+        /* Gizmo design modes: Default, Classic, Blockbench */
+        BBSSettings.gizmoDesign.modes(
+            UIKeys.GIZMOS_DESIGN_DEFAULT,
+            UIKeys.GIZMOS_DESIGN_CLASSIC,
+            UIKeys.GIZMOS_DESIGN_BLOCKBENCH
+        );
+
         UIKeys.C_KEYBIND_CATGORIES.load(KeyCombo.getCategoryKeys());
         UIKeys.C_KEYBIND_CATGORIES_TOOLTIP.load(KeyCombo.getCategoryKeys());
 
