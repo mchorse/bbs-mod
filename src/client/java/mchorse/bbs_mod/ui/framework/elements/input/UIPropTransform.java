@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input;
 
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.IValueNotifier;
@@ -129,8 +130,8 @@ public class UIPropTransform extends UITransform
         );
         /* I have no fucking idea why I have to rotate it 180 degrees by X axis... but it works! */
         Matrix3f matrix = new Matrix3f()
-            .rotateX(this.model ? MathUtils.PI : 0F)
-            .mul(this.transform.createRotationMatrix());
+                .rotateX(this.model ? MathUtils.PI : 0F)
+                .mul(this.transform.createRotationMatrix());
 
         matrix.transform(vector3f);
 
@@ -140,14 +141,68 @@ public class UIPropTransform extends UITransform
     public UIPropTransform enableHotkeys()
     {
         IKey category = UIKeys.TRANSFORMS_KEYS_CATEGORY;
-        Supplier<Boolean> active = () -> this.editing;
 
-        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, () -> this.enableMode(0)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_SCALE, () -> this.enableMode(1)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_ROTATE, () -> this.enableMode(2)).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(active).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(active).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(active).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, () ->
+        {
+            if (BBSSettings.gizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.TRANSLATE);
+            }
+            else
+            {
+                this.enableMode(0);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.TRANSFORMATIONS_SCALE, () ->
+        {
+            if (BBSSettings.gizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.SCALE);
+            }
+            else
+            {
+                this.enableMode(1);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.TRANSFORMATIONS_ROTATE, () ->
+        {
+            if (BBSSettings.gizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().setMode(BoneGizmoSystem.Mode.ROTATE);
+            }
+            else
+            {
+                this.enableMode(2);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.TRANSFORMATIONS_CYCLE_GIZMO, () ->
+        {
+            if (BBSSettings.gizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().cycleMode(true);
+            }
+            else
+            {
+                this.enableMode((this.mode + 1) % 3);
+            }
+        }).category(category);
+
+        this.keys().register(Keys.GIZMOS_TOGGLE_ROTATION_CHANNEL, () ->
+        {
+            if (BBSSettings.gizmosEnabled.get())
+            {
+                BoneGizmoSystem.get().toggleRotationChannel();
+            }
+        }).active(() -> BBSSettings.gizmosEnabled.get()).category(UIKeys.GIZMOS_KEYS_CATEGORY);
+
+        Supplier<Boolean> axisActive = () -> this.editing && !BBSSettings.gizmosEnabled.get();
+
+        this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(axisActive).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(axisActive).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(axisActive).category(category);
 
         return this;
     }
@@ -268,9 +323,9 @@ public class UIPropTransform extends UITransform
                 Vector3f vector3f = this.calculateLocalVector(x, axis);
 
                 this.setT(null,
-                    this.transform.translate.x + vector3f.x,
-                    this.transform.translate.y + vector3f.y,
-                    this.transform.translate.z + vector3f.z
+                        this.transform.translate.x + vector3f.x,
+                        this.transform.translate.y + vector3f.y,
+                        this.transform.translate.z + vector3f.z
                 );
             }
             catch (Exception e)
@@ -451,7 +506,7 @@ public class UIPropTransform extends UITransform
                     return true;
                 }
             }
-            
+
             return super.subMouseClicked(context);
         }
     }

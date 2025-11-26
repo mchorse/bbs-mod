@@ -62,17 +62,18 @@ public class CustomVertexConsumerProvider extends VertexConsumerProvider.Immedia
     @Override
     public VertexConsumer getBuffer(RenderLayer renderLayer)
     {
-        // Si hay recolor activo con alpha < 1, forzar capas cutout a translúcidas
-        // para que el fade se aplique también a entidades/banners con shaders.
         RenderLayer selectedLayer = renderLayer;
-        if (RecolorVertexConsumer.newColor != null && RecolorVertexConsumer.newColor.a < 0.999f)
+
+        if (RecolorVertexConsumer.newColor != null && RecolorVertexConsumer.newColor.a < 1F)
         {
             boolean shadersEnabled = BBSRendering.isIrisShadersEnabled() && BBSRendering.isRenderingWorld();
-            if (renderLayer == RenderLayer.getCutout()
-                || renderLayer == RenderLayer.getCutoutMipped()
-                || renderLayer == TexturedRenderLayers.getEntityCutout()
-                || renderLayer == TexturedRenderLayers.getBannerPatterns())
-            {
+
+            if (
+                renderLayer == RenderLayer.getCutout() ||
+                renderLayer == RenderLayer.getCutoutMipped() ||
+                renderLayer == TexturedRenderLayers.getEntityCutout() ||
+                renderLayer == TexturedRenderLayers.getBannerPatterns()
+            ) {
                 selectedLayer = shadersEnabled ? TexturedRenderLayers.getEntityTranslucentCull() : RenderLayer.getTranslucent();
             }
         }

@@ -2,18 +2,24 @@ package mchorse.bbs_mod.ui.forms.editors.utils;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
+import mchorse.bbs_mod.ui.forms.editors.forms.UIModelForm;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
@@ -88,6 +94,14 @@ public class UIPickableFormRenderer extends UIFormRenderer
     @Override
     public boolean subMouseClicked(UIContext context)
     {
+        if (BBSSettings.gizmosEnabled.get() && this.area.isInside(context) && BoneGizmoSystem.get().isHoveringHandle())
+        {
+            if (context.mouseButton == 0 || context.mouseButton == 1 || context.mouseButton == 2)
+            {
+                return true;
+            }
+        }
+
         if (this.formEditor.clickViewport(context, this.stencil))
         {
             return true;
@@ -123,6 +137,35 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
         this.renderAxes(context);
 
+        Matrix4f originRaw = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f origin = originRaw != null ? MatrixStackUtils.stripScale(originRaw) : null;
+        UIPropTransform activeTransform = null;
+
+        if (this.formEditor.statesEditor.isVisible() && this.formEditor.statesKeyframes != null && this.formEditor.statesKeyframes.keyframeEditor != null)
+        {
+            Object factory = this.formEditor.statesKeyframes.keyframeEditor.editor;
+
+            if (factory instanceof UIPoseKeyframeFactory poseFactory)
+            {
+                activeTransform = poseFactory.poseEditor.transform;
+            }
+            else if (factory instanceof UITransformKeyframeFactory transformFactory)
+            {
+                activeTransform = transformFactory.getTransform();
+            }
+        }
+        else if (this.formEditor.editor instanceof UIModelForm uiModelForm)
+        {
+            activeTransform = uiModelForm.modelPanel.poseEditor.transform;
+        }
+
+        Matrix4f viewWithTranslation = new Matrix4f(this.camera.view).translate(-(float) this.camera.position.x, -(float) this.camera.position.y, -(float) this.camera.position.z);
+
+        if (BBSSettings.gizmosEnabled.get())
+        {
+            BoneGizmoSystem.get().update(context, this.area, origin, this.camera.projection, viewWithTranslation, activeTransform);
+        }
+
         if (this.area.isInside(context))
         {
             GlStateManager._disableScissorTest();
@@ -131,7 +174,16 @@ public class UIPickableFormRenderer extends UIFormRenderer
             this.stencil.apply();
             FormUtilsClient.render(this.form, formContext.stencilMap(this.stencilMap));
 
-            this.stencil.pickGUI(context, this.area);
+            boolean blockPicking = BBSSettings.gizmosEnabled.get() && BoneGizmoSystem.get().isHoveringHandle();
+
+            if (!blockPicking)
+            {
+                this.stencil.pickGUI(context, this.area);
+            }
+            else
+            {
+                this.stencil.clearPicking();
+            }
             this.stencil.unbind(this.stencilMap);
 
             MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
@@ -146,7 +198,8 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
     private void renderAxes(UIContext context)
     {
-        Matrix4f matrix = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f matrixRaw = this.formEditor.getOrigin(context.getTransition());
+        Matrix4f matrix = matrixRaw != null ? MatrixStackUtils.stripScale(matrixRaw) : null;
         MatrixStack stack = context.render.batcher.getContext().getMatrices();
 
         stack.push();
@@ -156,12 +209,16 @@ public class UIPickableFormRenderer extends UIFormRenderer
             MatrixStackUtils.multiply(stack, matrix);
         }
 
-        /* Draw axes */
-        if (UIBaseMenu.renderAxes)
+        if (UIBaseMenu.renderAxes && !BBSSettings.gizmosEnabled.get())
         {
             RenderSystem.disableDepthTest();
             Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
             RenderSystem.enableDepthTest();
+        }
+
+        if (BBSSettings.gizmosEnabled.get())
+        {
+            BoneGizmoSystem.get().render3D(stack);
         }
 
         stack.pop();
@@ -172,9 +229,9 @@ public class UIPickableFormRenderer extends UIFormRenderer
         float hitboxW = this.form.hitboxWidth.get();
         float hitboxH = this.form.hitboxHeight.get();
         float eyeHeight = hitboxH * this.form.hitboxEyeHeight.get();
+        final float thickness = 0.01F;
 
         /* Draw look vector */
-        final float thickness = 0.01F;
         Draw.renderBox(context.batcher.getContext().getMatrices(), -thickness, -thickness + eyeHeight, -thickness, thickness, thickness, 2F, 1F, 0F, 0F);
 
         /* Draw hitbox */

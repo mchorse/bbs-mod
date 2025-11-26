@@ -3,6 +3,7 @@ package mchorse.bbs_mod.film;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.renderer.ModelBlockEntityRenderer;
 import mchorse.bbs_mod.entity.ActorEntity;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -15,6 +16,7 @@ import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.mixin.client.ClientPlayerEntityAccessor;
 import mchorse.bbs_mod.morphing.Morph;
@@ -158,7 +160,16 @@ public abstract class BaseFilmController
             {
                 stack.push();
                 MatrixStackUtils.multiply(stack, matrix);
-                Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+
+                if (BBSSettings.gizmosEnabled.get())
+                {
+                    BoneGizmoSystem.get().render3D(stack);
+                }
+                else
+                {
+                    Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+                }
+
                 RenderSystem.enableDepthTest();
                 stack.pop();
             }

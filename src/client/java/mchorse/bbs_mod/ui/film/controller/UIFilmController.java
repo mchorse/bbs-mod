@@ -22,6 +22,7 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.entities.MCEntity;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.gizmos.BoneGizmoSystem;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -37,7 +38,10 @@ import mchorse.bbs_mod.ui.film.replays.UIRecordOverlayPanel;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -67,6 +71,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3d;
@@ -1010,6 +1015,64 @@ public class UIFilmController extends UIElement
         }
 
         this.renderPickingPreview(context, area);
+
+        if (!this.panel.isFlying() && BBSSettings.gizmosEnabled.get())
+        {
+            UIPropTransform activeTransform = null;
+
+            UIKeyframeEditor keyframeEditor = this.panel.replayEditor != null ? this.panel.replayEditor.keyframeEditor : null;
+
+            if (keyframeEditor != null)
+            {
+                if (keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
+                {
+                    activeTransform = poseFactory.poseEditor.transform;
+                }
+                else if (keyframeEditor.editor instanceof UITransformKeyframeFactory tfFactory)
+                {
+                    activeTransform = tfFactory.getTransform();
+                }
+            }
+
+            Pair<String, Boolean> boneSel = this.getBone();
+
+            if (activeTransform != null && boneSel != null)
+            {
+                IEntity entity = this.getCurrentEntity();
+
+                if (entity != null && entity.getForm() != null)
+                {
+                    float transition = this.worldRenderContext != null ? this.worldRenderContext.tickDelta() : 0F;
+
+                    Vector3d cameraPos = this.panel.getCamera().position;
+                    Matrix4f defaultMatrix = BaseFilmController.getMatrixForRenderWithRotation(entity, cameraPos.x, cameraPos.y, cameraPos.z, transition);
+                    Pair<Matrix4f, Float> total = BaseFilmController.getTotalMatrix(this.getEntities(), entity.getForm().anchor.get(), defaultMatrix, cameraPos.x, cameraPos.y, cameraPos.z, transition, 0);
+                    Matrix4f targetMatrix = total.a != null ? total.a : defaultMatrix;
+
+                    Form root = entity.getForm();
+                    Map<String, Matrix4f> matrices = FormUtilsClient.getRenderer(root).collectMatrices(entity, boneSel.b ? null : boneSel.a, transition);
+                    Matrix4f boneMatrix = null;
+
+                    if (matrices != null)
+                    {
+                        boneMatrix = matrices.get(boneSel.a);
+
+                        if (boneMatrix == null)
+                        {
+                            boneMatrix = matrices.get(boneSel.a);
+                        }
+                    }
+
+                    if (boneMatrix != null)
+                    {
+                        Matrix4f originRaw = new Matrix4f(targetMatrix).mul(boneMatrix);
+                        Matrix4f origin = MatrixStackUtils.stripScale(originRaw);
+
+                        BoneGizmoSystem.get().update(context, area, origin, this.panel.lastProjection, this.panel.lastView, activeTransform);
+                    }
+                }
+            }
+        }
 
         this.orbit.handleOrbiting(context);
     }

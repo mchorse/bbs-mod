@@ -89,6 +89,8 @@ public class BBSSettings
     public static ValueBoolean modelBlocksRenderAll;
     public static ValueBoolean modelBlocksClick;
 
+    public static ValueBoolean gizmosEnabled;
+
     public static ValueBoolean structureCategories;
     public static ValueBoolean structureOptimization;
 
@@ -235,9 +237,12 @@ public class BBSSettings
         modelBlocksRenderAll = builder.getBoolean("render_all", true);
         modelBlocksClick = builder.getBoolean("click", true);
 
+        builder.category("gizmos");
+        gizmosEnabled = builder.getBoolean("enabled", false);
+
         builder.category("structures");
-        structureOptimization = builder.getBoolean("optimization", true);
         structureCategories = builder.getBoolean("categories", false);
+        structureOptimization = builder.getBoolean("optimization", true);
 
         builder.category("entity_selectors");
         entitySelectorsPropertyWhitelist = builder.getString("whitelist", "CustomName,Name");
