@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 支持like/dislike按钮的字符串列表
+ * String list with like/dislike buttons
  */
 public class UILikeableStringList extends UIStringList
 {
@@ -34,25 +34,16 @@ public class UILikeableStringList extends UIStringList
         this.removeButton = new UIIcon(Icons.REMOVE, null);
     }
     
-    /**
-     * 设置是否只显示like的音频
-     */
     public void setShowOnlyLiked(boolean showOnlyLiked)
     {
         this.showOnlyLiked = showOnlyLiked;
     }
     
-    /**
-     * 获取是否只显示like的音频
-     */
     public boolean isShowOnlyLiked()
     {
         return this.showOnlyLiked;
     }
     
-    /**
-     * 切换是否只显示like的音频
-     */
     public void toggleShowOnlyLiked()
     {
         this.showOnlyLiked = !this.showOnlyLiked;
@@ -68,7 +59,7 @@ public class UILikeableStringList extends UIStringList
     @Override
     protected void renderElementPart(UIContext context, String element, int i, int x, int y, boolean hover, boolean selected)
     {
-        // 在showOnlyLiked模式下，i是可见索引，需要获取实际的元素
+        /* In show-only-liked mode, 'i' is the visible index, map it to the actual element */
         if (this.showOnlyLiked)
         {
             element = this.getVisibleElement(i);
@@ -78,42 +69,36 @@ public class UILikeableStringList extends UIStringList
             }
         }
 
-        // 特殊处理"None"选项，始终显示且不显示like按钮
         boolean isNoneOption = element.equals(UIKeys.GENERAL_NONE.get());
 
-        // 计算文本宽度，为按钮留出空间（如果是None选项则不需要）
         String displayText = this.getDisplayText(element);
         int textWidth = context.batcher.getFont().getWidth(displayText);
         int buttonSpace = 0;
         if (!isNoneOption) {
             if (this.showEditRemoveButtons) {
-                buttonSpace = 60; // edit + remove + like = 3 * 20 = 60像素
+                buttonSpace = 60; // edit + remove + like = 60px
             } else {
-                buttonSpace = 20; // 只有like按钮 = 20像素
+                buttonSpace = 20; // like button only = 20px
             }
         }
         int maxWidth = this.area.w - 8 - buttonSpace;
 
-        // 如果文本太长，进行截断
         if (textWidth > maxWidth)
         {
             displayText = truncateText(context, displayText, maxWidth);
         }
 
-        // 绘制文本
         context.batcher.textShadow(displayText, x + 4, y + (this.scroll.scrollItemSize - context.batcher.getFont().getHeight()) / 2, hover ? Colors.HIGHLIGHT : Colors.WHITE);
 
-        // 如果是None选项，不绘制like按钮
         if (isNoneOption)
         {
             return;
         }
 
-        // 绘制按钮（从右到左：like, remove, edit）
+        /* Draw buttons from right to left: like, remove, edit */
         int currentIconX = this.area.x + this.area.w - 20;
         int iconY = y + (this.scroll.scrollItemSize - 16) / 2;
 
-        // 绘制like按钮
         boolean isLiked = this.likeManager.isSoundLiked(element);
         boolean isHoverOnLike = this.area.isInside(context) && context.mouseX >= currentIconX && context.mouseX < currentIconX + 16 &&
                 context.mouseY >= iconY && context.mouseY < iconY + 16;
@@ -123,9 +108,7 @@ public class UILikeableStringList extends UIStringList
         this.likeButton.area.set(currentIconX, iconY, 16, 16);
         this.likeButton.render(context);
 
-        // 如果启用了edit和remove按钮，则绘制它们
         if (this.showEditRemoveButtons) {
-            // Remove按钮
             currentIconX -= 20;
             boolean isHoverOnRemove = this.area.isInside(context) && context.mouseX >= currentIconX && context.mouseX < currentIconX + 16 &&
                     context.mouseY >= iconY && context.mouseY < iconY + 16;
@@ -134,7 +117,6 @@ public class UILikeableStringList extends UIStringList
             this.removeButton.area.set(currentIconX, iconY, 16, 16);
             this.removeButton.render(context);
 
-            // Edit按钮
             currentIconX -= 20;
             boolean isHoverOnEdit = this.area.isInside(context) && context.mouseX >= currentIconX && context.mouseX < currentIconX + 16 &&
                     context.mouseY >= iconY && context.mouseY < iconY + 16;
@@ -145,9 +127,6 @@ public class UILikeableStringList extends UIStringList
         }
     }
     
-    /**
-     * 截断文本以适应最大宽度
-     */
     private String truncateText(UIContext context, String text, int maxWidth)
     {
         String ellipsis = "...";
@@ -199,7 +178,6 @@ public class UILikeableStringList extends UIStringList
             return super.subMouseClicked(context);
         }
 
-        // 计算行的y坐标（与渲染时一致）
         int y = this.area.y + scrollIndex * this.scroll.scrollItemSize - (int) this.scroll.getScroll();
         int iconY = y + (this.scroll.scrollItemSize - 16) / 2;
         int likeIconX = this.area.x + this.area.w - 20;
@@ -278,8 +256,7 @@ public class UILikeableStringList extends UIStringList
     @Override
     public int renderElement(UIContext context, String element, int i, int index, boolean postDraw)
     {
-        // This check is now handled by the custom renderList method, but we keep it
-        // as a safeguard in case renderElement is called directly.
+        /* Custom renderList handles this, kept as safeguard */
         boolean isNoneOption = element.equals(UIKeys.GENERAL_NONE.get());
         
         if (this.showOnlyLiked && !this.likeManager.isSoundLiked(element) && !isNoneOption)
@@ -320,9 +297,6 @@ public class UILikeableStringList extends UIStringList
         }
     }
     
-    /**
-     * 获取当前显示的元素数量（考虑showOnlyLiked过滤）
-     */
     public int getVisibleElementCount()
     {
         if (!this.showOnlyLiked)
@@ -333,7 +307,6 @@ public class UILikeableStringList extends UIStringList
         int count = 0;
         for (String element : this.list)
         {
-            // 特殊处理"None"选项，始终显示
             boolean isNoneOption = element.equals(UIKeys.GENERAL_NONE.get());
             if (this.likeManager.isSoundLiked(element) || isNoneOption)
             {
@@ -344,9 +317,6 @@ public class UILikeableStringList extends UIStringList
         return count;
     }
     
-    /**
-     * 获取指定索引处的可见元素（考虑showOnlyLiked过滤）
-     */
     public String getVisibleElement(int visibleIndex)
     {
         if (!this.showOnlyLiked)
@@ -357,10 +327,8 @@ public class UILikeableStringList extends UIStringList
         int currentIndex = 0;
         for (String element : this.list)
         {
-            // 特殊处理"None"选项，始终显示
             boolean isNoneOption = element.equals(UIKeys.GENERAL_NONE.get());
             
-            // 如果只显示like的音频且当前音频没有被like，并且不是"None"选项，则跳过
             if (this.showOnlyLiked && !this.likeManager.isSoundLiked(element) && !isNoneOption)
             {
                 continue;
@@ -376,33 +344,21 @@ public class UILikeableStringList extends UIStringList
         return null;
     }
     
-    /**
-     * 设置刷新回调，当like状态改变时调用
-     */
     public void setRefreshCallback(Runnable callback)
     {
         this.refreshCallback = callback;
     }
 
-    /**
-     * 设置编辑回调
-     */
     public void setEditCallback(Consumer<String> callback)
     {
         this.editCallback = callback;
     }
 
-    /**
-     * 设置删除回调
-     */
     public void setRemoveCallback(Consumer<String> callback)
     {
         this.removeCallback = callback;
     }
 
-    /**
-     * 设置是否显示编辑和删除按钮（文件夹模式使用）
-     */
     public void setShowEditRemoveButtons(boolean show)
     {
         this.showEditRemoveButtons = show;
@@ -411,7 +367,6 @@ public class UILikeableStringList extends UIStringList
     @Override
     public void update()
     {
-        // 根据是否显示只喜欢的音频来计算正确的列表大小
         int size;
         if (this.showOnlyLiked)
         {

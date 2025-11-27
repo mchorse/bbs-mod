@@ -561,6 +561,7 @@ public class UIKeys
     public static final IKey MORPHING_FROM_MOB = L10n.lang("bbs.ui.morphing.from_mob");
     public static final IKey MORPHING_TITLE = L10n.lang("bbs.ui.morphing.title");
     public static final IKey OVERLAYS_SOUNDS_MAIN = L10n.lang("bbs.ui.overlays.sounds.main");
+    public static final IKey VANILLA_SOUND_SELECTION_TITLE = L10n.lang("bbs.ui.vanilla_sound_selection.title");
     public static final IKey PREVIEW_SOUND = L10n.lang("bbs.ui.preview_sound");
     public static final IKey FILTER_LIKED_SOUNDS = L10n.lang("bbs.ui.vanilla_sound.filter_liked");
     public static final IKey REMOVE_SOUND = L10n.lang("bbs.ui.sound.remove");
