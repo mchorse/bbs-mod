@@ -15,6 +15,7 @@ import mchorse.bbs_mod.client.renderer.entity.GunProjectileEntityRenderer;
 import mchorse.bbs_mod.client.renderer.item.GunItemRenderer;
 import mchorse.bbs_mod.client.renderer.item.ModelBlockItemRenderer;
 import mchorse.bbs_mod.cubic.model.ModelManager;
+import mchorse.bbs_mod.events.register.RegisterL10nEvent;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -322,6 +323,8 @@ public class BBSModClient implements ClientModInitializer
         l10n = new L10n();
         l10n.register((lang) -> Collections.singletonList(Link.assets("strings/" + lang + ".json")));
         l10n.reload();
+
+        BBSMod.events.post(new RegisterL10nEvent(l10n));
 
         File parentFile = BBSMod.getSettingsFolder().getParentFile();
 

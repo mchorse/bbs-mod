@@ -6,6 +6,7 @@ import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.events.register.L10nReloadEvent;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.l10n.keys.LangKey;
 import mchorse.bbs_mod.resources.AssetProvider;
@@ -166,6 +167,8 @@ public class L10n
                 e.printStackTrace();
             }
         }
+
+        BBSMod.events.post(new L10nReloadEvent(this));
 
         File export = UILanguageEditorOverlayPanel.getLangEditorFolder();
         File[] files = export.listFiles();
