@@ -9,6 +9,7 @@ public class EventBus
 {
     private final Map<Class<?>, CopyOnWriteArrayList<Subscription>> subscribers = new HashMap<>();
 
+    /** Registers the given subscriber to receive events. */
     public void register(Object subscriber)
     {
         for (Method method : subscriber.getClass().getMethods())
@@ -21,7 +22,6 @@ public class EventBus
     {
         if (method.isAnnotationPresent(Subscribe.class))
         {
-            //Getting the event from method parameters
             if (method.getParameterCount() != 1) {
                 return;
             }
@@ -32,9 +32,9 @@ public class EventBus
         }
     }
 
+    /** Posts the given event to the event bus. */
     public void post(Object event)
     {
-        //Getting subscribers by eventType
         CopyOnWriteArrayList<Subscription> eventSubscribers = this.subscribers.get(event.getClass());
 
         if (eventSubscribers == null || eventSubscribers.isEmpty())
