@@ -30,8 +30,8 @@ public class EventBus
             }
 
             this.subscribers
-                    .computeIfAbsent(method.getParameterTypes()[0], (clazz) -> new CopyOnWriteArrayList<>())
-                    .add(new Subscription(subscriber, method));
+                .computeIfAbsent(method.getParameterTypes()[0], (clazz) -> new CopyOnWriteArrayList<>())
+                .add(new Subscription(subscriber, method));
         }
     }
 
