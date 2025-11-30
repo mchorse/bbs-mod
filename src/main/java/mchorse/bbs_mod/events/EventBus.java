@@ -9,7 +9,9 @@ public class EventBus
 {
     private final Map<Class<?>, CopyOnWriteArrayList<Subscription>> subscribers = new HashMap<>();
 
-    /** Registers the given subscriber to receive events. */
+    /**
+     * Registers the given subscriber to receive events.
+     */
     public void register(Object subscriber)
     {
         for (Method method : subscriber.getClass().getMethods())
@@ -22,17 +24,20 @@ public class EventBus
     {
         if (method.isAnnotationPresent(Subscribe.class))
         {
-            if (method.getParameterCount() != 1) {
+            if (method.getParameterCount() != 1)
+            {
                 return;
             }
 
-            this.subscribers.computeIfAbsent(method.getParameterTypes()[0],
-                            clazz -> new CopyOnWriteArrayList<>())
+            this.subscribers
+                    .computeIfAbsent(method.getParameterTypes()[0], (clazz) -> new CopyOnWriteArrayList<>())
                     .add(new Subscription(subscriber, method));
         }
     }
 
-    /** Posts the given event to the event bus. */
+    /**
+     * Posts the given event to the event bus.
+     */
     public void post(Object event)
     {
         CopyOnWriteArrayList<Subscription> eventSubscribers = this.subscribers.get(event.getClass());
@@ -47,9 +52,9 @@ public class EventBus
             try
             {
                 subscription.method.invoke(subscription.target, event);
-            } catch (Exception ignored)
-            {
             }
+            catch (Exception ignored)
+            {}
         }
     }
 }

@@ -2,7 +2,9 @@ package mchorse.bbs_mod.events;
 
 import java.lang.reflect.Method;
 
-/** Class for all subscribers. */
+/**
+ * Class for all subscribers.
+ */
 public class Subscription
 {
     public final Object target;
