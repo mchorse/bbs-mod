@@ -1,5 +1,13 @@
 {
     "block.bbs.model": "Блок Модель",
+    "block.bbs.chroma_red": "Червоний хрома-блок",
+    "block.bbs.chroma_green": "Зелений хрома-блок",
+    "block.bbs.chroma_blue": "Синій хрома-блок",
+    "block.bbs.chroma_cyan": "Блакитний хрома-блок",
+    "block.bbs.chroma_magenta": "Пурпурний хрома-блок",
+    "block.bbs.chroma_yellow": "Жовтий хрома-блок",
+    "block.bbs.chroma_black": "Чорний хрома-блок",
+    "block.bbs.chroma_white": "Білий хрома-блок",
     "item.bbs.gun": "BBS рушниця",
     "itemGroup.bbs.main": "BBS мод",
 
@@ -9,8 +17,12 @@
     "key.bbs.open_replays": "Відкрити поточні записи",
     "key.bbs.open_morphing": "Відкрити меню морфінгу",
     "key.bbs.play_film": "Програти фільм",
+    "key.bbs.pause_film": "Зупинити фільм",
     "key.bbs.record_replay": "Записати поточний запис",
     "key.bbs.record_video": "Записати відео",
     "key.bbs.teleport": "Телепортувати до цього запису",
-    "category.bbs.main": "BBS мод"
+    "key.bbs.zoom": "Наближення (BBS рушниця)",
+    "category.bbs.main": "BBS мод",
+
+    "gamerule.bbsEditing": "Дозвіл на налаштування BBS моду"
 }

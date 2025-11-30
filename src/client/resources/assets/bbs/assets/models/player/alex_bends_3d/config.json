@@ -1,0 +1,98 @@
+{
+	"pose_group": "player/steve",
+	"procedural": true,
+	"culling": false,
+	"items_main": ["right_arm_item"],
+	"items_off": ["left_arm_item"],
+	"scale": [0.9375, 0.9375, 0.9375],
+	"armor_slots": {
+		"helmet": {
+			"group": "armor_helmet"
+		},
+		"chest": {
+			"group": "armor_chest"
+		},
+		"leggings": {
+			"group": "armor_leggings"
+		},
+		"left_arm": {
+			"group": "armor_left_arm"
+		},
+		"right_arm": {
+			"group": "armor_right_arm"
+		},
+		"left_leg": {
+			"group": "armor_left_leg"
+		},
+		"right_leg": {
+			"group": "armor_right_leg"
+		},
+		"left_boot": {
+			"group": "armor_left_boot"
+		},
+		"right_boot":{
+			"group": "armor_right_boot"
+		}
+	},
+	"sneaking_pose": {
+	    "static": false,
+	    "pose": {
+	        "head": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [0.0, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -4.2, 0.0],
+	            "fix": 0.0
+	        },
+	        "left_leg": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [0.0, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -0.2, 4.0],
+	            "fix": 0.0
+	        },
+	        "right_arm": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [-0.39999452, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -3.2, 0.0],
+	            "fix": 0.0
+	        },
+	        "torso": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [-0.50000197, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -3.2, 0.0],
+	            "fix": 0.0
+	        },
+	        "right_leg": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [0.0, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -0.2, 4.0],
+	            "fix": 0.0
+	        },
+	        "left_arm": {
+	            "r2": [0.0, 0.0, 0.0],
+	            "r": [-0.39999452, 0.0, 0.0],
+	            "s": [1.0, 1.0, 1.0],
+	            "t": [0.0, -3.2, 0.0],
+	            "fix": 0.0
+	        }
+	    }
+	},
+	"fp_main": {
+		"group": "right_arm",
+		"transform": {
+			"t": [0.13875, 1.525, 0],
+			"r": [180, 0, -5.729]
+		}
+	},
+	"fp_offhand": {
+		"group": "left_arm",
+		"transform": {
+			"t": [-0.13875, 1.525, 0],
+			"r": [180, 0, 5.729]
+		}
+	}
+}

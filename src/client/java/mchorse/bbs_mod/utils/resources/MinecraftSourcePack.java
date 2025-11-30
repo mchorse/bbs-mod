@@ -4,67 +4,30 @@ import mchorse.bbs_mod.resources.ISourcePack;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.StringUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MinecraftSourcePack implements ISourcePack
 {
-    private final ResourceManager manager;
     private Map<String, Object> links = new HashMap<>();
+    private Map<String, Object> soundLinks = new HashMap<>();
 
     public MinecraftSourcePack()
     {
-        this.manager = MinecraftClient.getInstance().getResourceManager();
-
         this.setupPaths();
+        this.setupSoundPaths();
     }
 
     public void setupPaths()
-    {
-        Map<Identifier, List<Resource>> map = this.manager.findAllResources("textures", (l) -> l.getNamespace().equals("minecraft") && l.getPath().endsWith(".png"));
+    {}
 
-        for (Identifier id : map.keySet())
-        {
-            DataPath path = new DataPath(id.getPath());
-
-            this.insert(path);
-        }
-    }
-
-    private void insert(DataPath path)
-    {
-        Map<String, Object> links = this.links;
-
-        for (String string : path.strings)
-        {
-            if (string.endsWith(".png"))
-            {
-                links.put(string, string);
-
-                return;
-            }
-            else
-            {
-                if (!links.containsKey(string))
-                {
-                    links.put(string, new HashMap<>());
-                }
-
-                links = (Map<String, Object>) links.get(string);
-            }
-        }
-    }
+    public void setupSoundPaths()
+    {}
 
     @Override
     public String getPrefix()
@@ -75,19 +38,12 @@ public class MinecraftSourcePack implements ISourcePack
     @Override
     public boolean hasAsset(Link link)
     {
-        return this.manager.getResource(new Identifier(link.toString())).isPresent();
+        return false;
     }
 
     @Override
     public InputStream getAsset(Link link) throws IOException
     {
-        Optional<Resource> resource = this.manager.getResource(new Identifier(link.toString()));
-
-        if (resource.isPresent())
-        {
-            return resource.get().getInputStream();
-        }
-
         return null;
     }
 

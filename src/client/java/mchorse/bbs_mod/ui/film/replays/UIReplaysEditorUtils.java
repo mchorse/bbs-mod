@@ -14,9 +14,11 @@ import mchorse.bbs_mod.math.molang.expressions.MolangExpression;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.film.ICursor;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.IUIKeyframeGraph;
 import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -34,6 +36,25 @@ import java.util.function.Consumer;
 
 public class UIReplaysEditorUtils
 {
+    public static UIPropTransform getEditableTransform(UIKeyframeEditor editor)
+    {
+        if (editor == null || editor.editor == null)
+        {
+            return null;
+        }
+
+        if (editor.editor instanceof UITransformKeyframeFactory transformKeyframeFactory)
+        {
+            return transformKeyframeFactory.transform;
+        }
+        else if (editor.editor instanceof UIPoseKeyframeFactory keyframeFactory)
+        {
+            return keyframeFactory.poseEditor.transform;
+        }
+
+        return null;
+    }
+
     /* Picking form and form properties */
 
     public static void pickFormProperty(UIContext context, UIKeyframeEditor editor, ICursor cursor, Form form, String bone)

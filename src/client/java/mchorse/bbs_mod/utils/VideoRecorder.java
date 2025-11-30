@@ -59,7 +59,7 @@ public class VideoRecorder
     /**
      * Start recording the video using ffmpeg
      */
-    public void startRecording(int textureId, int width, int height)
+    public void startRecording(File audioFile, int textureId, int width, int height)
     {
         if (this.recording)
         {
@@ -86,7 +86,9 @@ public class VideoRecorder
 
             Path path = Paths.get(movies.toString());
             String movieName = StringUtils.createTimestampFilename();
-            String params = BBSSettings.videoSettings.arguments.get();
+            String params = audioFile == null
+                ? BBSSettings.videoSettings.arguments.get()
+                : BBSSettings.videoSettings.argumentsAudio.get();
             StringBuilder filters = new StringBuilder("vflip");
             float frameRate = (float) BBSRendering.getVideoFrameRate();
 
@@ -102,6 +104,11 @@ public class VideoRecorder
             params = params.replace("%FPS%", String.valueOf(frameRate));
             params = params.replace("%NAME%", movieName);
             params = params.replace("%FILTERS%", filters.toString());
+
+            if (audioFile != null)
+            {
+                params = params.replace("%AUDIO_TRACK%", "\"" + audioFile.getAbsolutePath() + "\"");
+            }
 
             List<String> args = new ArrayList<String>();
 
@@ -293,7 +300,7 @@ public class VideoRecorder
         }
         else
         {
-            this.startRecording(textureId, textureWidth, textureHeight);
+            this.startRecording(null, textureId, textureWidth, textureHeight);
         }
 
         UIUtils.playClick();

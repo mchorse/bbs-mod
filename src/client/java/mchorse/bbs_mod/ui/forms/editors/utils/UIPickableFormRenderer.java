@@ -15,6 +15,7 @@ import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
 import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
+import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
 import mchorse.bbs_mod.utils.Pair;
@@ -129,7 +130,22 @@ public class UIPickableFormRenderer extends UIFormRenderer
 
             this.stencilMap.setup();
             this.stencil.apply();
+
             FormUtilsClient.render(this.form, formContext.stencilMap(this.stencilMap));
+
+            Matrix4f matrix = this.formEditor.getOrigin(context.getTransition());
+            MatrixStack stack = context.render.batcher.getContext().getMatrices();
+
+            stack.push();
+
+            if (matrix != null)
+            {
+                MatrixStackUtils.multiply(stack, matrix);
+            }
+
+            Gizmo.INSTANCE.renderStencil(context.batcher.getContext().getMatrices(), this.stencilMap);
+
+            stack.pop();
 
             this.stencil.pickGUI(context, this.area);
             this.stencil.unbind(this.stencilMap);
@@ -160,7 +176,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         if (UIBaseMenu.renderAxes)
         {
             RenderSystem.disableDepthTest();
-            Draw.coolerAxes(stack, 0.25F, 0.01F, 0.26F, 0.02F);
+            Gizmo.INSTANCE.render(stack);
             RenderSystem.enableDepthTest();
         }
 
@@ -219,7 +235,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
         RenderSystem.enableBlend();
         context.batcher.texturedBox(BBSShaders::getPickerPreviewProgram, texture.id, Colors.WHITE, this.area.x, this.area.y, this.area.w, this.area.h, 0, h, w, 0, w, h);
 
-        if (pair != null)
+        if (pair != null && pair.a != null)
         {
             String label = pair.a.getFormIdOrName();
 

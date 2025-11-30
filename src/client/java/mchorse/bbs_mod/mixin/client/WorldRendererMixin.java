@@ -38,10 +38,12 @@ public class WorldRendererMixin
     }
 
     @Inject(method = "renderLayer", at = @At("HEAD"), cancellable = true)
-    public void onRenderLayer(CallbackInfo info)
+    public void onRenderLayer(RenderLayer renderLayer, MatrixStack matrices, double cameraX, double cameraY, double cameraZ, Matrix4f positionMatrix, CallbackInfo info)
     {
         if (BBSSettings.chromaSkyEnabled.get() && !BBSSettings.chromaSkyTerrain.get())
         {
+            BBSRendering.onRenderChunkLayer(matrices);
+
             info.cancel();
         }
     }

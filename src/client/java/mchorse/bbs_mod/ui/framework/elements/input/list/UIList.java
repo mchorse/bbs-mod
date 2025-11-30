@@ -150,6 +150,25 @@ public abstract class UIList <T> extends UIElement
         return !this.filter.isEmpty();
     }
 
+    /**
+     * Get the element displayed at the given visible row index,
+     * taking filtering into account.
+     */
+    protected T getElementAt(int visibleIndex)
+    {
+        if (visibleIndex < 0)
+        {
+            return null;
+        }
+
+        if (!this.isFiltering())
+        {
+            return this.exists(visibleIndex) ? this.list.get(visibleIndex) : null;
+        }
+
+        return this.exists(this.filtered, visibleIndex) ? this.filtered.get(visibleIndex).a : null;
+    }
+
     /* Index and current value(s) methods */
 
     public boolean isSelected()

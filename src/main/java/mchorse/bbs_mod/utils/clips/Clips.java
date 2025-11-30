@@ -128,6 +128,21 @@ public class Clips extends ValueGroup
         return null;
     }
 
+    public <T extends Clip> List<T> getClips(Class<T> clazz)
+    {
+        List<T> clips = new ArrayList<>();
+
+        for (Clip clip : this.clips)
+        {
+            if (clazz.isAssignableFrom(clip.getClass()))
+            {
+                clips.add(clazz.cast(clip));
+            }
+        }
+
+        return clips;
+    }
+
     public List<Clip> getClips(int tick)
     {
         return this.getClips(tick, Integer.MAX_VALUE);

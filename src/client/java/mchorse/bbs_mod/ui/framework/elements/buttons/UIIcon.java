@@ -14,8 +14,11 @@ public class UIIcon extends UIClickable<UIIcon>
 
     public int iconColor = Colors.WHITE;
     public int hoverColor = Colors.LIGHTEST_GRAY;
+    public int activeColor = Colors.LIGHTEST_GRAY;
 
     public int disabledColor = 0x80404040;
+    
+    private boolean active;
 
     public UIIcon(Icon icon, Consumer<UIIcon> callback)
     {
@@ -83,6 +86,25 @@ public class UIIcon extends UIClickable<UIIcon>
         return this;
     }
 
+    public UIIcon activeColor(int color)
+    {
+        this.activeColor = color;
+
+        return this;
+    }
+
+    public UIIcon active(boolean active)
+    {
+        this.active = active;
+
+        return this;
+    }
+
+    public boolean isActive()
+    {
+        return this.active;
+    }
+
     @Override
     protected UIIcon get()
     {
@@ -93,7 +115,23 @@ public class UIIcon extends UIClickable<UIIcon>
     protected void renderSkin(UIContext context)
     {
         Icon icon = this.getIcon();
-        int color = this.isEnabled() ? (this.hover ? this.hoverColor : this.iconColor) : this.disabledColor;
+        int color;
+        
+        if (this.isEnabled())
+        {
+            if (this.active)
+            {
+                color = this.activeColor;
+            }
+            else
+            {
+                color = this.hover ? this.hoverColor : this.iconColor;
+            }
+        }
+        else
+        {
+            color = this.disabledColor;
+        }
 
         context.batcher.icon(icon, color, this.area.mx(), this.area.my(), 0.5F, 0.5F);
     }

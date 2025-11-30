@@ -9,6 +9,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
+import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -148,6 +149,7 @@ public class UIPropTransform extends UITransform
         this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(active).category(category);
         this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(active).category(category);
         this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(active).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_TOGGLE_LOCAL, this::toggleLocal).category(category);
 
         return this;
     }
@@ -185,8 +187,18 @@ public class UIPropTransform extends UITransform
         this.fillR2(MathUtils.toDeg(transform.rotate2.x), MathUtils.toDeg(transform.rotate2.y), MathUtils.toDeg(transform.rotate2.z));
     }
 
-    private void enableMode(int mode)
+    public void enableMode(int mode)
     {
+        this.enableMode(mode, null);
+    }
+
+    public void enableMode(int mode, Axis axis)
+    {
+        if (Gizmo.INSTANCE.setMode(Gizmo.Mode.values()[mode]) && axis == null)
+        {
+            return;
+        }
+
         UIContext context = this.getContext();
 
         if (this.editing)
@@ -199,7 +211,7 @@ public class UIPropTransform extends UITransform
         }
         else
         {
-            this.axis = Axis.X;
+            this.axis = axis == null ? Axis.X : axis;
             this.lastX = context.mouseX;
         }
 

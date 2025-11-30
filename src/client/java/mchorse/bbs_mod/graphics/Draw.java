@@ -3,6 +3,8 @@ package mchorse.bbs_mod.graphics;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.camera.data.Angle;
+import mchorse.bbs_mod.utils.Axis;
+import mchorse.bbs_mod.utils.MathUtils;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
@@ -141,25 +143,6 @@ public class Draw
         fillQuad(builder, stack, x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2, r, g, b, a);
     }
 
-    public static void axes(MatrixStack stack, float length, float thickness)
-    {
-        BufferBuilder builder = Tessellator.getInstance().getBuffer();
-
-        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
-        Draw.axes(builder, stack, length, thickness);
-
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        BufferRenderer.drawWithGlobalProgram(builder.end());
-    }
-
-    public static void axes(BufferBuilder builder, MatrixStack stack, float length, float thickness)
-    {
-        fillBox(builder, stack, thickness, -thickness, -thickness, length, thickness, thickness, 1, 0, 0, 1);
-        fillBox(builder, stack, -thickness, -thickness, -thickness, thickness, length, thickness, 0, 1, 0, 1);
-        fillBox(builder, stack, -thickness, -thickness, thickness, thickness, thickness, length, 0, 0, 1, 1);
-    }
-
     public static void coolerAxes(MatrixStack stack, float axisSize, float axisOffset, float outlineSize, float outlineOffset)
     {
         float scale = BBSSettings.axesScale.get();
@@ -187,5 +170,70 @@ public class Draw
         RenderSystem.disableDepthTest();
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
+    }
+
+    public static void arc3D(BufferBuilder builder, MatrixStack stack, Axis axis, float radius, float thickness, float r, float g, float b)
+    {
+        arc3D(builder, stack, axis, radius, thickness, r, g, b, 0F, 360F);
+    }
+
+    /**
+     * Based on ElGatoPro300's code from BBS mod CML edition
+     */
+    public static void arc3D(BufferBuilder builder, MatrixStack stack, Axis axis, float radius, float thickness, float r, float g, float b, float startDeg, float sweepDeg)
+    {
+        int segU = 96;
+        int segV = 24;
+        double u0 = Math.toRadians(startDeg);
+        double uStep = Math.toRadians(sweepDeg / (double) segU);
+        double vStep = Math.PI * 2D / (double) segV;
+
+        stack.push();
+
+        if (axis == Axis.X) stack.multiply(RotationAxis.POSITIVE_Z.rotation(MathUtils.PI / 2F));
+        if (axis == Axis.Z) stack.multiply(RotationAxis.POSITIVE_X.rotation(MathUtils.PI / 2F));
+
+        float tubeR = thickness * 0.5F;
+        Matrix4f mat = stack.peek().getPositionMatrix();
+
+        for (int iu = 0; iu < segU; iu++)
+        {
+            double u1 = u0 + uStep * iu;
+            double u2 = u0 + uStep * (iu + 1);
+
+            for (int iv = 0; iv < segV; iv++)
+            {
+                double v1 = vStep * iv;
+                double v2 = vStep * (iv + 1);
+                double cos1 = radius + tubeR * Math.cos(v1);
+                double cos2 = radius + tubeR * Math.cos(v2);
+
+                float x11 = (float) (cos1 * Math.cos(u1));
+                float z11 = (float) (cos1 * Math.sin(u1));
+                float y11 = (float) (tubeR * Math.sin(v1));
+
+                float x12 = (float) (cos2 * Math.cos(u1));
+                float z12 = (float) (cos2 * Math.sin(u1));
+                float y12 = (float) (tubeR * Math.sin(v2));
+
+                float x21 = (float) (cos1 * Math.cos(u2));
+                float z21 = (float) (cos1 * Math.sin(u2));
+                float y21 = (float) (tubeR * Math.sin(v1));
+
+                float x22 = (float) (cos2 * Math.cos(u2));
+                float z22 = (float) (cos2 * Math.sin(u2));
+                float y22 = (float) (tubeR * Math.sin(v2));
+
+                builder.vertex(mat, x11, y11, z11).color(r, g, b, 1F).next();
+                builder.vertex(mat, x12, y12, z12).color(r, g, b, 1F).next();
+                builder.vertex(mat, x22, y22, z22).color(r, g, b, 1F).next();
+
+                builder.vertex(mat, x11, y11, z11).color(r, g, b, 1F).next();
+                builder.vertex(mat, x22, y22, z22).color(r, g, b, 1F).next();
+                builder.vertex(mat, x21, y21, z21).color(r, g, b, 1F).next();
+            }
+        }
+
+        stack.pop();
     }
 }

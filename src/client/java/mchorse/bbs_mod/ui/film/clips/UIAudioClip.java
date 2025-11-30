@@ -37,7 +37,7 @@ public class UIAudioClip extends UIClip<AudioClip>
 
         this.pickAudio = new UIButton(UIKeys.CAMERA_PANELS_AUDIO_PICK_AUDIO, (b) ->
         {
-            UISoundOverlayPanel panel = new UISoundOverlayPanel((l) -> this.clip.audio.set(l));
+            UISoundOverlayPanel panel = new UISoundOverlayPanel((l) -> this.clip.audio.set(l), this.getContext());
 
             UIOverlay.addOverlay(this.getContext(), panel.set(this.clip.audio.get()));
         });

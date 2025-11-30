@@ -21,7 +21,14 @@ void main()
 
     if (abs(color.r * 255.0 - Target) < 0.1)
     {
-        color = vec4(0.0, 0.5, 1.0, 0.5);
+        if (Target >= 7)
+        {
+            color = vec4(0.0, 0.5, 1.0, 0.5);
+        }
+        else
+        {
+            color = vec4(1.0, 1.0, 1.0, 0.5);
+        }
     }
     else
     {

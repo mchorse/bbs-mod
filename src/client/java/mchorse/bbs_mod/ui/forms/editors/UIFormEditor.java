@@ -50,6 +50,7 @@ import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.EventPropagation;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIRenderable;
+import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIUtils;
@@ -91,6 +92,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
     public UIAnimationStateEditor statesKeyframes;
     public UIIcon openStates;
     public UIIcon plause;
+    public UIIcon shiftDuration;
 
     /* Forms sidebar */
     public UIElement forms;
@@ -197,6 +199,18 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.plause = new UIIcon(() -> this.playing ? Icons.PAUSE : Icons.PLAY, (b) -> this.plause());
         this.plause.relative(this.openStates).y(1F);
         this.plause.tooltip(UIKeys.CAMERA_EDITOR_KEYS_EDITOR_PLAUSE, Direction.RIGHT);
+        this.shiftDuration = new UIIcon(Icons.SHIFT_TO, (b) ->
+        {
+            AnimationState state = this.statesKeyframes.getState();
+
+            if (state != null)
+            {
+                state.duration.set(this.cursor);
+            }
+        });
+        this.shiftDuration.relative(this.plause).y(1F);
+        this.shiftDuration.tooltip(UIKeys.CAMERA_TIMELINE_CONTEXT_SHIFT_DURATION, Direction.RIGHT);
+        this.shiftDuration.keys().register(Keys.CLIP_SHIFT, () -> this.shiftDuration.clickItself());
 
         this.renderer = new UIPickableFormRenderer(this);
         this.renderer.full(this);
@@ -242,7 +256,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
         this.forms.add(background, this.formsList, this.bodyPartEditor, draggable);
         this.formEditor.add(this.forms);
-        this.statesEditor.add(backgroundStates, this.openStates, this.plause, this.statesKeyframes);
+        this.statesEditor.add(backgroundStates, this.openStates, this.plause, this.shiftDuration, this.statesKeyframes);
         this.add(this.renderer, this.formEditor, this.statesEditor, this.icons);
 
         this.keys().register(Keys.UNDO, this::undo);
@@ -280,6 +294,11 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
             if (pair != null)
             {
+                if (Gizmo.INSTANCE.start(stencil.getIndex(), context.mouseX, context.mouseY, this.editor.getEditableTransform()))
+                {
+                    return true;
+                }
+
                 this.pickFormFromRenderer(pair);
 
                 return true;
@@ -305,6 +324,14 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         if (!bone.isEmpty())
         {
             this.editor.pickBone(bone);
+        }
+    }
+
+    public void refillState()
+    {
+        if (this.statesKeyframes.getState() != null)
+        {
+            this.pickState(this.statesKeyframes.getState());
         }
     }
 
@@ -403,6 +430,8 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
                 this.pickForm(selection);
             }
         }
+
+        this.refillState();
     }
 
     private void addBodyPart(BodyPart part)
@@ -424,6 +453,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 
         part.fromData(data);
         this.addBodyPart(part);
+        this.refillState();
     }
 
     private void removeBodyPart()
@@ -436,6 +466,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.refreshFormList();
         this.formsList.setIndex(index - 1);
         this.pickForm(this.formsList.getCurrentFirst());
+        this.refillState();
     }
 
     private void pickForm(UIForms.FormEntry entry)
@@ -562,6 +593,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.editor.setEditor(this);
         this.editor.startEdit(form);
         this.editor.full(this.formEditor).resize();
+        this.refillState();
 
         return true;
     }
@@ -642,6 +674,8 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
             this.formsList.setCurrentScroll(bodyPart);
             this.pickForm(bodyPart);
         }
+
+        this.refillState();
     }
 
     public void preFormRender(UIContext context, Form form)

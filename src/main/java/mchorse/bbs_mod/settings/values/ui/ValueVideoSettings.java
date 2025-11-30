@@ -2,13 +2,17 @@ package mchorse.bbs_mod.settings.values.ui;
 
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 
 public class ValueVideoSettings extends ValueGroup
 {
     public static final String DEFAULT_FFMPEG_ARGUMENTS = "-f rawvideo -pix_fmt bgr24 -s %WIDTH%x%HEIGHT% -r %FPS% -i - -vf %FILTERS% -c:v libx264 -preset ultrafast -tune zerolatency -qp 18 -pix_fmt yuv420p %NAME%.mp4";
+    public static final String DEFAULT_AUDIO_FFMPEG_ARGUMENTS = "-f rawvideo -pix_fmt bgr24 -s %WIDTH%x%HEIGHT% -r %FPS% -i - -i %AUDIO_TRACK% -vf %FILTERS% -c:v libx264 -preset ultrafast -tune zerolatency -qp 18 -pix_fmt yuv420p -c:a aac -b:a 128k -shortest %NAME%.mp4";
 
     public final ValueString arguments = new ValueString("arguments", DEFAULT_FFMPEG_ARGUMENTS);
+    public final ValueString argumentsAudio = new ValueString("arguments_audio", DEFAULT_AUDIO_FFMPEG_ARGUMENTS);
+    public final ValueBoolean audio = new ValueBoolean("audio", false);
     public final ValueInt width = new ValueInt("width", 1280, 2, 8096);
     public final ValueInt height = new ValueInt("height", 720, 2, 8096);
     public final ValueInt frameRate = new ValueInt("frameRate", 60, 10, 1000);
@@ -21,6 +25,8 @@ public class ValueVideoSettings extends ValueGroup
         super(id);
 
         this.add(this.arguments);
+        this.add(this.argumentsAudio);
+        this.add(this.audio);
         this.add(this.width);
         this.add(this.height);
         this.add(this.frameRate);

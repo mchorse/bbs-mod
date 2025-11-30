@@ -15,6 +15,8 @@ import mchorse.bbs_mod.client.renderer.entity.GunProjectileEntityRenderer;
 import mchorse.bbs_mod.client.renderer.item.GunItemRenderer;
 import mchorse.bbs_mod.client.renderer.item.ModelBlockItemRenderer;
 import mchorse.bbs_mod.cubic.model.ModelManager;
+import mchorse.bbs_mod.events.register.RegisterClientSettingsEvent;
+import mchorse.bbs_mod.events.register.RegisterL10nEvent;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -252,6 +254,12 @@ public class BBSModClient implements ClientModInitializer
         }
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
+
+        if (player == null || MinecraftClient.getInstance().currentScreen != null)
+        {
+            return;
+        }
+
         Morph morph = Morph.getMorph(player);
 
         /* Animation state trigger */
@@ -263,25 +271,22 @@ public class BBSModClient implements ClientModInitializer
             return;
 
         /* Animation state trigger for items*/
-        if (player != null)
+        ModelProperties main = getItemStackProperties(player.getStackInHand(Hand.MAIN_HAND));
+        ModelProperties offhand = getItemStackProperties(player.getStackInHand(Hand.OFF_HAND));
+
+        if (main != null && main.getForm() != null && main.getForm().findState(key, (form, state) ->
         {
-            ModelProperties main = getItemStackProperties(player.getStackInHand(Hand.MAIN_HAND));
-            ModelProperties offhand = getItemStackProperties(player.getStackInHand(Hand.OFF_HAND));
+            ClientNetwork.sendFormTrigger(state.id.get(), ServerNetwork.STATE_TRIGGER_MAIN_HAND_ITEM);
+            form.playState(state);
+        }))
+            return;
 
-            if (main != null && main.getForm() != null && main.getForm().findState(key, (form, state) ->
-            {
-                ClientNetwork.sendFormTrigger(state.id.get(), ServerNetwork.STATE_TRIGGER_MAIN_HAND_ITEM);
-                form.playState(state);
-            }))
-                return;
-
-            if (offhand != null && offhand.getForm() != null && offhand.getForm().findState(key, (form, state) ->
-            {
-                ClientNetwork.sendFormTrigger(state.id.get(), ServerNetwork.STATE_TRIGGER_OFF_HAND_ITEM);
-                form.playState(state);
-            }))
-                return;
-        }
+        if (offhand != null && offhand.getForm() != null && offhand.getForm().findState(key, (form, state) ->
+        {
+            ClientNetwork.sendFormTrigger(state.id.get(), ServerNetwork.STATE_TRIGGER_OFF_HAND_ITEM);
+            form.playState(state);
+        }))
+            return;
 
         /* Change form based on the hotkey */
         for (Form form : BBSModClient.getFormCategories().getRecentForms().getCategories().get(0).getForms())
@@ -320,6 +325,8 @@ public class BBSModClient implements ClientModInitializer
         l10n.register((lang) -> Collections.singletonList(Link.assets("strings/" + lang + ".json")));
         l10n.reload();
 
+        BBSMod.events.post(new RegisterL10nEvent(l10n));
+
         File parentFile = BBSMod.getSettingsFolder().getParentFile();
 
         particles = new ParticleManager(() -> new File(BBSMod.getAssetsFolder(), "particles"));
@@ -342,6 +349,8 @@ public class BBSModClient implements ClientModInitializer
         KeybindSettings.registerClasses();
 
         BBSMod.setupConfig(Icons.KEY_CAP, "keybinds", new File(BBSMod.getSettingsFolder(), "keybinds.json"), KeybindSettings::register);
+
+        BBSMod.events.post(new RegisterClientSettingsEvent());
 
         BBSSettings.language.postCallback((v, f) -> reloadLanguage(getLanguageKey()));
         BBSSettings.editorSeconds.postCallback((v, f) ->

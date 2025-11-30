@@ -12,6 +12,7 @@ import mchorse.bbs_mod.ui.forms.editors.panels.UIFormPanel;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIGeneralFormPanel;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIPanelBase;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
@@ -28,12 +29,22 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
 
     public T form;
     public UIFormPanel<T> defaultPanel;
+    public UIFormPanel<T> generalPanel;
+
+    private UIPropTransform general;
 
     public UIForm()
     {
         super(Direction.LEFT);
 
         this.keys().register(Keys.FILM_CONTROLLER_CYCLE_EDITORS, this::cyclePanels);
+    }
+
+    public UIPropTransform getEditableTransform()
+    {
+        this.setPanel(this.generalPanel);
+
+        return this.general;
     }
 
     private void cyclePanels()
@@ -61,7 +72,12 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
 
     protected void registerDefaultPanels()
     {
-        this.registerPanel(new UIGeneralFormPanel(this), UIKeys.FORMS_EDITORS_GENERAL, Icons.GEAR);
+        UIGeneralFormPanel panel = new UIGeneralFormPanel(this);
+
+        this.registerPanel(panel, UIKeys.FORMS_EDITORS_GENERAL, Icons.GEAR);
+
+        this.generalPanel = panel;
+        this.general = panel.transform;
     }
 
     public void setEditor(UIFormEditor editor)

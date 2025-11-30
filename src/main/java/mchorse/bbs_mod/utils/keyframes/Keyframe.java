@@ -213,4 +213,11 @@ public class Keyframe <T> extends BaseValue
         if (map.has("shape")) this.shape = KeyframeShape.fromString(map.getString("shape"));
         if (map.has("color")) this.color = Color.rgb(map.getInt("color"));
     }
+
+    public void copyOverExtra(Keyframe<T> a)
+    {
+        this.getInterpolation().copy(a.getInterpolation());
+        this.setShape(a.getShape());
+        this.setColor(a.getColor());
+    }
 }

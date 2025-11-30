@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.utils;
 
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.utils.Pair;
 
 import java.util.HashMap;
@@ -19,8 +20,17 @@ public class StencilMap
 
     public void setup()
     {
-        this.objectIndex = 1;
+        this.objectIndex = 7;
+
+        /* Reset map and setup pairs for Gizmo's individual axes
+         * and perpendicular planes */
         this.indexMap.clear();
+        this.indexMap.put(Gizmo.STENCIL_X, new Pair<>(null, "x"));
+        this.indexMap.put(Gizmo.STENCIL_Y, new Pair<>(null, "y"));
+        this.indexMap.put(Gizmo.STENCIL_Z, new Pair<>(null, "z"));
+        this.indexMap.put(Gizmo.STENCIL_XZ, new Pair<>(null, "xz"));
+        this.indexMap.put(Gizmo.STENCIL_XY, new Pair<>(null, "xy"));
+        this.indexMap.put(Gizmo.STENCIL_ZY, new Pair<>(null, "zy"));
     }
 
     public void addPicking(Form form)

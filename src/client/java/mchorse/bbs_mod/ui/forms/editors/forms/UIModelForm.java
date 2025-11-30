@@ -6,6 +6,7 @@ import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIActionsFormPanel;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIModelFormPanel;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
 import mchorse.bbs_mod.utils.StringUtils;
@@ -33,6 +34,12 @@ public class UIModelForm extends UIForm<ModelForm>
 
             this.modelPanel.pick.clickItself();
         });
+    }
+
+    @Override
+    public UIPropTransform getEditableTransform()
+    {
+        return this.modelPanel.poseEditor.transform;
     }
 
     @Override
