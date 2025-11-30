@@ -6,7 +6,7 @@ import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.events.register.L10nReloadEvent;
+import mchorse.bbs_mod.events.L10nReloadEvent;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.l10n.keys.LangKey;
 import mchorse.bbs_mod.resources.AssetProvider;

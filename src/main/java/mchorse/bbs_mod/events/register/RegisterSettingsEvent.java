@@ -9,7 +9,8 @@ import java.util.function.Consumer;
 
 public class RegisterSettingsEvent
 {
-    public void register(Icon icon, String id, Consumer<SettingsBuilder> consumer) {
+    public void register(Icon icon, String id, Consumer<SettingsBuilder> consumer)
+    {
         BBSMod.setupConfig(icon, id, new File(BBSMod.getSettingsFolder(), id + ".json"), consumer);
     }
 }

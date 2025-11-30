@@ -8,7 +8,7 @@ import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.camera.OrbitCamera;
 import mchorse.bbs_mod.camera.controller.OrbitCameraController;
 import mchorse.bbs_mod.client.BBSRendering;
-import mchorse.bbs_mod.events.register.RegisterDashboardPanels;
+import mchorse.bbs_mod.events.register.RegisterDashboardPanelsEvent;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.resources.Link;
@@ -90,7 +90,7 @@ public class UIDashboard extends UIBaseMenu
         this.panels.full(this.viewport);
         this.registerPanels();
 
-        BBSMod.events.post(new RegisterDashboardPanels(this));
+        BBSMod.events.post(new RegisterDashboardPanelsEvent(this));
 
         this.main.add(this.panels);
 
