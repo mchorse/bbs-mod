@@ -2,8 +2,6 @@ package mchorse.bbs_mod.ui.framework.elements.input;
 
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.graphics.window.Window;
-import mchorse.bbs_mod.BBSModClient;
-import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.IValueNotifier;
 import mchorse.bbs_mod.ui.Keys;
@@ -43,7 +41,6 @@ public class UIPropTransform extends UITransform
 
     private boolean model;
     private boolean local;
-    private int rotateSign = 1;
 
     private UITransformHandler handler;
 
@@ -221,49 +218,11 @@ public class UIPropTransform extends UITransform
         this.editing = true;
         this.mode = mode;
 
-        if (this.mode == 2)
-        {
-            this.rotateSign = this.computeRotateSign();
-        }
-
         this.cache.copy(this.transform);
 
         if (!this.handler.hasParent())
         {
             context.menu.overlay.add(this.handler);
-        }
-    }
-
-    private int computeRotateSign()
-    {
-        try
-        {
-            Camera camera = BBSModClient.getCameraController().camera;
-            org.joml.Vector3f camForward = camera.getLookDirection();
-
-            /* This calculates which way the rotating gizmo turns depending on the perspective from which it is viewed
-              *The "F" keys handle perspective rotation depending on the side of the ring
-            */
-            org.joml.Vector3f axisVec = new org.joml.Vector3f(
-                this.axis == Axis.X ? 0F : 1F,
-                this.axis == Axis.Y ? 1F : 0F,
-                this.axis == Axis.Z ? 1F : 0F
-            );
-
-            Matrix3f rot = new Matrix3f()
-                .rotateX(this.model ? MathUtils.PI : 0F)
-                .mul(this.transform.createRotationMatrix());
-
-            rot.transform(axisVec);
-
-            float dot = axisVec.x * camForward.x + axisVec.y * camForward.y + axisVec.z * camForward.z;
-
-            /* This controls the ring face and which side it will rotate on */
-            return dot < 0F ? -1 : 1;
-        }
-        catch (Throwable t)
-        {
-            return 1;
         }
     }
 
@@ -449,11 +408,9 @@ public class UIPropTransform extends UITransform
                         vector3f.mul(180F / MathUtils.PI);
                     }
 
-                    int signedDx = this.mode == 2 ? (dx * this.rotateSign) : dx;
-
-                    if (this.axis == Axis.X || all) vector3f.x += factor * signedDx;
-                    if (this.axis == Axis.Y || all) vector3f.y += factor * signedDx;
-                    if (this.axis == Axis.Z || all) vector3f.z += factor * signedDx;
+                    if (this.axis == Axis.X || all) vector3f.x += factor * dx;
+                    if (this.axis == Axis.Y || all) vector3f.y += factor * dx;
+                    if (this.axis == Axis.Z || all) vector3f.z += factor * dx;
 
                     if (this.mode == 0) this.setT(null, vector3f.x, vector3f.y, vector3f.z);
                     if (this.mode == 1) this.setS(null, vector3f.x, vector3f.y, vector3f.z);
