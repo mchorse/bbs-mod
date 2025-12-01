@@ -103,7 +103,6 @@ public class MatrixStackUtils
         position.m22(position.m22() / max);
     }
 
-    /* matrix that prevents the gizmo from becoming distorted when scaling a bone of the model */
     public static Matrix4f stripScale(Matrix4f matrix)
     {
         Matrix4f m = new Matrix4f(matrix);
