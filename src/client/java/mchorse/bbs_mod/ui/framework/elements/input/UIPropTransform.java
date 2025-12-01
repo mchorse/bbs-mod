@@ -239,12 +239,12 @@ public class UIPropTransform extends UITransform
         try
         {
             Camera camera = BBSModClient.getCameraController().camera;
-            Vector3f camForward = camera.getLookDirection();
+            org.joml.Vector3f camForward = camera.getLookDirection();
 
             /* This calculates which way the rotating gizmo turns depending on the perspective from which it is viewed
               *The "F" keys handle perspective rotation depending on the side of the ring
             */
-            Vector3f axisVec = new Vector3f(
+            org.joml.Vector3f axisVec = new org.joml.Vector3f(
                 this.axis == Axis.X ? 0F : 1F,
                 this.axis == Axis.Y ? 1F : 0F,
                 this.axis == Axis.Z ? 1F : 0F
