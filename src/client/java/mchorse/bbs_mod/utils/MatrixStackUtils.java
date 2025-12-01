@@ -102,4 +102,37 @@ public class MatrixStackUtils
         position.m12(position.m12() / max);
         position.m22(position.m22() / max);
     }
+
+    /* matrix that prevents the gizmo from becoming distorted when scaling a bone of the model */
+    public static Matrix4f stripScale(Matrix4f matrix)
+    {
+        Matrix4f m = new Matrix4f(matrix);
+
+        float sx = (float) Math.sqrt(m.m00() * m.m00() + m.m10() * m.m10() + m.m20() * m.m20());
+        float sy = (float) Math.sqrt(m.m01() * m.m01() + m.m11() * m.m11() + m.m21() * m.m21());
+        float sz = (float) Math.sqrt(m.m02() * m.m02() + m.m12() * m.m12() + m.m22() * m.m22());
+
+        if (sx != 0F)
+        {
+            m.m00(m.m00() / sx);
+            m.m10(m.m10() / sx);
+            m.m20(m.m20() / sx);
+        }
+
+        if (sy != 0F)
+        {
+            m.m01(m.m01() / sy);
+            m.m11(m.m11() / sy);
+            m.m21(m.m21() / sy);
+        }
+
+        if (sz != 0F)
+        {
+            m.m02(m.m02() / sz);
+            m.m12(m.m12() / sz);
+            m.m22(m.m22() / sz);
+        }
+
+        return m;
+    }
 }
