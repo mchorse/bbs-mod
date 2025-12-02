@@ -80,7 +80,7 @@ public class UIKeyframeEditor extends UIElement
             this.resize();
         }
 
-        this.view.w(1F, keyframe == null || this.target != null ? 0 : -140);
+        this.view.w(1F, this.target != null ? 0 : -140);
         this.resize();
     }
 

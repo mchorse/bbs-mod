@@ -462,7 +462,7 @@ public class UIKeys
     public static final IKey GENERAL_SAVE = L10n.lang("bbs.ui.save");
     public static final IKey GENERAL_SEARCH = L10n.lang("bbs.ui.search");
     public static final IKey GENERAL_SUCCESS = L10n.lang("bbs.ui.success");
-    public static final IKey GENERAL_UPLOAD = L10n.lang("bbs.ui.download");
+    public static final IKey GENERAL_UPLOAD = L10n.lang("bbs.ui.upload");
     public static final IKey GENERAL_WARNING = L10n.lang("bbs.ui.warning");
     public static final IKey GENERAL_X = IKey.constant("X");
     public static final IKey GENERAL_Y = IKey.constant("Y");

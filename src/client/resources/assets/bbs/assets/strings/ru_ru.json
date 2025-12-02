@@ -9,6 +9,8 @@
     "bbs.config.appearance.fov-comment": "Опция управляющая полем зрения камеры в меню мира и панели анимаций",
     "bbs.config.appearance.freeze_models": "Заморозить модель",
     "bbs.config.appearance.freeze_models-comment": "Когда эта опция включена, то модели не будут следить за мышкой",
+    "bbs.config.appearance.gizmos": "Гизмо",
+    "bbs.config.appearance.gizmos-comment": "Определяет если хватабельные оси для перемещния, масштабирования и вращения включены",
     "bbs.config.appearance.hsv_color_picker": "HSV пипетка",
     "bbs.config.appearance.hsv_color_picker-comment": "Позволяет поменять цветовую модель цветовой пипетки на HSV вместо RGB, которая является более интуитивной",
     "bbs.config.appearance.language": "Язык",

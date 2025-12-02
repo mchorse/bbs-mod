@@ -157,7 +157,7 @@ public abstract class BaseFilmController
             if (matrix != null)
             {
                 stack.push();
-                MatrixStackUtils.multiply(stack, matrix);
+                MatrixStackUtils.multiply(stack, MatrixStackUtils.stripScale(matrix));
 
                 if (context.map == null)
                 {

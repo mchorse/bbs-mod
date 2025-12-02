@@ -1,10 +1,16 @@
 {
+	"texture": "assets:models/player/alex_bends_3d/alex.png",
 	"pose_group": "player/steve",
 	"procedural": true,
 	"culling": false,
 	"items_main": ["right_arm_item"],
 	"items_off": ["left_arm_item"],
 	"scale": [0.9375, 0.9375, 0.9375],
+	"look_at": {
+		"head": "head",
+		"pitch": true,
+		"head_limit": 45
+	},
 	"armor_slots": {
 		"helmet": {
 			"group": "armor_helmet"

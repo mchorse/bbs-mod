@@ -1,4 +1,6 @@
 {
+	"texture": "assets:models/player/steve_3d/steve.png",
+	"pose_group": "player/steve",
 	"procedural": true,
 	"culling": false,
 	"items_main": ["right_arm_item"],

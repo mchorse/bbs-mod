@@ -9,6 +9,8 @@
     "bbs.config.appearance.fov-comment": "This option controls FOV for camera in world menu and animation panel",
     "bbs.config.appearance.freeze_models": "Freeze models",
     "bbs.config.appearance.freeze_models-comment": "When enabled, models in form picker won't follow the mouse",
+    "bbs.config.appearance.gizmos": "Gizmos",
+    "bbs.config.appearance.gizmos-comment": "Whether grab-able axes elements for translation, scale and rotation are enabled",
     "bbs.config.appearance.hsv_color_picker": "HSV picker",
     "bbs.config.appearance.hsv_color_picker-comment": "When enabled, this option switches all color pickers to use HSV color model instead of RGB, which is more intuitive",
     "bbs.config.appearance.language": "Language",

@@ -10,6 +10,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.Gizmo;
+import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.MathUtils;
@@ -149,7 +150,11 @@ public class UIPropTransform extends UITransform
         this.keys().register(Keys.TRANSFORMATIONS_X, () -> this.axis = Axis.X).active(active).category(category);
         this.keys().register(Keys.TRANSFORMATIONS_Y, () -> this.axis = Axis.Y).active(active).category(category);
         this.keys().register(Keys.TRANSFORMATIONS_Z, () -> this.axis = Axis.Z).active(active).category(category);
-        this.keys().register(Keys.TRANSFORMATIONS_TOGGLE_LOCAL, this::toggleLocal).category(category);
+        this.keys().register(Keys.TRANSFORMATIONS_TOGGLE_LOCAL, () ->
+        {
+            this.toggleLocal();
+            UIUtils.playClick();
+        }).category(category);
 
         return this;
     }
@@ -234,7 +239,7 @@ public class UIPropTransform extends UITransform
         }
         else if (this.mode == 2)
         {
-            return this.transform.rotate;
+            return this.local && BBSSettings.gizmos.get() ? this.transform.rotate2 : this.transform.rotate;
         }
 
         return this.transform.translate;
@@ -244,7 +249,11 @@ public class UIPropTransform extends UITransform
     {
         if (this.mode == 0 || fully) this.setT(null, this.cache.translate.x, this.cache.translate.y, this.cache.translate.z);
         if (this.mode == 1 || fully) this.setS(null, this.cache.scale.x, this.cache.scale.y, this.cache.scale.z);
-        if (this.mode == 2 || fully) this.setR(null, MathUtils.toDeg(this.cache.rotate.x), MathUtils.toDeg(this.cache.rotate.y), MathUtils.toDeg(this.cache.rotate.z));
+        if (this.mode == 2 || fully)
+        {
+            this.setR(null, MathUtils.toDeg(this.cache.rotate.x), MathUtils.toDeg(this.cache.rotate.y), MathUtils.toDeg(this.cache.rotate.z));
+            this.setR2(null, MathUtils.toDeg(this.cache.rotate2.x), MathUtils.toDeg(this.cache.rotate2.y), MathUtils.toDeg(this.cache.rotate2.z));
+        }
     }
 
     private void disable()
@@ -414,7 +423,11 @@ public class UIPropTransform extends UITransform
 
                     if (this.mode == 0) this.setT(null, vector3f.x, vector3f.y, vector3f.z);
                     if (this.mode == 1) this.setS(null, vector3f.x, vector3f.y, vector3f.z);
-                    if (this.mode == 2) this.setR(null, vector3f.x, vector3f.y, vector3f.z);
+                    if (this.mode == 2)
+                    {
+                        if (this.local && BBSSettings.gizmos.get()) this.setR2(null, vector3f.x, vector3f.y, vector3f.z);
+                        else this.setR(null, vector3f.x, vector3f.y, vector3f.z);
+                    }
                 }
 
                 this.setTransform(this.transform);

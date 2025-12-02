@@ -63,14 +63,14 @@ public class FFMpegUtils
         return file;
     }
 
-    public static File getFFMPEG()
+    public static String getFFMPEG()
     {
-        File encoder = new File(BBSSettings.videoEncoderPath.get());
+        String encoder = BBSSettings.videoEncoderPath.get();
         File encoderPath = findFFMPEG(BBSSettings.videoEncoderPath.get());
 
         if (encoderPath.isFile())
         {
-            encoder = encoderPath;
+            encoder = encoderPath.getAbsolutePath();
         }
 
         return encoder;
@@ -85,7 +85,7 @@ public class FFMpegUtils
     {
         List<String> args = new ArrayList<String>();
 
-        args.add(getFFMPEG().getAbsolutePath());
+        args.add(getFFMPEG());
 
         for (String arg : arguments)
         {

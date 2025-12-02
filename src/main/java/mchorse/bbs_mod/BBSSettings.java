@@ -34,6 +34,7 @@ public class BBSSettings
     public static ValueFloat axesScale;
     public static ValueBoolean uniformScale;
     public static ValueBoolean clickSound;
+    public static ValueBoolean gizmos;
 
     public static ValueBoolean enableCursorRendering;
     public static ValueBoolean enableMouseButtonRendering;
@@ -162,6 +163,7 @@ public class BBSSettings
         axesScale = builder.getFloat("axes_scale", 1F, 0F, 2F);
         uniformScale = builder.getBoolean("uniform_scale", false);
         clickSound = builder.getBoolean("click_sound", false);
+        gizmos = builder.getBoolean("gizmos", true);
         favoriteColors = new ValueColors("favorite_colors");
         disabledSheets = new ValueStringKeys("disabled_sheets");
         disabledSheets.set(defaultFilters);

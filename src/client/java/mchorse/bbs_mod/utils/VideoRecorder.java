@@ -110,11 +110,10 @@ public class VideoRecorder
                 params = params.replace("%AUDIO_TRACK%", "\"" + audioFile.getAbsolutePath() + "\"");
             }
 
-            List<String> args = new ArrayList<String>();
+            List<String> args = new ArrayList<>();
+            String encoder = FFMpegUtils.getFFMPEG();
 
-            File encoder = FFMpegUtils.getFFMPEG();
-
-            args.add(encoder.getAbsolutePath());
+            args.add(encoder);
             args.addAll(Arrays.asList(params.split(" ")));
 
             System.out.println("Recording video with following arguments: " + args);

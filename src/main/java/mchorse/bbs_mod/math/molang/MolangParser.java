@@ -185,6 +185,15 @@ public class MolangParser extends MathBuilder
             {
                 String string = data.asString();
 
+                if (string.trim().equalsIgnoreCase("true"))
+                {
+                    return MolangParser.ONE;
+                }
+                else if (string.trim().equalsIgnoreCase("false"))
+                {
+                    return MolangParser.ZERO;
+                }
+
                 try
                 {
                     return new MolangValue(this, new Constant(Double.parseDouble(string)));
