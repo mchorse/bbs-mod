@@ -120,6 +120,7 @@ public class UICurveClip extends UIClip<CurveClip>
         {
             this.editor.embedView(this.keyframes);
             this.keyframes.view.resetView();
+            this.keyframes.view.getGraph().clearSelection();
         });
         this.edit.keys().register(Keys.FORMS_EDIT, () -> this.edit.clickItself());
     }

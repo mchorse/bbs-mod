@@ -33,7 +33,7 @@ public class UIRemapperClip extends UIClip<RemapperClip>
         {
             UIReplaysEditor.renderBackground(context, this.keyframes.view, (Clips) this.clip.getParent(), this.clip.tick.get());
         });
-        this.keyframes.view.duration(() -> this.clip.duration.get());
+        this.keyframes.view.single().duration(() -> this.clip.duration.get());
         this.keyframes.setUndoId("remapper_keyframes");
 
         this.edit = new UIButton(UIKeys.CAMERA_PANELS_EDIT_KEYFRAMES, (b) ->
@@ -41,6 +41,7 @@ public class UIRemapperClip extends UIClip<RemapperClip>
             this.editor.embedView(this.keyframes);
             this.keyframes.view.resetView();
             this.keyframes.view.editSheet(this.keyframes.view.getGraph().getSheets().get(0));
+            this.keyframes.view.getGraph().clearSelection();
         });
 
         this.edit.keys().register(Keys.FORMS_EDIT, () -> this.edit.clickItself());

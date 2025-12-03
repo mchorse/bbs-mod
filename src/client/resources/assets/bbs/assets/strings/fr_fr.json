@@ -955,6 +955,7 @@
     "bbs.ui.transforms.scale": "Échelle",
     "bbs.ui.transforms.translate": "Position",
     "bbs.ui.transforms.uniform_scale": "Activer l'échelle uniform",
+    "bbs.ui.upload": "Mettre en ligne",
     "bbs.ui.video_settings.args": "Arguments d'encodage",
     "bbs.ui.video_settings.audio": "Exporter l'audio",
     "bbs.ui.video_settings.audio-tooltip": "Cette option exporte les clips audio en tant qu’audio, puis les assemble avec la vidéo enregistrée (sans les sons de Minecraft).",

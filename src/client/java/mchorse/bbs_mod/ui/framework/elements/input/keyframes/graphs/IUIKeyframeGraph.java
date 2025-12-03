@@ -30,6 +30,8 @@ public interface IUIKeyframeGraph
         {
             sheet.selection.clear();
         }
+
+        this.pickKeyframe(null);
     }
 
     public default void selectAll()

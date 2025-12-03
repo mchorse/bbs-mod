@@ -41,12 +41,14 @@ public class UIKeyframeEditor extends UIElement
             }
         });
 
-        this.add(this.view.full(this));
+        this.add(this.view.full(this).w(1F, -140));
     }
 
     public UIKeyframeEditor target(UIElement target)
     {
         this.target = target;
+
+        this.view.resetFlex().full(this).w(1F, -140);
 
         return this;
     }
@@ -80,7 +82,6 @@ public class UIKeyframeEditor extends UIElement
             this.resize();
         }
 
-        this.view.w(1F, this.target != null ? 0 : -140);
         this.resize();
     }
 

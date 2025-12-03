@@ -1192,7 +1192,7 @@ public class UIFilmController extends UIElement
         {
             for (Map.Entry<Integer, IEntity> entry : this.getEntities().entrySet())
             {
-                this.stencilMap.objectIndex = entry.getKey() + 1;
+                this.stencilMap.objectIndex = entry.getKey() + 7;
 
                 Replay replay = CollectionUtils.getSafe(this.panel.getData().replays.getList(), entry.getKey());
 

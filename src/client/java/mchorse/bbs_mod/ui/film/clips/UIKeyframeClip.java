@@ -15,7 +15,6 @@ import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.joml.Matrices;
-import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import org.joml.Vector3f;
@@ -61,6 +60,7 @@ public class UIKeyframeClip extends UIClip<KeyframeClip>
         {
             this.editor.embedView(this.keyframes);
             this.keyframes.view.resetView();
+            this.keyframes.view.getGraph().clearSelection();
         });
         this.edit.keys().register(Keys.FORMS_EDIT, () -> this.edit.clickItself());
     }

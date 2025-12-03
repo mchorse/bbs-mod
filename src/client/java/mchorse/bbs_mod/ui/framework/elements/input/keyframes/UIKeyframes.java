@@ -54,6 +54,7 @@ public class UIKeyframes extends UIElement
     private boolean scaling;
     private float scalingAnchor;
     private Map<Keyframe, Float> scaleTicks = new HashMap<>();
+    private boolean single;
 
     private boolean stacking;
     private float stackOffset;
@@ -109,17 +110,20 @@ public class UIKeyframes extends UIElement
             menu.custom(new UIPresetContextMenu(this.copyPasteController, mouseX, mouseY)
                 .labels(UIKeys.KEYFRAMES_CONTEXT_COPY, UIKeys.KEYFRAMES_CONTEXT_PASTE));
 
-            if (this.isEditing())
+            if (!this.single)
             {
-                menu.action(Icons.CLOSE, UIKeys.KEYFRAMES_CONTEXT_EXIT_TRACK, () -> this.editSheet(null));
-            }
-            else
-            {
-                UIKeyframeSheet sheet = this.dopeSheet.getSheet(this.getContext().mouseY);
-
-                if (sheet != null && KeyframeFactories.isNumeric(sheet.channel.getFactory()))
+                if (this.isEditing())
                 {
-                    menu.action(Icons.EDIT, UIKeys.KEYFRAMES_CONTEXT_EDIT_TRACK.format(sheet.id), () -> this.editSheet(sheet));
+                    menu.action(Icons.CLOSE, UIKeys.KEYFRAMES_CONTEXT_EXIT_TRACK, () -> this.editSheet(null));
+                }
+                else
+                {
+                    UIKeyframeSheet sheet = this.dopeSheet.getSheet(this.getContext().mouseY);
+
+                    if (sheet != null && KeyframeFactories.isNumeric(sheet.channel.getFactory()))
+                    {
+                        menu.action(Icons.EDIT, UIKeys.KEYFRAMES_CONTEXT_EDIT_TRACK.format(sheet.id), () -> this.editSheet(sheet));
+                    }
                 }
             }
 
@@ -204,6 +208,13 @@ public class UIKeyframes extends UIElement
         this.keys().register(Keys.KEYFRAMES_SELECT_NEXT, () -> this.selectNextKeyframe(1)).category(category);
         this.keys().register(Keys.KEYFRAMES_SPREAD, this::spreadKeyframes).category(category);
         this.keys().register(Keys.KEYFRAMES_ADJUST_VALUES, this::adjustValues).category(category);
+    }
+
+    public UIKeyframes single()
+    {
+        this.single = true;
+
+        return this;
     }
 
     private void adjustValues()
@@ -1056,7 +1067,7 @@ public class UIKeyframes extends UIElement
     @Override
     protected boolean subKeyPressed(UIContext context)
     {
-        if (this.currentGraph != this.dopeSheet && context.isPressed(GLFW.GLFW_KEY_ESCAPE))
+        if (this.currentGraph != this.dopeSheet && context.isPressed(GLFW.GLFW_KEY_ESCAPE) && !this.single)
         {
             this.editSheet(null);
 

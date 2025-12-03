@@ -13,6 +13,7 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import org.lwjgl.opengl.GL11;
 
 public class Gizmo
 {
@@ -183,9 +184,11 @@ public class Gizmo
         }
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.disableDepthTest();
+        RenderSystem.depthFunc(GL11.GL_ALWAYS);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
+
+        RenderSystem.depthFunc(GL11.GL_LEQUAL);
     }
 
     public void renderStencil(MatrixStack stack, StencilMap map)

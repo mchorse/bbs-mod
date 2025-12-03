@@ -977,6 +977,7 @@
     "bbs.ui.transforms.scale": "Skalieren",
     "bbs.ui.transforms.translate": "Bewegen",
     "bbs.ui.transforms.uniform_scale": "Einheitliche Skalierung umschalten",
+    "bbs.ui.upload": "Hochladen",
     "bbs.ui.video_settings.args": "Encoder Argumente",
     "bbs.ui.video_settings.audio": "Audio exportieren",
     "bbs.ui.video_settings.audio-tooltip": "Diese Option exportiert Audio Clips als Audio und setzt sie zusammen mit dem aufgenommenen Video (keine Minecraft-Geräusche)",
