@@ -44,6 +44,7 @@ public class ModelBlockItemRenderer implements BuiltinItemRendererRegistry.Dynam
 
             item.expiration -= 1;
             item.entity.getProperties().update(item.formEntity);
+            item.formEntity.update();
         }
     }
 

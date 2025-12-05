@@ -7,10 +7,30 @@
     "authors": [
         "McHorse"
     ],
+    "contributors": [
+        "Chryfi (tracker clip)",
+        "FunkyFight (minor features and bug fixes)",
+        "ElGatoPro300 (bug fixes)",
+        "McMiro (Arabic translations)",
+        "Chunk7 (Chinese translations)",
+        "CheesyKirah (German translations)",
+        "Ninja2die (Greek translations)",
+        "aoa (Korean translations)",
+        "Nioum (French translations)",
+        "csabee (Hungarian translations)",
+        "Nikashi33 (Indonesian translations)",
+        "Legoego19 (Polish translations)",
+        "Fanyel (Portuguese translations)",
+        "El_Redstoniano (Spanish translations)",
+        "Sam Su~ (Thai translations)",
+        "Rüyaperest (Turkish translations)",
+        "Kirkus (Ukrainian translations)",
+        "Diobede (Vietnamese translations)"
+    ],
     "contact": {
         "homepage": "https://www.patreon.com/McHorse"
     },
-    "license": "ARR",
+    "license": "MIT",
     "icon": "assets/bbs/icon.png",
     "environment": "*",
     "entrypoints": {

@@ -1,0 +1,28 @@
+{
+    "block.bbs.model": "ماڈل بلاک",
+    "block.bbs.chroma_red": "سرخ کرومہ",
+    "block.bbs.chroma_green": "سبز کرومہ",
+    "block.bbs.chroma_blue": "نیلا کرومہ",
+    "block.bbs.chroma_cyan": "سایان کرومہ",
+    "block.bbs.chroma_magenta": "میجینٹا کرومہ",
+    "block.bbs.chroma_yellow": "پیلا کرومہ",
+    "block.bbs.chroma_black": "کالا کرومہ",
+    "block.bbs.chroma_white": "سفید کرومہ",
+    "item.bbs.gun": "BBS بندوق",
+    "itemGroup.bbs.main": "BBS ماڈ",
+
+    "key.bbs.item_editor": "آئٹم ایڈیٹر",
+    "key.bbs.dashboard": "ڈیش بورڈ",
+    "key.bbs.demorph": "ڈی مورف",
+    "key.bbs.open_replays": "موجودہ ری پلے کھولیں",
+    "key.bbs.open_morphing": "مورفنگ مینو کھولیں",
+    "key.bbs.play_film": "فلم چلائیں",
+    "key.bbs.pause_film": "فلم روکیں",
+    "key.bbs.record_replay": "موجودہ ری پلے ریکارڈ کریں",
+    "key.bbs.record_video": "ویڈیو ریکارڈ کریں",
+    "key.bbs.teleport": "موجودہ ری پلے پر ٹیلی پورٹ کریں",
+    "key.bbs.zoom": "زوم کریں (BBS بندوق)",
+    "category.bbs.main": "BBS ماڈ",
+
+    "gamerule.bbsEditing": "BBS ماڈ کی ایڈیٹنگ کی اجازت"
+}
