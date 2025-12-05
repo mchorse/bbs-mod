@@ -48,7 +48,7 @@ public class UIKeyframeEditor extends UIElement
     {
         this.target = target;
 
-        this.view.resetFlex().full(this).w(1F, -140);
+        this.view.resetFlex().full(this).w(1F);
 
         return this;
     }

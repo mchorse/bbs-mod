@@ -1072,7 +1072,7 @@ public class UIFilmController extends UIElement
 
         if (altPressed)
         {
-            int stencilIndex = this.stencil.getIndex() - 1;
+            int stencilIndex = this.stencil.getIndex() - 7;
 
             this.hoveredEntity = this.getEntities().get(stencilIndex);
 
