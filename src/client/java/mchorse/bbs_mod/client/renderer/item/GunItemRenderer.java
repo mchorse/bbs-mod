@@ -44,6 +44,7 @@ public class GunItemRenderer implements BuiltinItemRendererRegistry.DynamicItemR
 
             item.expiration -= 1;
             item.properties.update(item.formEntity);
+            item.formEntity.update();
         }
     }
 
