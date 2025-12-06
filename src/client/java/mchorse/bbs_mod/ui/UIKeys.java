@@ -122,6 +122,7 @@ public class UIKeys
     public static final IKey CAMERA_PANELS_KEYFRAMES = L10n.lang("bbs.ui.camera.panels.keyframes");
     public static final IKey CAMERA_PANELS_LAYER = L10n.lang("bbs.ui.camera.panels.layer");
     public static final IKey CAMERA_PANELS_LOOK_AT = L10n.lang("bbs.ui.camera.panels.look_at");
+    public static final IKey MODEL_BLOCKS_ROTATE_AT_YOU = L10n.lang("bbs.ui.model_blocks.rotate_at_you");
     public static final IKey CAMERA_PANELS_MATH = L10n.lang("bbs.ui.camera.panels.math");
     public static final IKey CAMERA_PANELS_METRICS = L10n.lang("bbs.ui.camera.panels.metrics");
     public static final IKey CAMERA_PANELS_OFFSET = L10n.lang("bbs.ui.camera.panels.offset");
@@ -595,6 +596,7 @@ public class UIKeys
     public static final IKey LANGUAGE_PICK_TITLE = L10n.lang("bbs.ui.language.pick.title");
     public static final IKey MODEL_BLOCKS_GLOBAL = L10n.lang("bbs.ui.model_blocks.global");
     public static final IKey MODEL_BLOCKS_KEYS_MOVE_TO = L10n.lang("bbs.ui.model_blocks.keys.move_to");
+    public static final IKey MODEL_BLOCKS_KEYS_ROTATE_AT_YOU = L10n.lang("bbs.ui.model_blocks.keys.rotate_at_you");
     public static final IKey MODEL_BLOCKS_KEYS_TELEPORT = L10n.lang("bbs.ui.model_blocks.keys.teleport");
     public static final IKey MODEL_BLOCKS_KEYS_TOGGLE_RENDERING = L10n.lang("bbs.ui.model_blocks.keys.toggle_rendering");
     public static final IKey MODEL_BLOCKS_SHADOW = L10n.lang("bbs.ui.model_blocks.shadow");
