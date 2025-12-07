@@ -398,9 +398,9 @@ public class UIPropTransform extends UITransform
             {
                 int dx = context.mouseX - this.lastX;
                 Vector3f vector = this.getValue();
-                boolean all = Window.isAltPressed();
-
-                float factor = this.mode == 0 ? 0.05F : (this.mode == 1 ? 0.01F : 0.5F);
+                boolean all = this.mode == 1 && Window.isCtrlPressed();
+                UITrackpad reference = this.mode == 0 ? this.tx : (this.mode == 1 ? this.sx : this.rx);
+                float factor = (float) reference.getValueModifier();
 
                 if (this.local && this.mode == 0)
                 {
@@ -478,6 +478,14 @@ public class UIPropTransform extends UITransform
             }
             
             return super.subMouseClicked(context);
+        }
+
+        @Override
+        protected boolean subMouseScrolled(UIContext context)
+        {
+            UITrackpad.updateAmplifier(context);
+
+            return true;
         }
     }
 }

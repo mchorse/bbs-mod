@@ -87,6 +87,12 @@ public class UITrackpad extends UIBaseTextbox
         FORMAT.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
     }
 
+    public static void updateAmplifier(UIContext context)
+    {
+        globalFactor.addX((int) context.mouseWheel);
+        context.notifyOrUpdate(UIKeys.TRACKPAD_GLOBAL_AMPLIFIER.format(globalFactor.getValue()), Colors.BLUE);
+    }
+
     public static String format(double number)
     {
         return FORMAT.format(number).replace(',', '.');
@@ -462,8 +468,7 @@ public class UITrackpad extends UIBaseTextbox
 
         if (this.dragging)
         {
-            globalFactor.addX((int) context.mouseWheel);
-            context.notifyOrUpdate(UIKeys.TRACKPAD_GLOBAL_AMPLIFIER.format(globalFactor.getValue()), Colors.BLUE);
+            updateAmplifier(context);
 
             return true;
         }
@@ -746,7 +751,7 @@ public class UITrackpad extends UIBaseTextbox
         super.render(context);
     }
 
-    protected double getValueModifier()
+    public double getValueModifier()
     {
         double value = this.normal;
 

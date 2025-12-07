@@ -29,6 +29,9 @@ public class FilmControllerContext
     public String bone;
     public boolean local;
 
+    public String bone2;
+    public boolean local2;
+
     public String nameTag = "";
     public boolean relative;
 
@@ -115,6 +118,14 @@ public class FilmControllerContext
     {
         this.bone = bone;
         this.local = local;
+
+        return this;
+    }
+
+    public FilmControllerContext bone2(String bone, boolean local)
+    {
+        this.bone2 = bone;
+        this.local2 = local;
 
         return this;
     }
