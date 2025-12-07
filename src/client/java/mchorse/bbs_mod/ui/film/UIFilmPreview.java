@@ -21,9 +21,14 @@ import mchorse.bbs_mod.ui.film.controller.UIOnionSkinContextMenu;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageFolderOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.rendering.UIRenderQueueSelectionPanel;
+import mchorse.bbs_mod.rendering.RenderQueue;
+import mchorse.bbs_mod.rendering.RenderQueueItem;
+import mchorse.bbs_mod.rendering.RenderQueueManager;
 import mchorse.bbs_mod.ui.framework.elements.utils.EventPropagation;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UI;
@@ -185,6 +190,7 @@ public class UIFilmPreview extends UIElement
             {
                 this.panel.recorder.resetReplays = !this.panel.recorder.resetReplays;
             });
+            menu.action(Icons.KEY, UIKeys.RENDER_QUEUE_ADD_TO_QUEUE, this::addToRenderQueue);
         });
 
         this.icons.add(this.replays, this.onionSkin, this.plause, this.teleport, this.flight, this.control, this.perspective, this.recordReplay, this.recordVideo);
@@ -220,6 +226,78 @@ public class UIFilmPreview extends UIElement
         {
             UIOverlay.addOverlay(context, new UIMessageOverlayPanel(UIKeys.GENERAL_ERROR, UIKeys.FILM_RENDER_AUDIO_ERROR));
         }
+    }
+
+    private void addToRenderQueue()
+    {
+        RenderQueueManager manager = BBSModClient.getRenderQueueManager();
+
+        if (manager == null)
+        {
+            return;
+        }
+
+        UIRenderQueueSelectionPanel selectionPanel = new UIRenderQueueSelectionPanel(
+            UIKeys.RENDER_QUEUE_SELECT_QUEUE,
+            manager,
+            (queueName, queue) -> this.addFilmToQueue(queueName, queue, manager)
+        ).singleClick();
+
+        UIOverlay.addOverlay(this.getContext(), selectionPanel, 300, 0.8F);
+    }
+
+    private void addFilmToQueue(String queueName, RenderQueue queue, RenderQueueManager manager)
+    {
+        if (queue == null || this.panel.getData() == null)
+        {
+            return;
+        }
+
+        String filmId = this.panel.getData().getId();
+
+        if (filmId == null || filmId.isEmpty())
+        {
+            return;
+        }
+
+        /* Check if film already exists in queue */
+        boolean filmExists = queue.containsFilm(filmId);
+
+        if (filmExists)
+        {
+            /* Show confirmation dialog for duplicate */
+            UIConfirmOverlayPanel confirmPanel = new UIConfirmOverlayPanel(
+                UIKeys.GENERAL_CONFIRM,
+                UIKeys.RENDER_QUEUE_CONFIRM_DUPLICATE,
+                (confirmed) ->
+                {
+                    if (confirmed)
+                    {
+                        this.doAddFilmToQueue(queueName, queue, manager, filmId);
+                    }
+                }
+            );
+
+            UIOverlay.addOverlay(this.getContext(), confirmPanel);
+        }
+        else
+        {
+            this.doAddFilmToQueue(queueName, queue, manager, filmId);
+        }
+    }
+
+    private void doAddFilmToQueue(String queueName, RenderQueue queue, RenderQueueManager manager, String filmId)
+    {
+        /* Create new item with current film and video settings */
+        RenderQueueItem item = queue.addItem();
+
+        item.filmId.set(filmId);
+        item.settings.copy(BBSSettings.videoSettings);
+
+        /* Save the queue */
+        manager.save(queueName, queue);
+
+        this.getContext().notifySuccess(UIKeys.RENDER_QUEUE_ADD_TO_QUEUE);
     }
 
     public Area getViewport()

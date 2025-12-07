@@ -182,6 +182,7 @@ public class Icons
     public static final Icon FOUR_STAR = register(new Icon(ATLAS, "four_star", 160, 144));
     public static final Icon FIVE_STAR = register(new Icon(ATLAS, "five_star", 176, 144));
     public static final Icon SIX_STAR = register(new Icon(ATLAS, "six_star", 192, 144));
+    public static final Icon CAMERA_LIST_RENDERING = register(new Icon(ATLAS, "camera_list_rendering", 208, 144));
 
     public static final Icon INTERP_LINEAR = register(new Icon(ATLAS, "interp_linear", 0, 192));
     public static final Icon INTERP_CONST = register(new Icon(ATLAS, "interp_const", 16, 192));

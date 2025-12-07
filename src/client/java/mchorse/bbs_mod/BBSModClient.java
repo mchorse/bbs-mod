@@ -31,6 +31,8 @@ import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.network.ServerNetwork;
 import mchorse.bbs_mod.particles.ParticleManager;
+import mchorse.bbs_mod.rendering.RenderQueueExecutor;
+import mchorse.bbs_mod.rendering.RenderQueueManager;
 import mchorse.bbs_mod.resources.AssetProvider;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.resources.packs.URLError;
@@ -100,6 +102,7 @@ public class BBSModClient implements ClientModInitializer
     private static EntitySelectors selectors;
 
     private static ParticleManager particles;
+    private static RenderQueueManager renderQueueManager;
 
     private static KeyBinding keyDashboard;
     private static KeyBinding keyItemEditor;
@@ -171,6 +174,23 @@ public class BBSModClient implements ClientModInitializer
     public static ParticleManager getParticles()
     {
         return particles;
+    }
+
+    public static RenderQueueManager getRenderQueueManager()
+    {
+        return renderQueueManager;
+    }
+
+    private static RenderQueueExecutor renderQueueExecutor;
+
+    public static RenderQueueExecutor getRenderQueueExecutor()
+    {
+        return renderQueueExecutor;
+    }
+
+    public static void setRenderQueueExecutor(RenderQueueExecutor executor)
+    {
+        renderQueueExecutor = executor;
     }
 
     public static CameraController getCameraController()
@@ -326,6 +346,7 @@ public class BBSModClient implements ClientModInitializer
         File parentFile = BBSMod.getSettingsFolder().getParentFile();
 
         particles = new ParticleManager(() -> new File(BBSMod.getAssetsFolder(), "particles"));
+        renderQueueManager = new RenderQueueManager(() -> new File(parentFile, "data/rendering"));
 
         models = new ModelManager(provider);
         formCategories = new FormCategories();
@@ -461,6 +482,12 @@ public class BBSModClient implements ClientModInitializer
         ClientTickEvents.START_CLIENT_TICK.register((client) ->
         {
             BBSRendering.startTick();
+
+            /* Update render queue executor */
+            if (renderQueueExecutor != null)
+            {
+                renderQueueExecutor.tick();
+            }
         });
 
         ClientTickEvents.END_WORLD_TICK.register((client) ->

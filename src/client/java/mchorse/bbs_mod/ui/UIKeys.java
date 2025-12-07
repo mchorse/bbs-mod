@@ -898,6 +898,22 @@ public class UIKeys
     public static final IKey UTILITY_RELOAD_TEXTURES = L10n.lang("studio.ui.utility.reload_textures");
     public static final IKey UTILITY_RESIZE_WINDOW = L10n.lang("studio.ui.utility.resize");
     public static final IKey UTILITY_TITLE = L10n.lang("studio.ui.utility.title");
+    /* Render Queue */
+    public static final IKey RENDER_QUEUE_TITLE = L10n.lang("bbs.ui.render_queue.title");
+    public static final IKey RENDER_QUEUE_ADD_TO_QUEUE = L10n.lang("bbs.ui.render_queue.add_to_queue");
+    public static final IKey RENDER_QUEUE_SELECT_QUEUE = L10n.lang("bbs.ui.render_queue.select_queue");
+    public static final IKey RENDER_QUEUE_NAME_EXISTS = L10n.lang("bbs.ui.render_queue.name_exists");
+    public static final IKey RENDER_QUEUE_NO_SELECTION = L10n.lang("bbs.ui.render_queue.no_selection");
+    public static final IKey RENDER_QUEUE_CONFIRM_DUPLICATE = L10n.lang("bbs.ui.render_queue.confirm_duplicate");
+    public static final IKey RENDER_QUEUE_CONTENT_TITLE = L10n.lang("bbs.ui.render_queue.content_title");
+    public static final IKey RENDER_QUEUE_EMPTY_QUEUE = L10n.lang("bbs.ui.render_queue.empty_queue");
+    public static final IKey RENDER_QUEUE_SETTINGS_TOOLTIP = L10n.lang("bbs.ui.render_queue.settings_tooltip");
+    public static final IKey RENDER_QUEUE_REMOVE_TOOLTIP = L10n.lang("bbs.ui.render_queue.remove_tooltip");
+    public static final IKey RENDER_QUEUE_PLAY_TOOLTIP = L10n.lang("bbs.ui.render_queue.play_tooltip");
+    public static final IKey RENDER_QUEUE_RESET_TOOLTIP = L10n.lang("bbs.ui.render_queue.reset_tooltip");
+    public static final IKey RENDER_QUEUE_RENDERING = L10n.lang("bbs.ui.render_queue.rendering");
+    public static final IKey RENDER_QUEUE_COMPLETE = L10n.lang("bbs.ui.render_queue.complete");
+
     public static final IKey VIDEO_SETTINGS_ARGS = L10n.lang("bbs.ui.video_settings.args");
     public static final IKey VIDEO_SETTINGS_AUDIO = L10n.lang("bbs.ui.video_settings.audio");
     public static final IKey VIDEO_SETTINGS_AUDIO_ARGS = L10n.lang("bbs.ui.video_settings.audio_args");

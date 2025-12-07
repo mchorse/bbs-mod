@@ -150,6 +150,14 @@ public class UIFilmRecorder extends UIElement
 
             context.menu.main.setEnabled(true);
             context.render.postRunnable(this::removeFromParent);
+
+            /* Notify render queue executor - it will handle the delay via tick() */
+            mchorse.bbs_mod.rendering.RenderQueueExecutor executor = BBSModClient.getRenderQueueExecutor();
+
+            if (executor != null && executor.isRunning())
+            {
+                executor.onRecordingComplete(true);
+            }
         }
     }
 

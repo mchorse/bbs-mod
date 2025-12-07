@@ -41,6 +41,11 @@ import mchorse.bbs_mod.ui.film.controller.UIFilmController;
 import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
 import mchorse.bbs_mod.ui.film.utils.UIFilmUndoHandler;
 import mchorse.bbs_mod.ui.film.utils.undo.UIUndoHistoryOverlay;
+import mchorse.bbs_mod.ui.rendering.UIRenderQueueSelectionPanel;
+import mchorse.bbs_mod.ui.rendering.UIRenderQueueContentPanel;
+import mchorse.bbs_mod.rendering.RenderQueue;
+import mchorse.bbs_mod.rendering.RenderQueueManager;
+import mchorse.bbs_mod.rendering.RenderQueueExecutor;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
@@ -104,6 +109,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIIcon openCameraEditor;
     public UIIcon openReplayEditor;
     public UIIcon openActionEditor;
+    public UIIcon openRenderQueue;
 
     private Camera camera = new Camera();
     private boolean entered;
@@ -227,9 +233,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.openReplayEditor.tooltip(UIKeys.FILM_OPEN_REPLAY_EDITOR, Direction.LEFT);
         this.openActionEditor = new UIIcon(Icons.ACTION, (b) -> this.showPanel(this.actionEditor));
         this.openActionEditor.tooltip(UIKeys.FILM_OPEN_ACTION_EDITOR, Direction.LEFT);
+        this.openRenderQueue = new UIIcon(Icons.CAMERA_LIST_RENDERING, (b) -> this.openRenderQueuePanel());
+        this.openRenderQueue.tooltip(UIKeys.RENDER_QUEUE_TITLE, Direction.LEFT);
 
         /* Setup elements */
-        this.iconBar.add(this.openHistory, this.toggleHorizontal.marginTop(9), this.openCameraEditor.marginTop(9), this.openReplayEditor, this.openActionEditor);
+        this.iconBar.add(this.openHistory, this.toggleHorizontal.marginTop(9), this.openCameraEditor.marginTop(9), this.openReplayEditor, this.openActionEditor, this.openRenderQueue);
 
         this.editor.add(this.main, new UIRenderable(this::renderIcons));
         this.main.add(this.cameraEditor, this.replayEditor, this.actionEditor, this.editArea, this.preview, this.draggableMain);
@@ -452,6 +460,82 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             this.toggleFlight();
         }
+    }
+
+    private void openRenderQueuePanel()
+    {
+        RenderQueueManager manager = BBSModClient.getRenderQueueManager();
+
+        if (manager == null)
+        {
+            return;
+        }
+
+        UIRenderQueueSelectionPanel selectionPanel = new UIRenderQueueSelectionPanel(
+            UIKeys.RENDER_QUEUE_SELECT_QUEUE,
+            manager,
+            (queueName, queue) -> this.openRenderQueueContent(queueName, queue, manager)
+        );
+
+        UIOverlay.addOverlay(this.getContext(), selectionPanel, 300, 0.8F);
+    }
+
+    private void openRenderQueueContent(String queueName, RenderQueue queue, RenderQueueManager manager)
+    {
+        UIRenderQueueContentPanel contentPanel = new UIRenderQueueContentPanel(manager, queue, queueName);
+
+        contentPanel.playCallback((item) -> this.startRenderQueueExecution(queue, manager, queueName, item, contentPanel));
+
+        UIOverlay.addOverlay(this.getContext(), contentPanel, 360, 0.8F);
+    }
+
+    private void startRenderQueueExecution(RenderQueue queue, RenderQueueManager manager, String queueName, mchorse.bbs_mod.rendering.RenderQueueItem item, UIRenderQueueContentPanel contentPanel)
+    {
+        int startIndex = queue.items.getList().indexOf(item);
+
+        if (startIndex < 0)
+        {
+            return;
+        }
+
+        /* Check for ffmpeg before starting */
+        if (!mchorse.bbs_mod.utils.FFMpegUtils.checkFFMPEG())
+        {
+            UIMessageOverlayPanel panel = new UIMessageOverlayPanel(UIKeys.GENERAL_WARNING, UIKeys.GENERAL_FFMPEG_ERROR_DESCRIPTION);
+            UIIcon guide = new UIIcon(Icons.HELP, (bb) -> UIUtils.openWebLink(UIKeys.GENERAL_FFMPEG_ERROR_GUIDE_LINK.get()));
+
+            guide.tooltip(UIKeys.GENERAL_FFMPEG_ERROR_GUIDE, Direction.LEFT);
+            panel.icons.add(guide);
+
+            UIOverlay.addOverlay(this.getContext(), panel);
+
+            return;
+        }
+
+        RenderQueueExecutor executor = new RenderQueueExecutor(queue, manager, queueName, this, contentPanel);
+
+        /* Set callbacks to update UI */
+        executor.onItemComplete((completedItem) ->
+        {
+            /* Use postRunnable to avoid ConcurrentModificationException */
+            this.getContext().render.postRunnable(() -> contentPanel.refreshList());
+        });
+
+        executor.onComplete((exec) ->
+        {
+            this.getContext().render.postRunnable(() ->
+            {
+                contentPanel.refreshList();
+                this.getContext().notifySuccess(UIKeys.RENDER_QUEUE_COMPLETE);
+            });
+            BBSModClient.setRenderQueueExecutor(null);
+        });
+
+        /* Store executor for update calls */
+        BBSModClient.setRenderQueueExecutor(executor);
+
+        /* Start rendering */
+        executor.startFrom(startIndex);
     }
 
     public UIFilmController getController()
