@@ -8,8 +8,10 @@ import mchorse.bbs_mod.ui.film.replays.UIReplayList;
 import mchorse.bbs_mod.ui.forms.UINestedEdit;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIAnchorKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
@@ -37,6 +39,8 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     public UITrackpad relativeOffsetX;
     public UITrackpad relativeOffsetY;
     public UITrackpad relativeOffsetZ;
+    public UIToggle axesPreview;
+    public UIButton pickAxesPreviewBone;
 
     private Consumer<Replay> callback;
 
@@ -87,6 +91,19 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         this.relativeOffsetX = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().x = v)));
         this.relativeOffsetY = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().y = v)));
         this.relativeOffsetZ = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().z = v)));
+        this.axesPreview = new UIToggle(UIKeys.FILM_REPLAY_AXES_PREVIEW, (b) ->
+        {
+            this.edit((replay) -> replay.axesPreview.set(b.getValue()));
+        });
+        this.pickAxesPreviewBone = new UIButton(UIKeys.FILM_REPLAY_PICK_AXES_PREVIEW, (b) ->
+        {
+            Replay replay = filmPanel.replayEditor.getReplay();
+
+            UIAnchorKeyframeFactory.displayAttachments(filmPanel, filmPanel.getData().replays.getList().indexOf(replay), replay.axesPreviewBone.get(), (s) ->
+            {
+                this.edit((r) -> r.axesPreviewBone.set(s));
+            });
+        });
 
         this.properties = UI.scrollView(5, 6,
             UI.label(UIKeys.FILM_REPLAY_REPLAY),
@@ -95,7 +112,8 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.shadow, this.shadowSize,
             UI.label(UIKeys.FILM_REPLAY_LOOPING),
             this.looping, this.actor, this.fp,
-            this.relative, UI.row(this.relativeOffsetX, this.relativeOffsetY, this.relativeOffsetZ)
+            this.relative, UI.row(this.relativeOffsetX, this.relativeOffsetY, this.relativeOffsetZ),
+            this.axesPreview, this.pickAxesPreviewBone
         );
         this.properties.relative(this.replays).x(1F).wTo(this.icons.area).h(1F);
         this.replays.relative(this.content).w(0.5F).h(1F);
@@ -135,6 +153,7 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.relativeOffsetX.setValue(replay.relativeOffset.get().x);
             this.relativeOffsetY.setValue(replay.relativeOffset.get().y);
             this.relativeOffsetZ.setValue(replay.relativeOffset.get().z);
+            this.axesPreview.setValue(replay.axesPreview.get());
         }
     }
 
