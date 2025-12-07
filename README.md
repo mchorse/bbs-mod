@@ -1,9 +1,20 @@
-# BBS mod
+# BBS Mod
 
-BBS mod is a Minecraft mod for Fabric 1.20.4 and 1.20.1 (works on Forge as well) for creating animations within Minecraft. It has more features than that, but overall its main task is to facilitate making animated content within Minecraft. For more information, see BBS mod's [Modrinth](https://modrinth.com/mod/bbs-mod/) or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/bbs-mod) pages.
+BBS Mod is a Minecraft mod for Fabric 1.20.4 and 1.20.1 (also compatible with Forge) designed to bring cinematic animation tools into Minecraft. Its main goal is to help creators build animated content, whether for videos, machinima, or other creative projects. For more information, visit the official [Modrinth](https://modrinth.com/mod/bbs-mod/) or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/bbs-mod) pages.
 
-This repository is the source code of BBS mod. The `1.20.4` code is in the `master` branch, and `1.20.1` in `1.20.1` branch, which is usually just a merge of the `master` branch.
+This repository contains a version of BBS Mod with custom updates and experiments. It is **maintained independently**, with additional features and improvements for personal use or testing. 
 
-If you'd like to contribute to BBS mod code-wise, I'm not looking for contributions. **Please fork the repository, and make your own version**.
+---
 
-See `LICENSE.md` for information about the license.
+### Contributors
+- Eleeter
+
+---
+
+### Original Project
+The original BBS Mod is created and maintained by **Mchorse**. All credit for the core features, vision, and long-term development belongs to him. This branch respects the original project and does not claim ownership of its base work.
+
+---
+
+### License
+See `LICENSE.md` for license information.
