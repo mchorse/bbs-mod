@@ -1,4 +1,3 @@
 {
-	"texture": "assets:models/player/eyes/alex.png",
-	"pose_group": "player/eyes"
+	"texture": "assets:models/player/eyes_1px/alex.png"
 }
