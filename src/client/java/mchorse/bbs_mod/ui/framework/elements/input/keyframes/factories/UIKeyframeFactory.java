@@ -100,7 +100,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.scroll.full(this);
 
         this.tick = new UITrackpad(this::setTick);
-        this.tick.limit(Float.MIN_VALUE, Float.MAX_VALUE).tooltip(UIKeys.KEYFRAMES_TICK);
+        this.tick.tooltip(UIKeys.KEYFRAMES_TICK);
         this.tick.getEvents().register(UITrackpadDragStartEvent.class, (e) -> this.editor.cacheKeyframes());
         this.tick.getEvents().register(UITrackpadDragEndEvent.class, (e) -> this.editor.submitKeyframes());
         this.duration = new UITrackpad((v) -> this.setDuration(v.floatValue()));
