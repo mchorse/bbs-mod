@@ -19,5 +19,10 @@ void main()
         discard;
     }
 
-    fragColor = vec4(float(Target + texCoord2.x) / 255.0, 0.0, 0.0, 1.0);
+    int totalIndex = Target + texCoord2.x;
+    float r = float(totalIndex & 0xff) / 255.0;
+    float g = float((totalIndex >> 8) & 0xff) / 255.0;
+    float b = float((totalIndex >> 16) & 0xff) / 255.0;
+
+    fragColor = vec4(r, g, b, 1.0);
 }
