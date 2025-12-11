@@ -14,7 +14,7 @@ public class EventBus
      */
     public void register(Object subscriber)
     {
-        for (Method method : subscriber.getClass().getMethods())
+        for (Method method : subscriber.getClass().getDeclaredMethods())
         {
             this.subscribe(subscriber, method);
         }
