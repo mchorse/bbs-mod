@@ -178,15 +178,15 @@ public class UIModelBlockEditorMenu extends UIBaseMenu
             launchPower.setValue(gun.launchPower);
             launchAdditive.setValue(gun.launchAdditive);
             scatterX.setValue(gun.scatterX);
-            scatterX.tooltip(UIKeys.GUN_ITEM_SCATTER_H);
+            scatterX.tooltip(UIKeys.GUN_ITEM_SCATTER_V);
             scatterY.setValue(gun.scatterY);
-            scatterY.tooltip(UIKeys.GUN_ITEM_SCATTER_V);
+            scatterY.tooltip(UIKeys.GUN_ITEM_SCATTER_H);
             projectiles.setValue(gun.projectiles);
             projectiles.limit(1).integer();
 
             this.sectionGun = UI.scrollView(5, 10,
                 launch, launchPower, launchAdditive,
-                UI.label(UIKeys.GUN_ITEM_SCATTER).background().marginTop(6), UI.row(scatterX, scatterY),
+                UI.label(UIKeys.GUN_ITEM_SCATTER).background().marginTop(6), UI.row(scatterY, scatterX),
                 UI.label(UIKeys.GUN_ITEM_PROJECTILES).background().marginTop(6), projectiles
             );
             this.sectionGun.relative(this.viewport).x(1F).w(200).h(1F).anchorX(1F);
