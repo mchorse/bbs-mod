@@ -44,12 +44,12 @@ public abstract class UIBaseMenu
         this.main.full(this.viewport);
         this.overlay = new UIElement();
         this.overlay.full(this.viewport);
-        this.overlay.keys().register(Keys.TRANSFORMATIONS_TOGGLE_AXES, () -> renderAxes = !renderAxes);
         this.root.add(this.main, this.overlay);
 
         UIElement popka = new UIElement();
 
         popka.keys().register(Keys.KEYBINDS, () -> this.context.toggleKeybinds());
+        popka.keys().register(Keys.TRANSFORMATIONS_TOGGLE_AXES, () -> renderAxes = !renderAxes);
         this.root.add(popka);
 
         this.context.keybinds.relative(this.viewport).wh(0.5F, 1F);
