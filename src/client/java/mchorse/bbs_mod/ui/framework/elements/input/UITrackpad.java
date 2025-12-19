@@ -266,8 +266,6 @@ public class UITrackpad extends UIBaseTextbox
     public void setValue(double value)
     {
         this.setValueInternal(value);
-        this.textbox.setText(this.integer ? String.valueOf((int) this.value) : String.valueOf(this.value));
-        this.textbox.moveCursorToStart();
     }
 
     private void setValueInternal(double value)
@@ -303,11 +301,31 @@ public class UITrackpad extends UIBaseTextbox
     }
 
     @Override
+    public void focus(UIContext context)
+    {
+        super.focus(context);
+
+        if (Window.isAltPressed())
+        {
+            this.textbox.setText(this.integer ? String.valueOf((int) this.value) : String.valueOf(this.value));
+        }
+        else
+        {
+            this.textbox.setText(this.integer ? format((int) this.value) : format(this.value));
+        }
+
+        this.textbox.setFocused(true);
+        this.textbox.moveCursorToEnd();
+    }
+
+    @Override
     public void unfocus(UIContext context)
     {
         this.evaluate();
 
         super.unfocus(context);
+
+        this.textbox.setFocused(false);
 
         /* Reset the value in case it's out of range */
         if (this.delayedInput)
@@ -432,8 +450,6 @@ public class UITrackpad extends UIBaseTextbox
                 }
                 else
                 {
-                    this.textbox.setFocused(true);
-                    this.textbox.moveCursorToEnd();
                     context.focus(this);
                 }
             }
@@ -520,7 +536,6 @@ public class UITrackpad extends UIBaseTextbox
             }
             else if (context.isPressed(GLFW.GLFW_KEY_ENTER))
             {
-                this.textbox.setFocused(false);
                 context.focus(null);
             }
         }
@@ -660,7 +675,7 @@ public class UITrackpad extends UIBaseTextbox
             }
 
             FontRenderer font = context.batcher.getFont();
-            String label = this.forcedLabel == null ? FORMAT.format(this.value) : this.forcedLabel.get();
+            String label = this.forcedLabel == null ? format(this.value) : this.forcedLabel.get();
             int lx = this.area.mx(font.getWidth(label));
             int ly = this.area.my() - font.getHeight() / 2;
 
