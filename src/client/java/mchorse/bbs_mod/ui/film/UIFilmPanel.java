@@ -160,6 +160,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.setupEditorFlex(true);
         });
 
+        this.draggableMain.reference(() ->
+        {
+            return BBSSettings.editorLayoutSettings.isHorizontal()
+                ? new Vector2i(this.editArea.area.x, this.editArea.area.ey())
+                : new Vector2i(this.editArea.area.x, this.editArea.area.y);
+        });
         this.draggableMain.rendering((context) ->
         {
             int size = 5;
