@@ -15,7 +15,7 @@ public class TimeUtils
         return tick / 20F;
     }
 
-    public static String formatTime(long ticks)
+    public static String formatTime(double ticks)
     {
         if (BBSSettings.editorSeconds.get())
         {
@@ -28,13 +28,13 @@ public class TimeUtils
         return String.valueOf(ticks);
     }
 
-    public static double toTime(int ticks)
+    public static double toTime(double ticks)
     {
         return BBSSettings.editorSeconds.get() ? ticks / 20D : ticks;
     }
 
-    public static int fromTime(double time)
+    public static double fromTime(double time)
     {
-        return BBSSettings.editorSeconds.get() ? (int) Math.round(time * 20) : (int) time;
+        return BBSSettings.editorSeconds.get() ? Math.round(time * 20D) : (int) time;
     }
 }

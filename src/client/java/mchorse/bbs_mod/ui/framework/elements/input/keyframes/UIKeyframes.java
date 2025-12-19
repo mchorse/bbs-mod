@@ -81,8 +81,6 @@ public class UIKeyframes extends UIElement
 
     private SheetCache cache;
 
-    private IAxisConverter converter;
-
     private UICopyPasteController copyPasteController;
 
     public UIKeyframes(Consumer<Keyframe> callback)
@@ -746,18 +744,6 @@ public class UIKeyframes extends UIElement
         this.duration = duration;
 
         return this;
-    }
-
-    public UIKeyframes axisConverter(IAxisConverter converter)
-    {
-        this.converter = converter;
-
-        return this;
-    }
-
-    public IAxisConverter getConverter()
-    {
-        return this.converter;
     }
 
     public IUIKeyframeGraph getGraph()

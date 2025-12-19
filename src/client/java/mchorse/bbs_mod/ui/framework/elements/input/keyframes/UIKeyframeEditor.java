@@ -5,7 +5,6 @@ import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.ui.film.utils.CameraAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
@@ -22,7 +21,6 @@ import java.util.function.Function;
 public class UIKeyframeEditor extends UIElement
 {
     public static final int[] COLORS = {Colors.RED, Colors.GREEN, Colors.BLUE, Colors.CYAN, Colors.MAGENTA, Colors.YELLOW, Colors.LIGHTEST_GRAY & 0xffffff, Colors.DEEP_PINK};
-    public static final CameraAxisConverter CONVERTER = new CameraAxisConverter();
 
     public UIKeyframes view;
     public UIKeyframeFactory editor;
@@ -32,7 +30,6 @@ public class UIKeyframeEditor extends UIElement
     public UIKeyframeEditor(Function<Consumer<Keyframe>, UIKeyframes> factory)
     {
         this.view = factory.apply(this::pickKeyframe);
-
         this.view.changed(() ->
         {
             if (this.editor != null)
@@ -83,11 +80,6 @@ public class UIKeyframeEditor extends UIElement
         }
 
         this.resize();
-    }
-
-    public void updateConverter()
-    {
-        this.view.axisConverter(CONVERTER);
     }
 
     public void setChannel(KeyframeChannel channel, int color)
