@@ -35,6 +35,7 @@ import mchorse.bbs_mod.utils.joml.Matrices;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 import org.joml.Matrix4f;
+import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -76,6 +77,7 @@ public class UIAnimationStateEditor extends UIElement
             this.getParent().resize();
         });
 
+        draggable.reference(() -> new Vector2i(this.editArea.area.x, this.area.y));
         draggable.rendering((context) ->
         {
             int size = 5;

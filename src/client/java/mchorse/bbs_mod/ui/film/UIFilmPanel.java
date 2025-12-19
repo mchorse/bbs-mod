@@ -160,6 +160,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.setupEditorFlex(true);
         });
 
+        this.draggableMain.reference(() ->
+        {
+            return BBSSettings.editorLayoutSettings.isHorizontal()
+                ? new Vector2i(this.editArea.area.x, this.editArea.area.ey())
+                : new Vector2i(this.editArea.area.x, this.editArea.area.y);
+        });
         this.draggableMain.rendering((context) ->
         {
             int size = 5;
@@ -1142,6 +1148,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public void fillData()
     {
         this.cameraEditor.fillData();
+        this.actionEditor.fillData();
+
+        if (this.replayEditor.keyframeEditor != null && this.replayEditor.keyframeEditor.editor != null)
+        {
+            this.replayEditor.keyframeEditor.editor.update();
+        }
     }
 
     public void teleportToCamera()

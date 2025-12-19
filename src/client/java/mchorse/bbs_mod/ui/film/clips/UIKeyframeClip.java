@@ -74,14 +74,6 @@ public class UIKeyframeClip extends UIClip<KeyframeClip>
     }
 
     @Override
-    public void updateDuration(int duration)
-    {
-        super.updateDuration(duration);
-
-        this.keyframes.updateConverter();
-    }
-
-    @Override
     public void editClip(Position position)
     {
         Position newPos = position.copy();
