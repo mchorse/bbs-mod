@@ -10,7 +10,6 @@ import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.forms.utils.Anchor;
-import mchorse.bbs_mod.forms.renderers.FormRenderer;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.Keys;
@@ -226,7 +225,7 @@ public class OrbitFilmCameraController implements ICameraController
 
             if (form != null)
             {
-                Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, "", transition);
+                Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, transition);
                 String group = "anchor";
 
                 if (form instanceof ModelForm modelForm)
@@ -241,7 +240,8 @@ public class OrbitFilmCameraController implements ICameraController
                     }
                 }
 
-                Matrix4f anchor = map.get(group);
+                Pair<Matrix4f, Matrix4f> p = map.get(group);
+                Matrix4f anchor = p == null ? null : p.a;
 
                 if (anchor != null)
                 {

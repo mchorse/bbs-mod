@@ -17,6 +17,7 @@ import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Matrices;
 import org.joml.Matrix4f;
@@ -29,7 +30,7 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
 
     public T form;
     public UIFormPanel<T> defaultPanel;
-    public UIFormPanel<T> generalPanel;
+    public UIGeneralFormPanel generalPanel;
 
     private UIPropTransform general;
 
@@ -58,14 +59,15 @@ public abstract class UIForm <T extends Form> extends UIPanelBase<UIFormPanel<T>
 
     public Matrix4f getOrigin(float transition)
     {
-        return this.getOrigin(transition, FormUtils.getPath(this.form), false);
+        return this.getOrigin(transition, FormUtils.getPath(this.form), this.generalPanel != null && this.generalPanel.transform.isLocal());
     }
 
     protected Matrix4f getOrigin(float transition, String path, boolean local)
     {
         Form root = FormUtils.getRoot(this.form);
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), local ? null : path, transition);
-        Matrix4f matrix = map.get(path);
+        Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), transition);
+        Pair<Matrix4f, Matrix4f> p = map.get(path);
+        Matrix4f matrix = p == null ? null : (local ? p.a : p.b);
 
         return matrix == null ? Matrices.EMPTY_4F : matrix;
     }

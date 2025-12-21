@@ -45,7 +45,7 @@ public class TrackerClientClip extends TrackerClip
             return;
         }
 
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, context.transition);
+        Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, context.transition);
         Vector3f relativeFormPos = new Vector3f();
         String targetGroup = this.group.get();
 
@@ -62,7 +62,7 @@ public class TrackerClientClip extends TrackerClip
             formTransform = totalMatrix.a;
         }
 
-        formTransform.mul(map.get(targetGroup));
+        formTransform.mul(map.get(targetGroup).a);
         formTransform.getTranslation(relativeFormPos);
 
         Matrix3d trackerRot = new Matrix3d(formTransform);
