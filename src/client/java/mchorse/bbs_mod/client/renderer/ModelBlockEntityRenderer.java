@@ -23,6 +23,7 @@ import mchorse.bbs_mod.ui.framework.UIScreen;
 import mchorse.bbs_mod.ui.model_blocks.UIModelBlockPanel;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -224,11 +225,11 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
 
                 if (FormUtilsClient.getBones(modelForm).contains(headKey))
                 {
-                    Map<String, Matrix4f> matrices = new HashMap<>();
+                    Map<String, Pair<Matrix4f, Matrix4f>> matrices = new HashMap<>();
 
-                    model.captureMatrices(matrices, headKey);
+                    model.captureMatrices(matrices);
 
-                    Matrix4f matrix = matrices.get(headKey);
+                    Matrix4f matrix = matrices.get(headKey).a;
 
                     if (matrix != null)
                     {

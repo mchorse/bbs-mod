@@ -182,9 +182,10 @@ public abstract class BaseFilmController
     private static void renderAxes(String bone, boolean local, StencilMap stencilMap, Form form, IEntity entity, float transition, MatrixStack stack)
     {
         Form root = FormUtils.getRoot(form);
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(entity, local ? null : bone, transition);
+        Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(root).collectMatrices(entity, transition);
+        Pair<Matrix4f, Matrix4f> p = map.get(bone);
 
-        Matrix4f matrix = map.get(bone);
+        Matrix4f matrix = p == null ? null : (local ? p.a : p.b);
 
         if (matrix != null)
         {
@@ -242,11 +243,6 @@ public abstract class BaseFilmController
         return result;
     }
 
-    public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, Anchor anchor, Matrix4f defaultMatrix, float transition)
-    {
-        return getEntityMatrix(entities, cameraX, cameraY, cameraZ, anchor, defaultMatrix, transition, 0);
-    }
-
     public static Matrix4f getEntityMatrix(IntObjectMap<IEntity> entities, double cameraX, double cameraY, double cameraZ, Anchor anchor, Matrix4f defaultMatrix, float transition, int i)
     {
         IEntity entity = entities.get(anchor.replay);
@@ -266,8 +262,9 @@ public abstract class BaseFilmController
                     basic = totalMatrix.a;
                 }
 
-                Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, transition);
-                Matrix4f matrix = map.get(anchor.attachment);
+                Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, transition);
+                Pair<Matrix4f, Matrix4f> p = map.get(anchor.attachment);
+                Matrix4f matrix = p == null ? null : p.a;
 
                 if (matrix != null)
                 {

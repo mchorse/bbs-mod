@@ -20,6 +20,8 @@ public class BOBJBone
      */
     public Matrix4f mat = new Matrix4f();
 
+    public Matrix4f originMat = new Matrix4f();
+
     /**
      * Bone matrix 
      */
@@ -53,7 +55,6 @@ public class BOBJBone
         Matrix4f mat = this.computeMatrix(new Matrix4f());
 
         this.mat.set(mat);
-        mat.set(this.mat);
         mat.mul(this.invBoneMat);
 
         return mat;
@@ -61,14 +62,15 @@ public class BOBJBone
 
     public Matrix4f computeMatrix(Matrix4f m)
     {
-        m.identity();
-
         this.mat.set(this.relBoneMat);
+        this.originMat.set(this.relBoneMat);
         this.applyTransformations();
 
         if (this.parentBone != null)
         {
-            m = new Matrix4f(this.parentBone.mat);
+            m.set(this.parentBone.mat).mul(this.originMat);
+            this.originMat.set(m);
+            m.identity().set(this.parentBone.mat);
         }
 
         m.mul(this.mat);
@@ -79,6 +81,7 @@ public class BOBJBone
     public void applyTransformations()
     {
         this.mat.translate(this.transform.translate);
+        this.originMat.translate(this.transform.translate);
 
         if (this.transform.rotate.z != 0F) this.mat.rotateZ(this.transform.rotate.z);
         if (this.transform.rotate.y != 0F) this.mat.rotateY(this.transform.rotate.y);

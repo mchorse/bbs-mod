@@ -266,6 +266,19 @@ public class UITrackpad extends UIBaseTextbox
     public void setValue(double value)
     {
         this.setValueInternal(value);
+        this.updateTextField();
+    }
+
+    private void updateTextField()
+    {
+        if (Window.isAltPressed())
+        {
+            this.textbox.setText(this.integer ? String.valueOf((int) this.value) : String.valueOf(this.value));
+        }
+        else
+        {
+            this.textbox.setText(this.integer ? format((int) this.value) : format(this.value));
+        }
     }
 
     private void setValueInternal(double value)
@@ -305,15 +318,7 @@ public class UITrackpad extends UIBaseTextbox
     {
         super.focus(context);
 
-        if (Window.isAltPressed())
-        {
-            this.textbox.setText(this.integer ? String.valueOf((int) this.value) : String.valueOf(this.value));
-        }
-        else
-        {
-            this.textbox.setText(this.integer ? format((int) this.value) : format(this.value));
-        }
-
+        this.updateTextField();
         this.textbox.setFocused(true);
         this.textbox.moveCursorToEnd();
     }

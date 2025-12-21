@@ -25,7 +25,7 @@ public class TimeUtils
             return seconds + "." + StringUtils.leftPad(String.valueOf(milliseconds), 2, "0");
         }
 
-        return String.valueOf(ticks);
+        return String.valueOf((int) ticks);
     }
 
     public static double toTime(double ticks)

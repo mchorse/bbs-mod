@@ -11,6 +11,7 @@ import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.keys.KeyCodes;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.Lerps;
@@ -104,7 +105,7 @@ public abstract class FormRenderer <T extends Form>
         boolean isPicking = context.stencilMap != null;
 
         context.stack.push();
-        this.applyTransforms(context.stack, context.getTransition());
+        this.applyTransforms(context.stack, false, context.getTransition());
 
         float lf = 1F - MathUtils.clamp(this.form.lighting.get(), 0F, 1F);
         int u = context.light & '\uffff';
@@ -129,9 +130,18 @@ public abstract class FormRenderer <T extends Form>
         this.form.unapplyStates();
     }
 
-    protected void applyTransforms(MatrixStack stack, float transition)
+    protected void applyTransforms(MatrixStack stack, boolean origin, float transition)
     {
-        MatrixStackUtils.applyTransform(stack, this.createTransform());
+        Transform transform = this.createTransform();
+
+        if (origin)
+        {
+            stack.translate(transform.translate.x, transform.translate.y, transform.translate.z);
+        }
+        else
+        {
+            MatrixStackUtils.applyTransform(stack, transform);
+        }
     }
 
     protected void applyTransforms(Matrix4f matrix, float transition)
@@ -221,22 +231,31 @@ public abstract class FormRenderer <T extends Form>
         context.entity = oldEntity;
     }
 
-    public Map<String, Matrix4f> collectMatrices(IEntity entity, String target, float transition)
+    public Map<String, Pair<Matrix4f, Matrix4f>> collectMatrices(IEntity entity, float transition)
     {
-        Map<String, Matrix4f> map = new HashMap<>();
+        Map<String, Pair<Matrix4f, Matrix4f>> map = new HashMap<>();
         MatrixStack stack = new MatrixStack();
 
-        this.collectMatrices(entity, target, stack, map, "", transition);
+        this.collectMatrices(entity, stack, map, "", transition);
 
         return map;
     }
 
-    public void collectMatrices(IEntity entity, String target, MatrixStack stack, Map<String, Matrix4f> matrices, String prefix, float transition)
+    public void collectMatrices(IEntity entity, MatrixStack stack, Map<String, Pair<Matrix4f, Matrix4f>> matrices, String prefix, float transition)
     {
-        stack.push();
-        this.applyTransforms(stack, transition);
+        Matrix4f mm = new Matrix4f();
+        Matrix4f oo = new Matrix4f();
 
-        matrices.put(prefix, new Matrix4f(stack.peek().getPositionMatrix()));
+        stack.push();
+        this.applyTransforms(stack, true, transition);
+        oo.set(stack.peek().getPositionMatrix());
+        stack.pop();
+
+        stack.push();
+        this.applyTransforms(stack, false, transition);
+        mm.set(stack.peek().getPositionMatrix());
+
+        matrices.put(prefix, new Pair<>(mm, oo));
 
         int i = 0;
 
@@ -249,7 +268,7 @@ public abstract class FormRenderer <T extends Form>
                 stack.push();
                 MatrixStackUtils.applyTransform(stack, part.transform.get());
 
-                FormUtilsClient.getRenderer(form).collectMatrices(entity, target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
+                FormUtilsClient.getRenderer(form).collectMatrices(entity, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
 
                 stack.pop();
             }

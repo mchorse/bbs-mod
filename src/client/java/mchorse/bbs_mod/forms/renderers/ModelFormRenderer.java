@@ -29,6 +29,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.joml.Vectors;
@@ -62,7 +63,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 {
     private static Matrix4f uiMatrix = new Matrix4f();
 
-    private Map<String, Matrix4f> bones = new HashMap<>();
+    private Map<String, Pair<Matrix4f, Matrix4f>> bones = new HashMap<>();
 
     private ActionsConfig lastConfigs;
     private IAnimator animator;
@@ -71,9 +72,9 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     private IEntity entity = new StubEntity();
 
     @Override
-    protected void applyTransforms(MatrixStack stack, float transition)
+    protected void applyTransforms(MatrixStack stack, boolean origin, float transition)
     {
-        super.applyTransforms(stack, transition);
+        super.applyTransforms(stack, origin, transition);
 
         ModelInstance model = this.getModel();
 
@@ -311,7 +312,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         }
 
         /* Render items */
-        this.captureMatrices(model, null);
+        this.captureMatrices(model);
 
         if (stencilMap == null)
         {
@@ -327,7 +328,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
     private void renderArmor(IEntity target, MatrixStack stack, ArmorType type, ArmorSlot armorSlot, Color color, int overlay, int light)
     {
-        Matrix4f matrix = this.bones.get(armorSlot.group);
+        Matrix4f matrix = this.bones.get(armorSlot.group).a;
 
         if (matrix != null)
         {
@@ -363,7 +364,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
         for (ArmorSlot armorSlot : items)
         {
-            Matrix4f matrix = this.bones.get(armorSlot.group);
+            Matrix4f matrix = this.bones.get(armorSlot.group).a;
 
             if (matrix != null)
             {
@@ -518,10 +519,10 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         model.fillStencilMap(context.stencilMap, this.form);
     }
 
-    private void captureMatrices(ModelInstance model, String target)
+    private void captureMatrices(ModelInstance model)
     {
         /* this.bones.clear()? */
-        model.captureMatrices(this.bones, target);
+        model.captureMatrices(this.bones);
     }
 
     @Override
@@ -531,7 +532,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
         for (BodyPart part : this.form.parts.getAllTyped())
         {
-            Matrix4f matrix = this.bones.get(part.bone.get());
+            Matrix4f matrix = this.bones.get(part.bone.get()).a;
 
             context.stack.push();
 
@@ -554,45 +555,51 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
     }
 
     @Override
-    public void collectMatrices(IEntity entity, String target, MatrixStack stack, Map<String, Matrix4f> matrices, String prefix, float transition)
+    public void collectMatrices(IEntity entity, MatrixStack stack, Map<String, Pair<Matrix4f, Matrix4f>> matrices, String prefix, float transition)
     {
         ModelInstance model = this.getModel();
+        Matrix4f mm = new Matrix4f();
+        Matrix4f oo = new Matrix4f();
 
         stack.push();
-        this.applyTransforms(stack, transition);
+        this.applyTransforms(stack, true, transition);
+        oo.set(stack.peek().getPositionMatrix());
+        stack.pop();
 
-        matrices.put(prefix, new Matrix4f(stack.peek().getPositionMatrix()));
+        stack.push();
+        this.applyTransforms(stack, false, transition);
+        mm.set(stack.peek().getPositionMatrix());
+
+        matrices.put(prefix, new Pair<>(mm, oo));
 
         /* Collect bones and add them to matrix list */
         if (this.animator != null && model != null)
         {
             model.model.resetPose();
 
-            String localTarget = target;
-
-            if (target != null && !prefix.isEmpty())
-            {
-                String fullPrefix = prefix + "/";
-
-                if (localTarget.startsWith(fullPrefix) && localTarget.indexOf('/', localTarget.length()) == -1)
-                {
-                    localTarget = localTarget.substring(fullPrefix.length());
-                }
-            }
-
             this.animator.applyActions(entity, model, transition);
             model.model.applyPose(this.getPose());
 
             stack.multiply(RotationAxis.POSITIVE_Y.rotation(MathUtils.PI));
-            this.captureMatrices(model, localTarget);
+            this.captureMatrices(model);
         }
 
-        for (Map.Entry<String, Matrix4f> entry : this.bones.entrySet())
+        for (Map.Entry<String, Pair<Matrix4f, Matrix4f>> entry : this.bones.entrySet())
         {
+            Matrix4f matrix = new Matrix4f();
+            Matrix4f o = new Matrix4f();
+
             stack.push();
-            MatrixStackUtils.multiply(stack, entry.getValue());
-            matrices.put(StringUtils.combinePaths(prefix, entry.getKey()), new Matrix4f(stack.peek().getPositionMatrix()));
+            MatrixStackUtils.multiply(stack, entry.getValue().a);
+            matrix.set(stack.peek().getPositionMatrix());
             stack.pop();
+
+            stack.push();
+            MatrixStackUtils.multiply(stack, entry.getValue().b);
+            o.set(stack.peek().getPositionMatrix());
+            stack.pop();
+
+            matrices.put(StringUtils.combinePaths(prefix, entry.getKey()), new Pair<>(matrix, o));
         }
 
         int i = 0;
@@ -604,7 +611,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
             if (form != null)
             {
-                Matrix4f matrix = this.bones.get(part.bone.get());
+                Matrix4f matrix = this.bones.get(part.bone.get()).a;
 
                 stack.push();
 
@@ -619,7 +626,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
                 MatrixStackUtils.applyTransform(stack, part.transform.get());
 
-                FormUtilsClient.getRenderer(form).collectMatrices(part.useTarget.get() ? entity : part.getEntity(), target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
+                FormUtilsClient.getRenderer(form).collectMatrices(part.useTarget.get() ? entity : part.getEntity(), stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
 
                 stack.pop();
             }

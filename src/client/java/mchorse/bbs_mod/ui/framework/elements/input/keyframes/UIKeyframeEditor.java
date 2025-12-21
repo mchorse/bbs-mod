@@ -10,6 +10,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyfram
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.utils.Pair;
+import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -133,19 +134,34 @@ public class UIKeyframeEditor extends UIElement
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
             String currentFirst = pose.poseEditor.groups.getCurrentFirst();
 
-            if (sheet != null && sheet.id.endsWith("pose"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
-                local = pose.poseEditor.transform.isLocal();
+                String id = StringUtils.fileName(sheet.id);
+
+                if (id.startsWith("pose"))
+                {
+                    int i = id.lastIndexOf('/');
+
+                    bone = i >= 0 ? id.substring(0, i + 1) + currentFirst : currentFirst;
+                    local = pose.poseEditor.transform.isLocal();
+                }
             }
         }
-        else if (editor instanceof UITransformKeyframeFactory)
+        else if (editor instanceof UITransformKeyframeFactory transform)
         {
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
 
-            if (sheet != null && sheet.id.endsWith("transform"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
+                String id = StringUtils.fileName(sheet.id);
+
+                if (id.startsWith("transform"))
+                {
+                    int i = id.lastIndexOf('/');
+
+                    bone = i >= 0  ? id.substring(0, i) : "";
+                    local = transform.transform.isLocal();
+                }
             }
         }
 
