@@ -16,6 +16,7 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import org.joml.Matrix4f;
@@ -72,8 +73,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
         }
 
         Form form = entity.getForm();
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, 0F);
-        List<String> attachments = new ArrayList<>(map.keySet());
+        List<String> attachments = new ArrayList<>(FormUtilsClient.getRenderer(form).collectMatrices(entity, 0F).keySet());
 
         attachments.sort(String::compareToIgnoreCase);
 

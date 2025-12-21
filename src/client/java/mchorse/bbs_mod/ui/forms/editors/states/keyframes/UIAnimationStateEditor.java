@@ -8,6 +8,7 @@ import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.forms.states.AnimationState;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
@@ -35,11 +36,11 @@ import mchorse.bbs_mod.utils.joml.Matrices;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 import org.joml.Matrix4f;
+import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -76,6 +77,7 @@ public class UIAnimationStateEditor extends UIElement
             this.getParent().resize();
         });
 
+        draggable.reference(() -> new Vector2i(this.editArea.area.x, this.area.y));
         draggable.rendering((context) ->
         {
             int size = 5;
@@ -307,9 +309,8 @@ public class UIAnimationStateEditor extends UIElement
         }
 
         Form root = FormUtils.getRoot(this.editor.form);
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), bone.b ? null : bone.a, transition);
-
-        Matrix4f matrix = map.get(bone.a);
+        MatrixCache map = FormUtilsClient.getRenderer(root).collectMatrices(this.editor.renderer.getTargetEntity(), transition);
+        Matrix4f matrix = bone.b ? map.get(bone.a).origin() : map.get(bone.a).matrix();
 
         return matrix == null ? Matrices.EMPTY_4F : matrix;
     }

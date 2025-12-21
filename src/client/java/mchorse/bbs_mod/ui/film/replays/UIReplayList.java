@@ -226,7 +226,7 @@ public class UIReplayList extends UIList<Replay>
 
                     if (channel == null || channel.getFactory() != pastedKeyframes.factory)
                     {
-                        channel = (KeyframeChannel) replay.properties.get(id);
+                        channel = replay.properties.getOrCreate(replay.form.get(), id);
                     }
 
                     float min = Integer.MAX_VALUE;

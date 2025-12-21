@@ -100,14 +100,14 @@ public class UICameraUtils
         });
     }
 
-    private static void copyPoint(Map<String, Double> map, Point point)
+    public static void copyPoint(Map<String, Double> map, Point point)
     {
         map.put("X", point.x);
         map.put("Y", point.y);
         map.put("Z", point.z);
     }
 
-    private static Point createPoint(Map<String, Double> map)
+    public static Point createPoint(Map<String, Double> map)
     {
         if (map.containsKey("x") && map.containsKey("y") && map.containsKey("z"))
         {
@@ -145,7 +145,7 @@ public class UICameraUtils
         });
     }
 
-    private static void copyAngle(Map<String, Double> map, Angle angle)
+    public static void copyAngle(Map<String, Double> map, Angle angle)
     {
         map.put("Yaw", (double) angle.yaw);
         map.put("Pitch", (double) angle.pitch);
@@ -153,7 +153,7 @@ public class UICameraUtils
         map.put("FOV", (double) angle.fov);
     }
 
-    private static Angle createAngle(Map<String, Double> map)
+    public static Angle createAngle(Map<String, Double> map)
     {
         if (map.containsKey("yaw") && map.containsKey("pitch"))
         {
@@ -170,7 +170,7 @@ public class UICameraUtils
         return null;
     }
 
-    private static String mapToString(Map<String, Double> data)
+    public static String mapToString(Map<String, Double> data)
     {
         StringJoiner joiner = new StringJoiner("\n");
 
@@ -182,7 +182,7 @@ public class UICameraUtils
         return joiner.toString();
     }
 
-    private static Map<String, Double> stringToMap(String string)
+    public static Map<String, Double> stringToMap(String string)
     {
         Map<String, Double> map = new LinkedHashMap<>();
 

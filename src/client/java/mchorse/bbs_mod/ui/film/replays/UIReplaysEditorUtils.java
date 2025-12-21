@@ -103,6 +103,18 @@ public class UIReplaysEditorUtils
                 type = id.substring(index);
             }
         }
+        else
+        {
+            UIKeyframeSheet lastSheet = keyframeEditor.view.getGraph().getLastSheet();
+
+            if (lastSheet != null && lastSheet.property != null)
+            {
+                if (FormUtils.getPath((Form) lastSheet.property.getParent()).equals(FormUtils.getPath(form)) && lastSheet.property.getId().startsWith("pose"))
+                {
+                    type = lastSheet.id;
+                }
+            }
+        }
 
         pickProperty(keyframeEditor, cursor, bone, StringUtils.combinePaths(path, type), false);
     }

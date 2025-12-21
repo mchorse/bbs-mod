@@ -152,14 +152,6 @@ public class UICurveClip extends UIClip<CurveClip>
     }
 
     @Override
-    public void updateDuration(int duration)
-    {
-        super.updateDuration(duration);
-
-        this.keyframes.updateConverter();
-    }
-
-    @Override
     public void applyUndoData(MapType data)
     {
         if (data.getString("embed").equals("curve"))

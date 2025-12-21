@@ -5,12 +5,12 @@ import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.ui.film.utils.CameraAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.utils.Pair;
+import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
@@ -22,7 +22,6 @@ import java.util.function.Function;
 public class UIKeyframeEditor extends UIElement
 {
     public static final int[] COLORS = {Colors.RED, Colors.GREEN, Colors.BLUE, Colors.CYAN, Colors.MAGENTA, Colors.YELLOW, Colors.LIGHTEST_GRAY & 0xffffff, Colors.DEEP_PINK};
-    public static final CameraAxisConverter CONVERTER = new CameraAxisConverter();
 
     public UIKeyframes view;
     public UIKeyframeFactory editor;
@@ -32,7 +31,6 @@ public class UIKeyframeEditor extends UIElement
     public UIKeyframeEditor(Function<Consumer<Keyframe>, UIKeyframes> factory)
     {
         this.view = factory.apply(this::pickKeyframe);
-
         this.view.changed(() ->
         {
             if (this.editor != null)
@@ -83,11 +81,6 @@ public class UIKeyframeEditor extends UIElement
         }
 
         this.resize();
-    }
-
-    public void updateConverter()
-    {
-        this.view.axisConverter(CONVERTER);
     }
 
     public void setChannel(KeyframeChannel channel, int color)
@@ -141,19 +134,34 @@ public class UIKeyframeEditor extends UIElement
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
             String currentFirst = pose.poseEditor.groups.getCurrentFirst();
 
-            if (sheet != null && sheet.id.endsWith("pose"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/pose") ? sheet.id.substring(0, sheet.id.lastIndexOf('/') + 1) + currentFirst : currentFirst;
-                local = pose.poseEditor.transform.isLocal();
+                String id = StringUtils.fileName(sheet.id);
+
+                if (id.startsWith("pose"))
+                {
+                    int i = id.lastIndexOf('/');
+
+                    bone = i >= 0 ? id.substring(0, i + 1) + currentFirst : currentFirst;
+                    local = pose.poseEditor.transform.isLocal();
+                }
             }
         }
-        else if (editor instanceof UITransformKeyframeFactory)
+        else if (editor instanceof UITransformKeyframeFactory transform)
         {
             UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
 
-            if (sheet != null && sheet.id.endsWith("transform"))
+            if (sheet != null)
             {
-                bone = sheet.id.endsWith("/transform") ? sheet.id.substring(0, sheet.id.lastIndexOf('/')) : "";
+                String id = StringUtils.fileName(sheet.id);
+
+                if (id.startsWith("transform"))
+                {
+                    int i = id.lastIndexOf('/');
+
+                    bone = i >= 0  ? id.substring(0, i) : "";
+                    local = transform.transform.isLocal();
+                }
             }
         }
 

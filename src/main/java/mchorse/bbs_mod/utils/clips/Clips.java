@@ -1,8 +1,11 @@
 package mchorse.bbs_mod.utils.clips;
 
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
+import mchorse.bbs_mod.camera.clips.overwrite.KeyframeClip;
+import mchorse.bbs_mod.camera.data.Point;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
+import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.factory.IFactory;
@@ -329,11 +332,38 @@ public class Clips extends ValueGroup
                 continue;
             }
 
-            Clip clip = this.factory.fromData(type.asMap());
-
-            if (clip != null)
+            try
             {
-                this.clips.add(clip);
+                Clip clip = this.factory.fromData(type.asMap());
+
+                if (clip != null)
+                {
+                    this.clips.add(clip);
+                }
+            }
+            catch (Exception e)
+            {
+                MapType map = type.asMap();
+
+                if (map.getString("type").equalsIgnoreCase("bbs:circular"))
+                {
+                    KeyframeClip clip = new KeyframeClip();
+                    Point point = new Point(0D, 0D, 0D);
+
+                    point.fromData(map.getMap("start"));
+                    clip.fromData(map);
+                    clip.x.insert(0F, point.x);
+                    clip.y.insert(0F, point.y);
+                    clip.z.insert(0F, point.z);
+                    clip.yaw.insert(0F, (double) map.getFloat("start"));
+                    clip.yaw.insert(clip.duration.get(), (double) map.getFloat("start") + (double) map.getFloat("circles"));
+                    clip.pitch.insert(0F, (double) map.getFloat("pitch"));
+                    clip.roll.insert(0F, 0D);
+                    clip.fov.insert(0F, (double) map.getFloat("fov"));
+                    clip.distance.insert(0F, (double) map.getFloat("distance"));
+
+                    this.clips.add(clip);
+                }
             }
         }
 

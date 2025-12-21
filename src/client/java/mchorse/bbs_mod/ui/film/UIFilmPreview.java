@@ -7,9 +7,11 @@ import mchorse.bbs_mod.audio.AudioRenderer;
 import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.camera.clips.misc.AudioClip;
 import mchorse.bbs_mod.camera.controller.RunnerCameraController;
+import mchorse.bbs_mod.camera.data.Angle;
+import mchorse.bbs_mod.camera.data.Point;
 import mchorse.bbs_mod.camera.data.Position;
+import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.client.BBSRendering;
-import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
@@ -18,6 +20,7 @@ import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.dashboard.panels.UIDashboardPanels;
 import mchorse.bbs_mod.ui.film.controller.UIOnionSkinContextMenu;
+import mchorse.bbs_mod.ui.film.utils.UICameraUtils;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
@@ -45,7 +48,9 @@ import org.joml.Vector2i;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UIFilmPreview extends UIElement
 {
@@ -105,19 +110,31 @@ public class UIFilmPreview extends UIElement
             {
                 Position current = new Position(this.panel.getCamera());
 
-                Window.setClipboard(current.toData(), "_CopyCameraPosition");
+                Map<String, Double> map = new LinkedHashMap<>();
+
+                UICameraUtils.copyPoint(map, current.point);
+                UICameraUtils.copyAngle(map, current.angle);
+
+                Window.setClipboard(UICameraUtils.mapToString(map));
             });
 
-            MapType map = Window.getClipboardMap("_CopyCameraPosition");
+            Map<String, Double> map = UICameraUtils.stringToMap(Window.getClipboard());
 
-            if (map != null)
+            if (!map.isEmpty())
             {
                 menu.action(Icons.PASTE, UIKeys.CAMERA_PANELS_CONTEXT_PASTE_POSITION, () ->
                 {
-                    Position current = new Position();
+                    Position position = new Position();
+                    Point point = UICameraUtils.createPoint(map);
+                    Angle angle = UICameraUtils.createAngle(map);
 
-                    current.fromData(map);
-                    this.panel.cameraEditor.editClip(current);
+                    if (point != null && angle != null)
+                    {
+                        position.point.set(point);
+                        position.angle.set(angle);
+                    }
+
+                    this.panel.cameraEditor.editClip(position);
                 });
             }
         });
@@ -211,8 +228,9 @@ public class UIFilmPreview extends UIElement
         String name = StringUtils.createTimestampFilename() + ".wav";
         File videos = BBSRendering.getVideoFolder();
         UIContext context = this.getContext();
+        Vector2i range = BBSSettings.editorLoop.get() ? this.panel.getLoopingRange() : new Vector2i();
 
-        if (AudioRenderer.renderAudio(new File(videos, name), audioClips, camera.calculateDuration(), 48000))
+        if (AudioRenderer.renderAudio(new File(videos, name), audioClips, camera.calculateDuration(), 48000, TimeUtils.toSeconds(range.x), TimeUtils.toSeconds(range.y)))
         {
             UIOverlay.addOverlay(context, new UIMessageFolderOverlayPanel(UIKeys.GENERAL_SUCCESS, UIKeys.FILM_RENDER_AUDIO_SUCCESS, videos));
         }

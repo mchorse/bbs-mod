@@ -5,6 +5,7 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
@@ -24,9 +25,7 @@ import net.minecraft.util.Hand;
 import org.joml.Matrix4f;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class FormRenderer <T extends Form>
@@ -104,7 +103,7 @@ public abstract class FormRenderer <T extends Form>
         boolean isPicking = context.stencilMap != null;
 
         context.stack.push();
-        this.applyTransforms(context.stack, context.getTransition());
+        this.applyTransforms(context.stack, false, context.getTransition());
 
         float lf = 1F - MathUtils.clamp(this.form.lighting.get(), 0F, 1F);
         int u = context.light & '\uffff';
@@ -129,9 +128,18 @@ public abstract class FormRenderer <T extends Form>
         this.form.unapplyStates();
     }
 
-    protected void applyTransforms(MatrixStack stack, float transition)
+    protected void applyTransforms(MatrixStack stack, boolean origin, float transition)
     {
-        MatrixStackUtils.applyTransform(stack, this.createTransform());
+        Transform transform = this.createTransform();
+
+        if (origin)
+        {
+            stack.translate(transform.translate.x, transform.translate.y, transform.translate.z);
+        }
+        else
+        {
+            MatrixStackUtils.applyTransform(stack, transform);
+        }
     }
 
     protected void applyTransforms(Matrix4f matrix, float transition)
@@ -221,22 +229,31 @@ public abstract class FormRenderer <T extends Form>
         context.entity = oldEntity;
     }
 
-    public Map<String, Matrix4f> collectMatrices(IEntity entity, String target, float transition)
+    public MatrixCache collectMatrices(IEntity entity, float transition)
     {
-        Map<String, Matrix4f> map = new HashMap<>();
+        MatrixCache map = new MatrixCache();
         MatrixStack stack = new MatrixStack();
 
-        this.collectMatrices(entity, target, stack, map, "", transition);
+        this.collectMatrices(entity, stack, map, "", transition);
 
         return map;
     }
 
-    public void collectMatrices(IEntity entity, String target, MatrixStack stack, Map<String, Matrix4f> matrices, String prefix, float transition)
+    public void collectMatrices(IEntity entity, MatrixStack stack, MatrixCache matrices, String prefix, float transition)
     {
-        stack.push();
-        this.applyTransforms(stack, transition);
+        Matrix4f mm = new Matrix4f();
+        Matrix4f oo = new Matrix4f();
 
-        matrices.put(prefix, new Matrix4f(stack.peek().getPositionMatrix()));
+        stack.push();
+        this.applyTransforms(stack, true, transition);
+        oo.set(stack.peek().getPositionMatrix());
+        stack.pop();
+
+        stack.push();
+        this.applyTransforms(stack, false, transition);
+        mm.set(stack.peek().getPositionMatrix());
+
+        matrices.put(prefix, mm, oo);
 
         int i = 0;
 
@@ -249,7 +266,7 @@ public abstract class FormRenderer <T extends Form>
                 stack.push();
                 MatrixStackUtils.applyTransform(stack, part.transform.get());
 
-                FormUtilsClient.getRenderer(form).collectMatrices(entity, target, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
+                FormUtilsClient.getRenderer(form).collectMatrices(entity, stack, matrices, StringUtils.combinePaths(prefix, String.valueOf(i)), transition);
 
                 stack.pop();
             }

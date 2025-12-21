@@ -8,6 +8,7 @@ import mchorse.bbs_mod.film.BaseFilmController;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.utils.MatrixUtils;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.clips.Clip;
@@ -18,7 +19,6 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.util.List;
-import java.util.Map;
 
 public class TrackerClientClip extends TrackerClip
 {
@@ -45,11 +45,11 @@ public class TrackerClientClip extends TrackerClip
             return;
         }
 
-        Map<String, Matrix4f> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, null, context.transition);
+        MatrixCache map = FormUtilsClient.getRenderer(form).collectMatrices(entity, context.transition);
         Vector3f relativeFormPos = new Vector3f();
         String targetGroup = this.group.get();
 
-        if (!map.containsKey(targetGroup))
+        if (!map.has(targetGroup))
         {
             return;
         }
@@ -62,7 +62,7 @@ public class TrackerClientClip extends TrackerClip
             formTransform = totalMatrix.a;
         }
 
-        formTransform.mul(map.get(targetGroup));
+        formTransform.mul(map.get(targetGroup).matrix());
         formTransform.getTranslation(relativeFormPos);
 
         Matrix3d trackerRot = new Matrix3d(formTransform);

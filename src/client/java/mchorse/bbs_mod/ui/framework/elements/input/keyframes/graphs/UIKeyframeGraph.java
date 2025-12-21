@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.graphics.line.LineBuilder;
 import mchorse.bbs_mod.graphics.line.SolidColorLineRenderer;
@@ -9,11 +10,11 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.ScrollDirection;
 import mchorse.bbs_mod.utils.Pair;
-import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.IInterp;
 import mchorse.bbs_mod.utils.interps.Interpolations;
@@ -119,6 +120,12 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
     {
         this.keyframes.resetViewX();
         this.resetViewY(this.sheet);
+    }
+
+    @Override
+    public UIKeyframeSheet getLastSheet()
+    {
+        return this.sheet;
     }
 
     @Override
@@ -398,7 +405,7 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
                 break;
             }
 
-            String label = this.keyframes.getConverter() == null ? String.valueOf(j * mult) : this.keyframes.getConverter().format(j * mult);
+            String label = TimeUtils.formatTime(j * mult);
 
             context.batcher.box(x, area.y, x + 1, area.ey(), Colors.setA(Colors.WHITE, 0.25F));
             context.batcher.text(label, x + 4, area.y + 4);
@@ -642,21 +649,24 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
                 isPointHover = isPointHover || this.keyframes.getGrabbingArea(context).isInside(x1, y);
             }
 
-            int c = (sheet.selection.has(i) || isPointHover ? Colors.WHITE : sheet.color) | Colors.A100;
+            int kc = frame.getColor() != null ? frame.getColor().getRGBColor() | Colors.A100 : sheet.color;
+            int c = (sheet.selection.has(i) || isPointHover ? Colors.WHITE : kc) | Colors.A100;
 
             if (toRemove)
             {
                 c = Colors.RED | Colors.A100;
             }
 
-            this.renderSquare(context, builder, matrix, x1, y, toRemove ? 4 : 3, c);
+            int offset = toRemove ? 4 : 3;
+
+            UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, x1, y, offset, c);
 
             if (frame.getInterpolation().getInterp() == Interpolations.BEZIER)
             {
                 int rx = this.keyframes.toGraphX(frame.getTick() + frame.rx);
                 int ry = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()) + frame.ry);
 
-                this.renderSquare(context, builder, matrix, rx, ry, 3, c);
+                UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, rx, ry, 3, c);
             }
 
             if (prev != null && prev.getInterpolation().getInterp() == Interpolations.BEZIER)
@@ -664,7 +674,7 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
                 int lx = this.keyframes.toGraphX(frame.getTick() - frame.lx);
                 int ly = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()) + frame.ly);
 
-                this.renderSquare(context, builder, matrix, lx, ly, 3, c);
+                UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, lx, ly, 3, c);
             }
         }
 
@@ -675,18 +685,20 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
             Keyframe prev = j > 0 ? (Keyframe) keyframes.get(j - 1) : null;
             int y = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()));
 
-            Color keyframeColor = frame.getColor();
-            int kc = keyframeColor != null ? keyframeColor.getRGBColor() : 0;
             int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
+            int mx = this.keyframes.toGraphX(frame.getTick());
+            int mc = c | Colors.A100;
+            IKeyframeShapeRenderer shapeResult = UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, mx, y, 2, mc);
 
-            this.renderSquare(context, builder, matrix, this.keyframes.toGraphX(frame.getTick()), y, 2, kc | c | Colors.A100);
+            shapeResult.renderKeyframeBackground(context, builder, matrix, mx, y, 2, mc);
 
             if (frame.getInterpolation().getInterp() == Interpolations.BEZIER)
             {
                 int rx = this.keyframes.toGraphX(frame.getTick() + frame.rx);
                 int ry = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()) + frame.ry);
 
-                this.renderSquare(context, builder, matrix, rx, ry, 2, c | Colors.A100);
+                shapeResult = UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, rx, ry, 2, c | Colors.A100);
+                shapeResult.renderKeyframeBackground(context, builder, matrix, rx, ry, 2, c | Colors.A100);
             }
 
             if (prev != null && prev.getInterpolation().getInterp() == Interpolations.BEZIER)
@@ -694,18 +706,14 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
                 int lx = this.keyframes.toGraphX(frame.getTick() - frame.lx);
                 int ly = this.toGraphY(sheet.channel.getFactory().getY(frame.getValue()) + frame.ly);
 
-                this.renderSquare(context, builder, matrix, lx, ly, 2, c | Colors.A100);
+                shapeResult = UIKeyframeDopeSheet.renderShape(frame, context, builder, matrix, lx, ly, 2, c | Colors.A100);
+                shapeResult.renderKeyframeBackground(context, builder, matrix, lx, ly, 2, c | Colors.A100);
             }
         }
 
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferRenderer.drawWithGlobalProgram(builder.end());
-    }
-
-    protected void renderSquare(UIContext context, BufferBuilder builder, Matrix4f matrix, int x, int y, int offset, int c)
-    {
-        context.batcher.fillRect(builder, matrix, x - offset, y - offset, offset * 2, offset * 2, c, c, c, c);
     }
 
     @Override

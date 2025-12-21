@@ -160,12 +160,12 @@ public abstract class UIClip <T extends Clip> extends UIElement
         this.title.tooltip(UIKeys.CAMERA_PANELS_TITLE_TOOLTIP);
         this.layer = new UITrackpad((v) -> this.editor.editMultiple(this.clip.layer, v.intValue()));
         this.layer.limit(0, Integer.MAX_VALUE, true).tooltip(UIKeys.CAMERA_PANELS_LAYER);
-        this.tick = new UITrackpad((v) -> this.editor.editMultiple(this.clip.tick, TimeUtils.fromTime(v)));
+        this.tick = new UITrackpad((v) -> this.editor.editMultiple(this.clip.tick, (int) TimeUtils.fromTime(v)));
         this.tick.limit(0, Integer.MAX_VALUE, true).tooltip(UIKeys.CAMERA_PANELS_TICK);
         this.duration = new UITrackpad((v) ->
         {
-            this.editor.editMultiple(this.clip.duration, TimeUtils.fromTime(v));
-            this.updateDuration(TimeUtils.fromTime(v));
+            this.editor.editMultiple(this.clip.duration, (int) TimeUtils.fromTime(v));
+            this.updateDuration((int) TimeUtils.fromTime(v));
         });
         this.duration.limit(1, Integer.MAX_VALUE, true).tooltip(UIKeys.CAMERA_PANELS_DURATION);
         this.envelope = new UIEnvelope(this);

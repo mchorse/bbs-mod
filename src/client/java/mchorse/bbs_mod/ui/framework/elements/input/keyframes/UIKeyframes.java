@@ -81,8 +81,6 @@ public class UIKeyframes extends UIElement
 
     private SheetCache cache;
 
-    private IAxisConverter converter;
-
     private UICopyPasteController copyPasteController;
 
     public UIKeyframes(Consumer<Keyframe> callback)
@@ -748,18 +746,6 @@ public class UIKeyframes extends UIElement
         return this;
     }
 
-    public UIKeyframes axisConverter(IAxisConverter converter)
-    {
-        this.converter = converter;
-
-        return this;
-    }
-
-    public IAxisConverter getConverter()
-    {
-        return this.converter;
-    }
-
     public IUIKeyframeGraph getGraph()
     {
         return this.currentGraph;
@@ -799,6 +785,8 @@ public class UIKeyframes extends UIElement
 
     public void pickKeyframe(Keyframe keyframe)
     {
+        this.getGraph().onCallback(keyframe);
+
         if (this.callback != null)
         {
             this.callback.accept(keyframe);

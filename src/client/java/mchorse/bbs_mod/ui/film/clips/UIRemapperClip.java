@@ -64,14 +64,6 @@ public class UIRemapperClip extends UIClip<RemapperClip>
     }
 
     @Override
-    public void updateDuration(int duration)
-    {
-        super.updateDuration(duration);
-
-        this.keyframes.updateConverter();
-    }
-
-    @Override
     public void applyUndoData(MapType data)
     {
         super.applyUndoData(data);

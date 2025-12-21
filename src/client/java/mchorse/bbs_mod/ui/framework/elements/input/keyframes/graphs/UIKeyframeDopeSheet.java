@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -36,9 +37,20 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     private UIKeyframes keyframes;
 
     private List<UIKeyframeSheet> sheets = new ArrayList<>();
+    private UIKeyframeSheet lastSheet;
 
     private Scroll dopeSheet;
     private double trackHeight;
+
+    public static IKeyframeShapeRenderer renderShape(Keyframe frame, UIContext context, BufferBuilder builder, Matrix4f matrix, int x, int y, int offset, int c)
+    {
+        KeyframeShape keyframeShape = frame.getShape();
+        IKeyframeShapeRenderer shape = KeyframeShapeRenderers.SHAPES.get(keyframeShape);
+
+        shape.renderKeyframe(context, builder, matrix, x, y, offset, c);
+
+        return shape;
+    }
 
     public UIKeyframeDopeSheet(UIKeyframes keyframes)
     {
@@ -87,7 +99,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     /**
      * Whether given mouse coordinates are near the given point?
      */
-    private boolean isNear(double x, double y, int mouseX, int mouseY, boolean checkOnlyX)
+    public static boolean isNear(double x, double y, int mouseX, int mouseY, boolean checkOnlyX)
     {
         if (checkOnlyX)
         {
@@ -103,6 +115,12 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     public void resetView()
     {
         this.keyframes.resetViewX();
+    }
+
+    @Override
+    public UIKeyframeSheet getLastSheet()
+    {
+        return this.lastSheet == null ? CollectionUtils.getSafe(this.sheets, 0) : this.lastSheet;
     }
 
     @Override
@@ -227,6 +245,17 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         }
 
         return null;
+    }
+
+    @Override
+    public void onCallback(Keyframe keyframe)
+    {
+        UIKeyframeSheet sheet = this.getSheet(keyframe);
+
+        if (sheet != null)
+        {
+            this.lastSheet = sheet;
+        }
     }
 
     @Override
@@ -358,7 +387,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                 break;
             }
 
-            String label = this.keyframes.getConverter() == null ? String.valueOf(j * mult) : this.keyframes.getConverter().format(j * mult);
+            String label = TimeUtils.formatTime(j * mult);
 
             context.batcher.box(x, area.y, x + 1, area.ey(), Colors.setA(Colors.WHITE, 0.25F));
             context.batcher.text(label, x + 4, area.y + 4);
@@ -607,7 +636,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
                 int offset = toRemove ? 4 : 3;
 
-                this.renderShape(frame, context, builder, matrix, x1, my, offset, c);
+                renderShape(frame, context, builder, matrix, x1, my, offset, c);
             }
 
             /* Render keyframe handles (inner) */
@@ -617,7 +646,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                 int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
                 int mx = this.keyframes.toGraphX(frame.getTick());
                 int mc = c | Colors.A100;
-                IKeyframeShapeRenderer shapeResult = this.renderShape(frame, context, builder, matrix, mx, my, 2, mc);
+                IKeyframeShapeRenderer shapeResult = renderShape(frame, context, builder, matrix, mx, my, 2, mc);
 
                 shapeResult.renderKeyframeBackground(context, builder, matrix, mx, my, 2, mc);
             }
@@ -649,16 +678,6 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                 context.batcher.icon(icon, area.x + 2, my - icon.h / 2);
             }
         }
-    }
-
-    protected IKeyframeShapeRenderer renderShape(Keyframe frame, UIContext context, BufferBuilder builder, Matrix4f matrix, int x, int y, int offset, int c)
-    {
-        KeyframeShape keyframeShape = frame.getShape();
-        IKeyframeShapeRenderer shape = KeyframeShapeRenderers.SHAPES.get(keyframeShape);
-
-        shape.renderKeyframe(context, builder, matrix, x, y, offset, c);
-
-        return shape;
     }
 
     @Override

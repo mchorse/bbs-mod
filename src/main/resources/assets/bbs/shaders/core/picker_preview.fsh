@@ -19,7 +19,9 @@ void main()
         discard;
     }
 
-    if (abs(color.r * 255.0 - Target) < 0.1)
+    int totalIndex = int(color.r * 255.0) | (int(color.g * 255.0) << 8) | (int(color.b * 255.0) << 16);
+
+    if (totalIndex == Target)
     {
         if (Target >= 7)
         {

@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
+import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
@@ -10,7 +11,6 @@ import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragEndEvent;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.IAxisConverter;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
@@ -100,7 +100,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.scroll.full(this);
 
         this.tick = new UITrackpad(this::setTick);
-        this.tick.limit(Float.MIN_VALUE, Float.MAX_VALUE).tooltip(UIKeys.KEYFRAMES_TICK);
+        this.tick.tooltip(UIKeys.KEYFRAMES_TICK);
         this.tick.getEvents().register(UITrackpadDragStartEvent.class, (e) -> this.editor.cacheKeyframes());
         this.tick.getEvents().register(UITrackpadDragEndEvent.class, (e) -> this.editor.submitKeyframes());
         this.duration = new UITrackpad((v) -> this.setDuration(v.floatValue()));
@@ -168,23 +168,20 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.add(this.scroll);
 
         /* Fill data */
-        IAxisConverter converter = this.editor.getConverter();
-
-        this.tick.setValue(converter == null ? keyframe.getTick() : converter.to(keyframe.getTick()));
-        this.duration.setValue(converter == null ? keyframe.getDuration() : converter.to(keyframe.getDuration()));
+        this.tick.setValue(TimeUtils.toTime(keyframe.getTick()));
+        this.duration.setValue(TimeUtils.toTime(keyframe.getDuration()));
     }
 
     public Keyframe<T> getKeyframe()
     {
-        return keyframe;
+        return this.keyframe;
     }
 
     public void setTick(double tick)
     {
-        IAxisConverter converter = this.editor.getConverter();
-        float time = (float) (converter == null ? tick : converter.from(tick));
+        double time = TimeUtils.fromTime(tick);
 
-        this.editor.getGraph().setTick(time, false);
+        this.editor.getGraph().setTick((float) time, false);
     }
 
     public void setDuration(float value)
@@ -199,9 +196,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
 
     public void update()
     {
-        IAxisConverter converter = this.editor.getConverter();
-
-        this.tick.setValue(converter == null ? this.keyframe.getTick() : converter.to(this.keyframe.getTick()));
+        this.tick.setValue(TimeUtils.toTime(this.keyframe.getTick()));
     }
 
     public static interface IUIKeyframeFactoryFactory <T>
