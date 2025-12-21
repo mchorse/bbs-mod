@@ -37,6 +37,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     private UIKeyframes keyframes;
 
     private List<UIKeyframeSheet> sheets = new ArrayList<>();
+    private UIKeyframeSheet lastSheet;
 
     private Scroll dopeSheet;
     private double trackHeight;
@@ -104,6 +105,12 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     public void resetView()
     {
         this.keyframes.resetViewX();
+    }
+
+    @Override
+    public UIKeyframeSheet getLastSheet()
+    {
+        return this.lastSheet == null ? CollectionUtils.getSafe(this.sheets, 0) : this.lastSheet;
     }
 
     @Override
@@ -228,6 +235,17 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         }
 
         return null;
+    }
+
+    @Override
+    public void onCallback(Keyframe keyframe)
+    {
+        UIKeyframeSheet sheet = this.getSheet(keyframe);
+
+        if (sheet != null)
+        {
+            this.lastSheet = sheet;
+        }
     }
 
     @Override

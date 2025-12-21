@@ -785,6 +785,8 @@ public class UIKeyframes extends UIElement
 
     public void pickKeyframe(Keyframe keyframe)
     {
+        this.getGraph().onCallback(keyframe);
+
         if (this.callback != null)
         {
             this.callback.accept(keyframe);

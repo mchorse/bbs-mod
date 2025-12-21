@@ -123,6 +123,12 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
     }
 
     @Override
+    public UIKeyframeSheet getLastSheet()
+    {
+        return this.sheet;
+    }
+
+    @Override
     public List<UIKeyframeSheet> getSheets()
     {
         return Collections.singletonList(this.sheet);
