@@ -411,4 +411,68 @@ public class Wave
     {
         return offset - offset % 2;
     }
+
+    /**
+     * Creates a mono excerpt (copy) of this Wave in the time range [fromSeconds, toSeconds).
+     * - Clamps out-of-bounds times to [0, duration]
+     * - If the clamped range is empty, returns an empty Wave (same format, empty data)
+     * - Assumes PCM-like layout and mono; does not handle stereo/channel remapping
+     */
+    public Wave excerptMono(float fromSeconds, float toSeconds)
+    {
+        float duration = this.getDuration();
+        float from = MathUtils.clamp(fromSeconds, 0F, duration);
+        float to = MathUtils.clamp(toSeconds, 0F, duration);
+
+        if (to < from)
+        {
+            float tmp = from;
+
+            from = to;
+            to = tmp;
+        }
+
+        int bps = this.getBytesPerSample();
+
+        if (to <= from || this.data == null || this.data.length == 0 || bps <= 0)
+        {
+            Wave empty = new Wave(this.audioFormat, 1, this.sampleRate, this.byteRate, this.blockAlign, this.bitsPerSample, new byte[0]);
+
+            empty.lists = this.lists;
+            empty.cues = this.cues;
+
+            return empty;
+        }
+
+        int fromSample = (int) Math.floor(from * this.sampleRate);
+        int toSample = (int) Math.ceil(to * this.sampleRate);
+        int startByte = fromSample * bps;
+        int endByte = toSample * bps;
+
+        startByte = MathUtils.clamp(startByte, 0, this.data.length);
+        endByte = MathUtils.clamp(endByte, 0, this.data.length);
+
+        startByte -= startByte % bps;
+        endByte -= endByte % bps;
+
+        if (endByte <= startByte)
+        {
+            Wave empty = new Wave(this.audioFormat, 1, this.sampleRate, this.byteRate, this.blockAlign, this.bitsPerSample, new byte[0]);
+
+            empty.lists = this.lists;
+            empty.cues = this.cues;
+
+            return empty;
+        }
+
+        byte[] out = new byte[endByte - startByte];
+        Wave copy = new Wave(this.audioFormat, 1, this.sampleRate, this.sampleRate * bps, bps, this.bitsPerSample, out);
+
+        System.arraycopy(this.data, startByte, out, 0, out.length);
+
+        copy.lists = this.lists;
+        copy.cues = this.cues;
+
+        return copy;
+    }
 }
