@@ -73,8 +73,7 @@ public class UIAnchorKeyframeFactory extends UIKeyframeFactory<Anchor>
         }
 
         Form form = entity.getForm();
-        Map<String, Pair<Matrix4f, Matrix4f>> map = FormUtilsClient.getRenderer(form).collectMatrices(entity, 0F);
-        List<String> attachments = new ArrayList<>(map.keySet());
+        List<String> attachments = new ArrayList<>(FormUtilsClient.getRenderer(form).collectMatrices(entity, 0F).keySet());
 
         attachments.sort(String::compareToIgnoreCase);
 

@@ -5,13 +5,13 @@ import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.keys.KeyCodes;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
-import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.Lerps;
@@ -25,9 +25,7 @@ import net.minecraft.util.Hand;
 import org.joml.Matrix4f;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class FormRenderer <T extends Form>
@@ -231,9 +229,9 @@ public abstract class FormRenderer <T extends Form>
         context.entity = oldEntity;
     }
 
-    public Map<String, Pair<Matrix4f, Matrix4f>> collectMatrices(IEntity entity, float transition)
+    public MatrixCache collectMatrices(IEntity entity, float transition)
     {
-        Map<String, Pair<Matrix4f, Matrix4f>> map = new HashMap<>();
+        MatrixCache map = new MatrixCache();
         MatrixStack stack = new MatrixStack();
 
         this.collectMatrices(entity, stack, map, "", transition);
@@ -241,7 +239,7 @@ public abstract class FormRenderer <T extends Form>
         return map;
     }
 
-    public void collectMatrices(IEntity entity, MatrixStack stack, Map<String, Pair<Matrix4f, Matrix4f>> matrices, String prefix, float transition)
+    public void collectMatrices(IEntity entity, MatrixStack stack, MatrixCache matrices, String prefix, float transition)
     {
         Matrix4f mm = new Matrix4f();
         Matrix4f oo = new Matrix4f();
@@ -255,7 +253,7 @@ public abstract class FormRenderer <T extends Form>
         this.applyTransforms(stack, false, transition);
         mm.set(stack.peek().getPositionMatrix());
 
-        matrices.put(prefix, new Pair<>(mm, oo));
+        matrices.put(prefix, mm, oo);
 
         int i = 0;
 

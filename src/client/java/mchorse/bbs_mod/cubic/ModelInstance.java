@@ -21,11 +21,11 @@ import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.obj.shapes.ShapeKeys;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.utils.MathUtils;
-import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.resources.LinkUtils;
@@ -279,7 +279,7 @@ public class ModelInstance implements IModelInstance
         }
     }
 
-    public void captureMatrices(Map<String, Pair<Matrix4f, Matrix4f>> bones)
+    public void captureMatrices(MatrixCache bones)
     {
         if (this.model instanceof Model model)
         {
@@ -305,7 +305,7 @@ public class ModelInstance implements IModelInstance
                     group.initial.translate.z / 16
                 );
                 origin.rotateY(MathUtils.PI);
-                bones.put(group.id, new Pair<>(matrix, origin));
+                bones.put(group.id, matrix, origin);
             }
         }
         else if (this.model instanceof BOBJModel model)
@@ -319,7 +319,7 @@ public class ModelInstance implements IModelInstance
 
                 matrix.rotateY(MathUtils.PI).mul(orderedBone.mat);
                 origin.rotateY(MathUtils.PI).mul(orderedBone.originMat);
-                bones.put(orderedBone.name, new Pair<>(matrix, origin));
+                bones.put(orderedBone.name, matrix, origin);
             }
         }
     }
