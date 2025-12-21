@@ -15,6 +15,7 @@ import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
+import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.mixin.client.EntityRendererDispatcherInvoker;
 import mchorse.bbs_mod.ui.dashboard.UIDashboard;
@@ -23,7 +24,6 @@ import mchorse.bbs_mod.ui.framework.UIScreen;
 import mchorse.bbs_mod.ui.model_blocks.UIModelBlockPanel;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
-import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.pose.Transform;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -37,9 +37,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockEntity>
 {
@@ -225,11 +222,11 @@ public class ModelBlockEntityRenderer implements BlockEntityRenderer<ModelBlockE
 
                 if (FormUtilsClient.getBones(modelForm).contains(headKey))
                 {
-                    Map<String, Pair<Matrix4f, Matrix4f>> matrices = new HashMap<>();
+                    MatrixCache matrices = new MatrixCache();
 
                     model.captureMatrices(matrices);
 
-                    Matrix4f matrix = matrices.get(headKey).a;
+                    Matrix4f matrix = matrices.get(headKey).matrix();
 
                     if (matrix != null)
                     {
