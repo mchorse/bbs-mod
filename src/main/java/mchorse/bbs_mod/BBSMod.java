@@ -380,11 +380,11 @@ public class BBSMod implements ModInitializer
         assetsFolder.mkdirs();
 
         FabricLoader.getInstance()
-                .getEntrypointContainers("bbs-addon", BBSAddonMod.class)
-                .forEach((container) ->
-                {
-                    events.register(container.getEntrypoint());
-                });
+            .getEntrypointContainers("bbs-addon", BBSAddonMod.class)
+            .forEach((container) ->
+            {
+                events.register(container.getEntrypoint());
+            });
 
         actions = new ActionManager();
 
