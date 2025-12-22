@@ -44,6 +44,7 @@ import mchorse.bbs_mod.camera.clips.overwrite.KeyframeClip;
 import mchorse.bbs_mod.camera.clips.overwrite.PathClip;
 import mchorse.bbs_mod.entity.ActorEntity;
 import mchorse.bbs_mod.entity.GunProjectileEntity;
+import mchorse.bbs_mod.events.BBSAddonMod;
 import mchorse.bbs_mod.events.EventBus;
 import mchorse.bbs_mod.events.register.RegisterSettingsEvent;
 import mchorse.bbs_mod.events.register.RegisterSourcePacksEvent;
@@ -377,6 +378,13 @@ public class BBSMod implements ModInitializer
         settingsFolder = new File(gameFolder, "config/bbs/settings");
 
         assetsFolder.mkdirs();
+
+        FabricLoader.getInstance()
+            .getEntrypointContainers("bbs-addon", BBSAddonMod.class)
+            .forEach((container) ->
+            {
+                events.register(container.getEntrypoint());
+            });
 
         actions = new ActionManager();
 
