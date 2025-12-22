@@ -3,6 +3,7 @@ package mchorse.bbs_mod.ui.framework.elements.input;
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.graphics.texture.Texture;
@@ -175,6 +176,19 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
             if (this.current != null)
             {
                 menu.action(Icons.COPY, UIKeys.TEXTURES_COPY, () -> Window.setClipboard(this.current.toString()));
+            }
+
+            File file = BBSMod.getProvider().getFile(this.current);
+
+            if (file.isFile() && file.getName().endsWith(".png"))
+            {
+                menu.action(Icons.ADD, UIKeys.TEXTURES_CREATE_MCMETA, () ->
+                {
+                    MapType data = DataToString.mapFromString("{\"animation\":{\"frametime\":2}}");
+                    String path = file.getAbsolutePath() + ".mcmeta";
+
+                    DataToString.writeSilently(new File(path), data, true);
+                });
             }
 
             menu.action(Icons.DOWNLOAD, UIKeys.TEXTURES_DOWNLOAD, () -> this.download(""));
