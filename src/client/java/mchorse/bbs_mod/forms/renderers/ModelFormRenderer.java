@@ -595,7 +595,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
             stack.pop();
 
             stack.push();
-            MatrixStackUtils.multiply(stack, entry.getValue().matrix());
+            MatrixStackUtils.multiply(stack, entry.getValue().origin());
             o.set(stack.peek().getPositionMatrix());
             stack.pop();
 
