@@ -1000,6 +1000,7 @@
     "bbs.ui.texture.url_error_ffmpeg": "URL \"%s\" couldn't be downloaded because ffmpeg isn't installed...",
     "bbs.ui.texture.url_error_http": "URL \"%s\" couldn't be downloaded due to HTTP error...",
     "bbs.ui.textures.copy": "Copy texture's path to copy-paste buffer",
+    "bbs.ui.textures.create_mcmeta": "Create .mcmeta file",
     "bbs.ui.textures.download": "Download texture from URL...",
     "bbs.ui.textures.download-description": "Input the URL to the texture you want to download:",
     "bbs.ui.textures.download-title": "Download from URL",
