@@ -97,6 +97,19 @@ public interface IUIKeyframeGraph
         return null;
     }
 
+    public default UIKeyframeSheet getSheet(String id)
+    {
+        for (UIKeyframeSheet sheet : this.getSheets())
+        {
+            if (sheet.id.equals(id))
+            {
+                return sheet;
+            }
+        }
+
+        return null;
+    }
+
     public UIKeyframeSheet getSheet(int mouseY);
 
     public boolean addKeyframe(int mouseX, int mouseY);
