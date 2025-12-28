@@ -201,6 +201,11 @@ public class ActionPlayer
         double vy = y - replay.keyframes.y.interpolate(tick - 1);
         double vz = z - replay.keyframes.z.interpolate(tick - 1);
 
+        if (vy == 0D)
+        {
+            vy = -0.0784;
+        }
+
         actor.setVelocity(vx, vy, vz);
 
         actor.fallDistance = replay.keyframes.fall.interpolate(tick).floatValue();
