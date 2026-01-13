@@ -20,6 +20,7 @@ import mchorse.bbs_mod.ui.forms.UIToggleEditorEvent;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.events.UIRemovedEvent;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
@@ -36,6 +37,7 @@ import mchorse.bbs_mod.utils.pose.Transform;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -60,6 +62,7 @@ public class UIModelBlockPanel extends UIDashboardPanel implements IFlightSuppor
     public UIToggle shadow;
     public UIToggle global;
     public UIToggle lookAt;
+    public UIButton rotateAtYou;
     public UIPropTransform transform;
 
     private ModelBlockEntity modelBlock;
@@ -149,10 +152,16 @@ public class UIModelBlockPanel extends UIDashboardPanel implements IFlightSuppor
         });
         this.lookAt = new UIToggle(UIKeys.CAMERA_PANELS_LOOK_AT, (b) -> this.modelBlock.getProperties().setLookAt(b.getValue()));
 
+        this.rotateAtYou = new UIButton(UIKeys.MODEL_BLOCKS_ROTATE_AT_YOU, b -> this.rotateAtYou());
+        this.keyDude.keys().register(Keys.MODEL_BLOCKS_ROTATE_AT_YOU, () -> {if (this.modelBlock != null) {this.rotateAtYou();}}).active(() -> this.modelBlock != null);
+
+
+
+
         this.transform = new UIPropTransform();
         this.transform.enableHotkeys();
 
-        this.editor = UI.column(this.pickEdit, this.enabled, this.shadow, this.global, this.lookAt, this.transform);
+        this.editor = UI.column(this.pickEdit, this.enabled, this.shadow, this.global, this.lookAt, this.rotateAtYou, this.transform);
 
         this.scrollView = UI.scrollView(5, 10, this.modelBlocks, this.editor);
         this.scrollView.scroll.opposite().cancelScrolling();
@@ -175,6 +184,72 @@ public class UIModelBlockPanel extends UIDashboardPanel implements IFlightSuppor
             UIUtils.playClick();
         }
     }
+
+    private void rotateAtYou()
+    {
+        if (this.modelBlock == null)
+        {
+            return;
+        }
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+
+        if (mc.world == null)
+        {
+            return;
+        }
+
+        /* Local transform reference used for world-space */
+        ModelProperties properties = this.modelBlock.getProperties();
+        Transform transform = properties.getTransform();
+
+        BlockPos pos = this.modelBlock.getPos();
+
+        double x = pos.getX() + 0.5D + (double) transform.translate.x;
+        double y = pos.getY() + (double) transform.translate.y;
+        double z = pos.getZ() + 0.5D + (double) transform.translate.z;
+
+        PlayerEntity nearest = null;
+        double nearestDist = Double.MAX_VALUE;
+
+        for (PlayerEntity player : mc.world.getPlayers())
+        {
+            double dist = player.squaredDistanceTo(x, y, z);
+
+            if (dist < nearestDist)
+            {
+                nearestDist = dist;
+                nearest = player;
+            }
+        }
+
+        if (nearest == null)
+        {
+            return;
+        }
+
+        /* Yaw computed in the model's coordinate system */
+        double dx = nearest.getX() - x;
+        double dz = nearest.getZ() - z;
+        float yaw = (float) Math.atan2(dx, dz);
+
+        transform.rotate.y = yaw;
+
+        this.fillData();
+        UIUtils.playClick();
+
+        transform = this.modelBlock.getProperties().getTransform();
+
+
+        float rotXDeg = (float) Math.toDegrees(transform.rotate.x);
+        float rotYDeg = (float) Math.toDegrees(transform.rotate.y);
+        float rotZDeg = (float) Math.toDegrees(transform.rotate.z);
+
+        System.out.println("X=" + rotXDeg
+                + ", Y=" + rotYDeg
+                + ", Z=" + rotZDeg);
+    }
+
 
     @Override
     public boolean supportsRollFOVControl()
