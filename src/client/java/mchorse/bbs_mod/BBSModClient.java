@@ -605,6 +605,7 @@ public class BBSModClient implements ClientModInitializer
 
         /* Create folders */
         BBSMod.getAudioFolder().mkdirs();
+        BBSMod.getAssetsPath("textures").mkdirs();
 
         for (String path : List.of("alex", "alex_simple", "steve", "steve_simple"))
         {

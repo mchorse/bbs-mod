@@ -994,6 +994,7 @@
     "bbs.ui.texture.url_error_ffmpeg": "Ресурс по \"%s\" URL не смог был скачан из-за ffmpeg не установлен...",
     "bbs.ui.texture.url_error_http": "Ресурс по \"%s\" URL не смог был скачан из-за HTTP ошибки...",
     "bbs.ui.textures.copy": "Скопировать путь текстуры в буфер обмена",
+    "bbs.ui.textures.create_mcmeta": "Создать .mcmeta файл",
     "bbs.ui.textures.download": "Скачать текстуру по URL...",
     "bbs.ui.textures.download-description": "Введите URL текстуры которую вы хотите скачать:",
     "bbs.ui.textures.download-title": "Скачать по URL",

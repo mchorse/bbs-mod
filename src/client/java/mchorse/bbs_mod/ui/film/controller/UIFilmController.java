@@ -1174,7 +1174,7 @@ public class UIFilmController extends UIElement
 
         IEntity entity = this.getCurrentEntity();
 
-        if (entity == null || (this.pov == CAMERA_MODE_FIRST_PERSON && entity == this.getCurrentEntity()))
+        if ((entity == null || (this.pov == CAMERA_MODE_FIRST_PERSON && entity == this.getCurrentEntity())) && !altPressed)
         {
             return;
         }
